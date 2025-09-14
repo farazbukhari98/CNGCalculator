@@ -29,7 +29,8 @@ export default function GlobalSettings() {
     updateVehicleParameters,
     results,
     hideNegativeValues,
-    toggleHideNegativeValues
+    toggleHideNegativeValues,
+    setDistributionStrategy
   } = useCalculator();
 
   const { 
@@ -200,6 +201,7 @@ export default function GlobalSettings() {
                     ...vehicleParameters, 
                     lightDutyCount: parseInt(e.target.value) || 0 
                   })}
+                  data-testid="input-light-duty-count"
                 />
               </div>
             </div>
@@ -218,6 +220,7 @@ export default function GlobalSettings() {
                     ...vehicleParameters, 
                     mediumDutyCount: parseInt(e.target.value) || 0 
                   })}
+                  data-testid="input-medium-duty-count"
                 />
               </div>
             </div>
@@ -236,11 +239,77 @@ export default function GlobalSettings() {
                     ...vehicleParameters, 
                     heavyDutyCount: parseInt(e.target.value) || 0 
                   })}
+                  data-testid="input-heavy-duty-count"
                 />
               </div>
             </div>
           </div>
         )}
+      </div>
+
+      {/* Distribution Scenarios Section */}
+      <div className="border-b border-gray-200 pb-3">
+        <div className="flex items-center mb-2">
+          <BarChart3 className="h-4 w-4 mr-1 text-gray-600" />
+          <h4 className="text-sm font-medium text-gray-700">Distribution Scenarios</h4>
+        </div>
+        
+        {/* Distribution scenario buttons */}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant={deploymentStrategy === 'manual' ? 'default' : 'outline'}
+            className={deploymentStrategy === 'manual' 
+              ? "px-3 py-1 text-xs rounded bg-blue-100 text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+              : "px-3 py-1 text-xs rounded bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"}
+            onClick={() => updateDeploymentStrategy('manual')}
+            data-testid="button-manual-distribution"
+          >
+            Manual Distribution
+          </Button>
+          
+          {deploymentStrategy !== 'immediate' && (
+            <>
+              <Button
+                size="sm"
+                variant={deploymentStrategy === 'phased' ? 'default' : 'outline'}
+                className={deploymentStrategy === 'phased' 
+                  ? "px-3 py-1 text-xs rounded bg-blue-100 text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                  : "px-3 py-1 text-xs rounded bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"}
+                onClick={() => setDistributionStrategy('phased')}
+                data-testid="button-even-distribution"
+              >
+                Even Distribution
+              </Button>
+              <Button
+                size="sm"
+                variant={deploymentStrategy === 'aggressive' ? 'default' : 'outline'}
+                className={deploymentStrategy === 'aggressive' 
+                  ? "px-3 py-1 text-xs rounded bg-blue-100 text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                  : "px-3 py-1 text-xs rounded bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"}
+                onClick={() => setDistributionStrategy('aggressive')}
+                data-testid="button-front-loaded"
+              >
+                Front-Loaded
+              </Button>
+              <Button
+                size="sm"
+                variant={deploymentStrategy === 'deferred' ? 'default' : 'outline'}
+                className={deploymentStrategy === 'deferred' 
+                  ? "px-3 py-1 text-xs rounded bg-blue-100 text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                  : "px-3 py-1 text-xs rounded bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"}
+                onClick={() => setDistributionStrategy('deferred')}
+                data-testid="button-back-loaded"
+              >
+                Back-Loaded
+              </Button>
+            </>
+          )}
+        </div>
+        
+        <p className="text-xs text-gray-500 mt-2">
+          Choose how to distribute vehicle purchases over time. These options provide different deployment patterns for your fleet conversion strategy.
+        </p>
       </div>
 
       {/* Time Horizon */}
@@ -264,38 +333,6 @@ export default function GlobalSettings() {
         </div>
       </div>
 
-      {/* Deployment Strategy */}
-      <div className="pt-2">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Deployment Strategy
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="ml-2 inline-block text-gray-500 dark:text-gray-400 cursor-help">
-                  <Info size={16} />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent className="w-60">
-                <p className="text-xs">Choose how to distribute vehicle purchases over time. Select "Manual Distribution" to enter your own quantities in the timeline below.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </label>
-        <select
-          className="block w-full rounded-md border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
-          value={deploymentStrategy}
-          onChange={(e) => updateDeploymentStrategy(e.target.value as any)}
-        >
-          <option value="immediate">Immediate Purchase</option>
-          <option value="phased">Phased (Even Distribution)</option>
-          <option value="aggressive">Aggressive Early</option>
-          <option value="deferred">Deferred (Late Heavy)</option>
-          <option value="manual">Manual Distribution</option>
-        </select>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          {strategyDescriptions[deploymentStrategy]}
-        </p>
-      </div>
 
       {/* Chart Display Options */}
       <div className="pt-2">
