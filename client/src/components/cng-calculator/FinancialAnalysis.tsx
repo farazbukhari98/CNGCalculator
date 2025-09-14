@@ -120,35 +120,42 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
   };
 
   // Prepare data for year-by-year vehicle investment chart (only used when showCashflow is false)
-  const vehicleInvestmentData = results.vehicleDistribution
-    .map((yearData, index) => {
-      // Base data with vehicle counts and investment
-      const data = {
-        year: `Year ${index + 1}`,
-        light: yearData.light,
-        medium: yearData.medium,
-        heavy: yearData.heavy,
-        vehicleInvestment: yearData.investment,
-      };
-      
-      // For Year 1 with Turnkey=Yes, add station cost as a separate value
-      if (index === 0 && stationConfig.turnkey) {
-        return {
-          ...data,
-          stationCost: totalStationCost,
-          // Total investment for this year is vehicle investment + station cost
-          totalInvestment: yearData.investment + totalStationCost
-        };
-      }
-      
-      // For all other years or when Turnkey=No, only include vehicle investment
-      return {
-        ...data,
-        stationCost: 0,
-        totalInvestment: yearData.investment
-      };
-    })
-    .filter(data => data.totalInvestment > 0); // Only show years with investments
+  // Show ALL years in the time horizon, not just years with investments
+  const vehicleInvestmentData = Array.from({ length: timeHorizon }, (_, index) => {
+    const yearData = results.vehicleDistribution[index] || { 
+      light: 0, 
+      medium: 0, 
+      heavy: 0, 
+      investment: 0,
+      lightReplacements: 0,
+      mediumReplacements: 0,
+      heavyReplacements: 0,
+      replacementInvestment: 0
+    };
+    
+    // Calculate individual vehicle type investments based on vehicle parameters and counts
+    const lightInvestment = (yearData.light || 0) * vehicleParameters.lightDutyCost + 
+                           (yearData.lightReplacements || 0) * vehicleParameters.lightDutyCost;
+    const mediumInvestment = (yearData.medium || 0) * vehicleParameters.mediumDutyCost + 
+                            (yearData.mediumReplacements || 0) * vehicleParameters.mediumDutyCost;
+    const heavyInvestment = (yearData.heavy || 0) * vehicleParameters.heavyDutyCost + 
+                           (yearData.heavyReplacements || 0) * vehicleParameters.heavyDutyCost;
+    
+    // For Year 1 with Turnkey=Yes, add station cost
+    const stationInvestment = (index === 0 && stationConfig.turnkey) ? totalStationCost : 0;
+    
+    return {
+      year: `Year ${index + 1}`,
+      // Individual investment components for stacked chart
+      stationInvestment: stationInvestment,
+      heavyInvestment: heavyInvestment,
+      mediumInvestment: mediumInvestment,
+      lightInvestment: lightInvestment,
+      // Keep totals for reference
+      totalVehicleInvestment: lightInvestment + mediumInvestment + heavyInvestment,
+      totalInvestment: lightInvestment + mediumInvestment + heavyInvestment + stationInvestment
+    };
+  }); // No filtering - show all years including zero investments
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 financial-analysis">
