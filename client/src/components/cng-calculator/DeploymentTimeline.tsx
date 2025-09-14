@@ -10,8 +10,6 @@ export default function DeploymentTimeline() {
   const { 
     timeHorizon,
     deploymentStrategy,
-    setDistributionStrategy,
-    updateDeploymentStrategy,
     updateManualDistribution,
     vehicleDistribution,
     results,
