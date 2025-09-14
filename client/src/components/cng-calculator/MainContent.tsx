@@ -21,7 +21,7 @@ import jsPDF from "jspdf";
 export default function MainContent() {
   const { deploymentStrategy, results, vehicleParameters, stationConfig, fuelPrices, timeHorizon, hideNegativeValues } = useCalculator();
   const { darkMode, toggleDarkMode } = useDarkMode();
-  const [showCashflow, setShowCashflow] = useState(true);
+  const [showCashflow, setShowCashflow] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   
@@ -373,13 +373,17 @@ export default function MainContent() {
           </div>
           <div className="flex items-center mt-3 md:mt-0 space-x-6">
             <div className="flex items-center space-x-2">
-              <Label htmlFor="cashflowToggle" className="mr-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+              <Label 
+                htmlFor="cashflowToggle" 
+                className={`mr-3 text-sm font-medium ${!results ? 'text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'}`}
+              >
                 Show Cash Flow
               </Label>
               <Switch
                 id="cashflowToggle"
                 checked={showCashflow}
                 onCheckedChange={setShowCashflow}
+                disabled={!results}
                 className="data-[state=checked]:bg-blue-500"
               />
             </div>
