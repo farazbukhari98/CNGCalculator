@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { calculateStationCost, getStationSizeInfo } from "@/lib/calculator";
+import { Check } from "lucide-react";
 
 export default function StationConfiguration() {
   const { 
@@ -69,8 +70,13 @@ export default function StationConfiguration() {
             <RadioGroupItem value="fast" id="stationTypeFast" className="absolute opacity-0" />
             <Label 
               htmlFor="stationTypeFast" 
-              className="flex flex-col items-center p-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-blue-50 data-[state=checked]:border-blue-500"
+              className="flex flex-col items-center p-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-green-50 data-[state=checked]:border-green-500 data-[state=checked]:border-2"
             >
+              {stationConfig.stationType === 'fast' && (
+                <div className="absolute top-2 left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+              )}
               <span className="text-sm font-medium">Fast-Fill</span>
               <span className="text-xs text-gray-500 mt-1">Quick refueling, higher cost</span>
             </Label>
@@ -79,8 +85,13 @@ export default function StationConfiguration() {
             <RadioGroupItem value="time" id="stationTypeTime" className="absolute opacity-0" />
             <Label 
               htmlFor="stationTypeTime" 
-              className="flex flex-col items-center p-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-blue-50 data-[state=checked]:border-blue-500"
+              className="flex flex-col items-center p-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-green-50 data-[state=checked]:border-green-500 data-[state=checked]:border-2"
             >
+              {stationConfig.stationType === 'time' && (
+                <div className="absolute top-2 left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+              )}
               <span className="text-sm font-medium">Time-Fill</span>
               <span className="text-xs text-gray-500 mt-1">Overnight refueling, lower cost</span>
             </Label>
@@ -139,8 +150,13 @@ export default function StationConfiguration() {
             <RadioGroupItem value="yes" id="turnkeyYes" className="absolute opacity-0" />
             <Label 
               htmlFor="turnkeyYes" 
-              className="flex flex-col items-center p-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-blue-50 data-[state=checked]:border-blue-500"
+              className="flex flex-col items-center p-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-green-50 data-[state=checked]:border-green-500 data-[state=checked]:border-2"
             >
+              {stationConfig.turnkey === true && (
+                <div className="absolute top-2 left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+              )}
               <span className="text-sm font-medium">Yes</span>
               <span className="text-xs text-gray-500 mt-1">Pay cost upfront</span>
             </Label>
@@ -149,8 +165,13 @@ export default function StationConfiguration() {
             <RadioGroupItem value="no" id="turnkeyNo" className="absolute opacity-0" />
             <Label 
               htmlFor="turnkeyNo" 
-              className="flex flex-col items-center p-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-blue-50 data-[state=checked]:border-blue-500"
+              className="flex flex-col items-center p-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-green-50 data-[state=checked]:border-green-500 data-[state=checked]:border-2"
             >
+              {stationConfig.turnkey === false && (
+                <div className="absolute top-2 left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+              )}
               <span className="text-sm font-medium">No</span>
               <span className="text-xs text-gray-500 mt-1">Leveraging LDC investment tariff</span>
             </Label>
