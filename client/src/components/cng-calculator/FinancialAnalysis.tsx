@@ -153,7 +153,9 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
       lightInvestment: lightInvestment,
       // Keep totals for reference
       totalVehicleInvestment: lightInvestment + mediumInvestment + heavyInvestment,
-      totalInvestment: lightInvestment + mediumInvestment + heavyInvestment + stationInvestment
+      totalInvestment: lightInvestment + mediumInvestment + heavyInvestment + stationInvestment,
+      // Baseline to ensure all years are visually represented
+      baseline: 1
     };
   }); // No filtering - show all years including zero investments
 
@@ -252,12 +254,12 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
                   "Complete timeline showing vehicle investments across all years, with detailed breakdown by vehicle type (station costs financed separately)."}
               />
             </h2>
-            <div className="h-64">
+            <div className="h-64 min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 {/* New stacked investment chart showing all years in time horizon */}
                 <BarChart data={vehicleInvestmentData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="year" />
+                  <XAxis dataKey="year" interval={0} tickMargin={6} />
                   <YAxis tickFormatter={currencyFormatter} label={{ value: 'Investment ($)', angle: -90, position: 'insideLeft' }} />
                   <RechartsTooltip 
                     formatter={(value, name) => {
@@ -269,6 +271,14 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
                     labelFormatter={(label) => `${label}`}
                   />
                   <Legend />
+                  {/* Baseline to ensure all years are visually represented */}
+                  <Bar 
+                    dataKey="baseline" 
+                    stackId="investment" 
+                    fill="transparent" 
+                    stroke="#e5e7eb" 
+                    isAnimationActive={false}
+                  />
                   {/* Stacked Investment Bars - Order: Station (bottom), Heavy, Medium, Light (top) */}
                   {stationConfig.turnkey && (
                     <Bar 
