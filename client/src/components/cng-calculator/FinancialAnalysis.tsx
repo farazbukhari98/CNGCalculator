@@ -255,10 +255,10 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 {/* New stacked investment chart showing all years in time horizon */}
-                <BarChart data={vehicleInvestmentData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <BarChart data={vehicleInvestmentData} margin={{ top: 5, right: 30, left: 80, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="year" />
-                  <YAxis tickFormatter={currencyFormatter} label={{ value: 'Investment ($)', angle: -90, position: 'insideLeft' }} />
+                  <YAxis tickFormatter={currencyFormatter} label={{ value: 'Investment ($)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' } }} />
                   <RechartsTooltip 
                     formatter={(value, name) => {
                       if (typeof value === 'number' && value > 0) {
