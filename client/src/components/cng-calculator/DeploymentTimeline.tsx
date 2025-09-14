@@ -37,10 +37,10 @@ export default function DeploymentTimeline() {
   };
 
   return (
-    <Card className="bg-white rounded-lg shadow mb-6 deployment-timeline">
+    <Card className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6 deployment-timeline">
       <CardContent className="p-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4">
-          <h2 className="text-xl font-semibold">Deployment Timeline</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Deployment Timeline</h2>
         </div>
         
         {/* Timeline Visualization - Only show if we have results */}
@@ -66,238 +66,162 @@ export default function DeploymentTimeline() {
                 const isFirstYear = year === 1;
                 // Calculate station cost properly using the calculator function
                 const calculatedStationCost = calculateStationCost(stationConfig, vehicleParameters);
-                // Station cost logic: 
-                // - Turnkey: Show full station cost in Year 1 only
-                // - Non-turnkey: Show annual tariff fee in every year
-                let stationCost = 0;
+                // Station cost logic for INVESTMENT calculation (not operational costs):
+                // - Turnkey: Include full station cost in Year 1 only (actual investment)
+                // - Non-turnkey: No station investment (tariff fees are operational, already in yearlySavings)
+                let stationCostInvestment = 0;
+                let stationCostDisplay = 0;
+                
                 if (stationConfig.turnkey) {
-                  stationCost = isFirstYear ? calculatedStationCost : 0;
+                  stationCostInvestment = isFirstYear ? calculatedStationCost : 0;
+                  stationCostDisplay = stationCostInvestment;
                 } else {
-                  // Non-turnkey: Show annual tariff fee (available from results.yearlyTariffFees)
-                  stationCost = results.yearlyTariffFees[year - 1] || 0;
+                  // For non-turnkey, show $0 for station investment (tariff fees are operational, not investment)
+                  stationCostDisplay = 0;
+                  stationCostInvestment = 0; // Not an investment, it's operational cost
                 }
-                const totalYearInvestment = vehicleInvestment + stationCost;
+                const totalYearInvestment = vehicleInvestment + stationCostInvestment;
                 
                 // Calculate cumulative savings up to this year
                 let cumulativeFuelSavings = 0;
                 let cumulativeMaintenanceSavings = 0;
-                let cumulativeTotalSavings = 0;
+                let cumulativeOperationalSavings = 0;
+                let cumulativeInvestments = 0;
                 
                 for (let i = 0; i < year; i++) {
                   cumulativeFuelSavings += results.yearlyFuelSavings[i] || 0;
                   cumulativeMaintenanceSavings += results.yearlyMaintenanceSavings[i] || 0;
-                  cumulativeTotalSavings += results.yearlySavings[i] || 0;
+                  cumulativeOperationalSavings += results.yearlySavings[i] || 0;
+                  
+                  // Calculate actual investments for this past year (not operational costs)
+                  const pastYearData = vehicleDistribution[i] || { investment: 0, replacementInvestment: 0 };
+                  const pastVehicleInvestment = (pastYearData.investment || 0) + (pastYearData.replacementInvestment || 0);
+                  const pastIsFirstYear = (i + 1) === 1;
+                  let pastStationInvestment = 0;
+                  if (stationConfig.turnkey) {
+                    pastStationInvestment = pastIsFirstYear ? calculatedStationCost : 0;
+                  } else {
+                    // Non-turnkey: no station investment (tariff fees are operational, already in yearlySavings)
+                    pastStationInvestment = 0;
+                  }
+                  cumulativeInvestments += pastVehicleInvestment + pastStationInvestment;
                 }
                 
+                // Calculate true cumulative net savings/cost
+                const cumulativeTotalSavings = cumulativeOperationalSavings - cumulativeInvestments;
+                
+                // Calculate totals for new requirements format
+                const totalNewVehicles = light + medium + heavy;
+                const totalReplacements = (yearData.lightReplacements || 0) + (yearData.mediumReplacements || 0) + (yearData.heavyReplacements || 0);
+                const totalVehiclesInOperation = (yearData.totalActiveLight || 0) + (yearData.totalActiveMedium || 0) + (yearData.totalActiveHeavy || 0);
+                
+                // Get annual savings for this year (not cumulative)
+                const annualFuelSavings = results.yearlyFuelSavings[year - 1] || 0;
+                const annualMaintenanceSavings = results.yearlyMaintenanceSavings[year - 1] || 0;
+                const annualOperationalSavings = results.yearlySavings[year - 1] || 0; // This is fuel + maintenance - tariff fees
+                
+                // Calculate true Annual Net Savings/Cost by subtracting investments
+                const annualNetSavings = annualOperationalSavings - totalYearInvestment;
+
                 return (
-                  <div key={year} className={`year-block bg-white border rounded-lg shadow-sm p-3 ${borderClass}`}>
-                    <div className="text-sm font-medium text-gray-700 mb-2">Year {year}</div>
+                  <div key={year} className={`year-block bg-white dark:bg-gray-800 border rounded-lg shadow-sm p-3 ${borderClass}`}>
+                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Year {year}</div>
                     
-                    <div className="space-y-3 mb-3">
-                      {/* New Vehicle Purchases Section */}
-                      <div>
-                        <div className="text-xs font-medium text-blue-700 mb-1">New Purchases</div>
-                        <div className="space-y-1 pl-2">
-                          {deploymentStrategy === 'manual' ? (
-                            <>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Light Duty</span>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  value={light}
-                                  onChange={(e) => handleInputChange(year, 'light', e.target.value)}
-                                  className="text-xs w-16 h-6 p-1"
-                                />
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Medium Duty</span>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  value={medium}
-                                  onChange={(e) => handleInputChange(year, 'medium', e.target.value)}
-                                  className="text-xs w-16 h-6 p-1"
-                                />
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Heavy Duty</span>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  value={heavy}
-                                  onChange={(e) => handleInputChange(year, 'heavy', e.target.value)}
-                                  className="text-xs w-16 h-6 p-1"
-                                />
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Light Duty</span>
-                                <span className="text-xs font-medium">{light}</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Medium Duty</span>
-                                <span className="text-xs font-medium">{medium}</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Heavy Duty</span>
-                                <span className="text-xs font-medium">{heavy}</span>
-                              </div>
-                            </>
-                          )}
-                        </div>
+                    <div className="space-y-2">
+                      {/* # of new vehicles purchased */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-600 dark:text-gray-400"># of new vehicles purchased</span>
+                        {deploymentStrategy === 'manual' ? (
+                          <div className="flex items-center space-x-1">
+                            <Input
+                              type="number"
+                              min="0"
+                              value={light}
+                              onChange={(e) => handleInputChange(year, 'light', e.target.value)}
+                              className="text-xs w-12 h-6 p-1"
+                              data-testid={`input-light-year-${year}`}
+                            />
+                            <Input
+                              type="number"
+                              min="0"
+                              value={medium}
+                              onChange={(e) => handleInputChange(year, 'medium', e.target.value)}
+                              className="text-xs w-12 h-6 p-1"
+                              data-testid={`input-medium-year-${year}`}
+                            />
+                            <Input
+                              type="number"
+                              min="0"
+                              value={heavy}
+                              onChange={(e) => handleInputChange(year, 'heavy', e.target.value)}
+                              className="text-xs w-12 h-6 p-1"
+                              data-testid={`input-heavy-year-${year}`}
+                            />
+                            <span className="text-xs font-medium ml-2" data-testid={`total-new-vehicles-year-${year}`}>= {totalNewVehicles}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs font-medium" data-testid={`total-new-vehicles-year-${year}`}>{totalNewVehicles}</span>
+                        )}
                       </div>
 
-                      {/* Replacement Vehicles Section */}
-                      {(yearData.lightReplacements || yearData.mediumReplacements || yearData.heavyReplacements) && (
-                        <div>
-                          <div className="text-xs font-medium text-orange-700 mb-1">Replacements (7-year cycle)</div>
-                          <div className="space-y-1 pl-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-500">Light Duty</span>
-                              <span className="text-xs font-medium">{yearData.lightReplacements || 0}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-500">Medium Duty</span>
-                              <span className="text-xs font-medium">{yearData.mediumReplacements || 0}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-500">Heavy Duty</span>
-                              <span className="text-xs font-medium">{yearData.heavyReplacements || 0}</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                      {/* # of replacement vehicles purchased - always show */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-600 dark:text-gray-400"># of replacement vehicles purchased</span>
+                        <span className="text-xs font-medium" data-testid={`total-replacements-year-${year}`}>{totalReplacements}</span>
+                      </div>
 
-                      {/* Total Active Fleet Section */}
-                      <div className="border-t pt-2">
-                        <div className="text-xs font-medium text-green-700 mb-1">Total Active Fleet</div>
-                        <div className="space-y-1 pl-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Light Duty</span>
-                            <span className="text-xs font-bold">{yearData.totalActiveLight || 0}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Medium Duty</span>
-                            <span className="text-xs font-bold">{yearData.totalActiveMedium || 0}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Heavy Duty</span>
-                            <span className="text-xs font-bold">{yearData.totalActiveHeavy || 0}</span>
-                          </div>
-                        </div>
+                      {/* # total vehicles in operation */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-600 dark:text-gray-400"># total vehicles in operation</span>
+                        <span className="text-xs font-medium" data-testid={`total-vehicles-operation-year-${year}`}>{totalVehiclesInOperation}</span>
                       </div>
                     </div>
                     
-                    <div className="border-t pt-3">
-                      {/* Always show investment breakdown in hierarchical format */}
-                      {(vehicleInvestment > 0 || stationCost > 0) && (
-                        <>
-                          {/* Investment header */}
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-gray-700 font-medium">Investment</span>
-                            <span></span>
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
+                      {/* Investment Section */}
+                      <div className="mb-3">
+                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Investment</div>
+                        <div className="ml-4 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-600 dark:text-gray-400">Vehicles (Incr.)</span>
+                            <span className="text-xs font-medium" data-testid={`vehicle-investment-year-${year}`}>{formatCurrency(vehicleInvestment)}</span>
                           </div>
-                          {/* Investment breakdown - indented */}
-                          <div className="flex items-center justify-between ml-4 mb-1.5">
-                            <span className="text-xs text-gray-500">
-                              Vehicles (Inc)
-                              <MetricInfoTooltip
-                                title="Vehicle Investment"
-                                description={`This is the total cost for ${light} light-duty, ${medium} medium-duty, and ${heavy} heavy-duty vehicles converted in Year ${year}.`}
-                                calculation={`Vehicle Investment = (${light} light-duty × $${(vehicleInvestment / (light || 1)).toLocaleString()}) + (${medium} medium-duty × $${(vehicleInvestment / (medium || 1)).toLocaleString()}) + (${heavy} heavy-duty × $${(vehicleInvestment / (heavy || 1)).toLocaleString()})`}
-                                affectingVariables={[
-                                  "Vehicle counts (light, medium, heavy)",
-                                  "Incremental cost per vehicle type",
-                                  "Deployment strategy"
-                                ]}
-                                simpleDescription="Cost of CNG vehicle conversion for this year"
-                              />
-                            </span>
-                            <span className="text-xs font-medium">{formatCurrency(vehicleInvestment)}</span>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-600 dark:text-gray-400">Station</span>
+                            <span className="text-xs font-medium" data-testid={`station-investment-year-${year}`}>{formatCurrency(stationCostDisplay)}</span>
                           </div>
-                          <div className="flex items-center justify-between ml-4 mb-2">
-                            <span className="text-xs text-gray-500">
-                              Station
-                              <MetricInfoTooltip
-                                title={stationConfig.turnkey ? "Station Investment" : "Station Tariff Fee"}
-                                description={stationConfig.turnkey 
-                                  ? "The upfront cost of building your CNG station. This is a one-time cost in Year 1 and includes all equipment, installation, and setup."
-                                  : `Annual tariff fee for non-turnkey station option. This is ${stationConfig.businessType === 'cgc' ? '1.6%' : '1.5%'} of the total station cost, charged annually.`
-                                }
-                                calculation={stationConfig.turnkey 
-                                  ? "Based on station type (Fast-Fill or Time-Fill), business type (AGLC, CGC, VNG), and required capacity to support your fleet's daily fuel consumption."
-                                  : `Annual Tariff = Total Station Cost (${formatCurrency(calculatedStationCost)}) × ${stationConfig.businessType === 'cgc' ? '1.6%' : '1.5%'} × 12 months`
-                                }
-                                affectingVariables={[
-                                  "Station type (Fast-Fill or Time-Fill)",
-                                  "Business type (AGLC, CGC, VNG)",
-                                  "Total fleet size and composition",
-                                  stationConfig.turnkey ? "Turnkey option (Yes = upfront cost)" : "Non-turnkey annual tariff rate"
-                                ]}
-                                simpleDescription={stationConfig.turnkey ? "Cost of building the CNG fueling station" : "Annual fee for non-turnkey station financing"}
-                              />
-                            </span>
-                            <span className="text-xs font-medium">{formatCurrency(stationCost)}</span>
-                          </div>
-                        </>
-                      )}
+                        </div>
+                      </div>
                       
                       {/* Savings Section */}
+                      <div className="mb-3">
+                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Savings</div>
+                        <div className="ml-4 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-600 dark:text-gray-400">Fuel</span>
+                            <span className="text-xs font-medium text-green-600 dark:text-green-400" data-testid={`fuel-savings-year-${year}`}>{formatCurrency(annualFuelSavings)}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-600 dark:text-gray-400">Maintenance</span>
+                            <span className="text-xs font-medium text-green-600 dark:text-green-400" data-testid={`maintenance-savings-year-${year}`}>{formatCurrency(annualMaintenanceSavings)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Annual Net Savings/Cost */}
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-700 font-medium">Savings</span>
-                        <span></span>
-                      </div>
-                      {/* Savings breakdown - indented */}
-                      <div className="flex items-center justify-between ml-4 mb-1.5">
-                        <span className="text-xs text-gray-500">
-                          Fuel
-                          <MetricInfoTooltip
-                            title="Cumulative Fuel Savings"
-                            description={`Total fuel cost savings accumulated from Year 1 through Year ${year} from switching to CNG instead of gasoline/diesel.`}
-                            calculation="Cumulative Fuel Savings = Sum of annual fuel savings from Year 1 to current year"
-                            affectingVariables={[
-                              "Number of converted vehicles in operation each year",
-                              "Annual mileage per vehicle type",
-                              "Fuel prices (gasoline, diesel, CNG)",
-                              "Vehicle fuel efficiency (MPG)"
-                            ]}
-                            simpleDescription="Total fuel cost reduction from CNG to date"
-                          />
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Annual Net Savings/Cost</span>
+                        <span className={`text-sm font-semibold ${annualNetSavings >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} data-testid={`annual-net-savings-year-${year}`}>
+                          {formatCurrency(annualNetSavings)}
                         </span>
-                        <span className="text-xs font-medium text-green-600">{formatCurrency(cumulativeFuelSavings)}</span>
                       </div>
-                      <div className="flex items-center justify-between ml-4 mb-2">
-                        <span className="text-xs text-gray-500">
-                          Maintenance
-                          <MetricInfoTooltip
-                            title="Cumulative Maintenance Savings"
-                            description={`Total maintenance cost savings accumulated from Year 1 through Year ${year} from reduced maintenance needs of CNG vehicles.`}
-                            calculation="Cumulative Maintenance Savings = Sum of annual maintenance savings from Year 1 to current year ($0.05 per mile for diesel vehicles)"
-                            affectingVariables={[
-                              "Number of converted diesel vehicles in operation each year",
-                              "Annual mileage per vehicle type",
-                              "Deployment timing and vehicle rollout schedule"
-                            ]}
-                            simpleDescription="Total maintenance cost reduction to date"
-                          />
+
+                      {/* Cumulative Net Savings/Cost */}
+                      <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-2">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Cumulative Net Savings/Cost</span>
+                        <span className={`text-sm font-semibold ${cumulativeTotalSavings >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} data-testid={`cumulative-net-savings-year-${year}`}>
+                          {formatCurrency(cumulativeTotalSavings)}
                         </span>
-                        <span className="text-xs font-medium text-green-600">{formatCurrency(cumulativeMaintenanceSavings)}</span>
-                      </div>
-                      {/* Total Savings */}
-                      <div className="flex items-center justify-between border-t border-gray-200 pt-2">
-                        <span className="text-sm text-gray-700 font-medium">
-                          Total Savings
-                          <MetricInfoTooltip
-                            title="Total Cumulative Savings"
-                            description={`Total savings accumulated from Year 1 through Year ${year} including fuel and maintenance savings, minus any operational costs.`}
-                            calculation={`Total Cumulative Savings = Cumulative Fuel Savings (${formatCurrency(cumulativeFuelSavings)}) + Cumulative Maintenance Savings (${formatCurrency(cumulativeMaintenanceSavings)}) - Station Operational Costs`}
-                            simpleDescription="Combined operating cost reduction to date"
-                          />
-                        </span>
-                        <span className="text-sm font-semibold text-green-600">{formatCurrency(cumulativeTotalSavings)}</span>
                       </div>
                     </div>
                   </div>
