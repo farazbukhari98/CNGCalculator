@@ -15,7 +15,8 @@ export default function FleetConfiguration({ showCashflow }: FleetConfigurationP
     results,
     timeHorizon,
     deploymentStrategy,
-    vehicleDistribution
+    vehicleDistribution,
+    fuelPrices
   } = useCalculator();
 
   // Calculate vehicle distribution percentages (use manual distribution totals if in manual mode)
@@ -89,7 +90,7 @@ export default function FleetConfiguration({ showCashflow }: FleetConfigurationP
   
   // Use centralized station cost calculation
   const getStationCost = () => {
-    return calculateStationCost(stationConfig, vehicleParameters, vehicleDistribution);
+    return calculateStationCost(stationConfig, vehicleParameters, vehicleDistribution, fuelPrices);
   };
 
   const stationCost = getStationCost();

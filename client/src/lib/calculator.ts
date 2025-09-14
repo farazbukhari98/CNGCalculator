@@ -19,6 +19,9 @@ const getVehicleCosts = (vehicleParams: VehicleParameters) => {
 // Diesel deduction factor (5 cents per mile)
 const DIESEL_DEDUCTION_PER_MILE = 0.05;
 
+// Station design factor to account for compressor/venting losses, uptime derate, and growth reserve
+const STATION_DESIGN_FACTOR = 1.2735;
+
 // CNG efficiency loss percentage
 const CNG_LOSS = {
   light: 0.05,   // 5% loss
@@ -67,6 +70,7 @@ const TIME_FILL_STATIONS = [
 ];
 
 // Helper function to find peak year vehicle count from vehicle distribution
+// Uses total active vehicles when available, otherwise falls back to new purchases
 function getPeakYearVehicleCount(vehicleDistribution: VehicleDistribution[] | null): { lightDutyCount: number, mediumDutyCount: number, heavyDutyCount: number } {
   if (!vehicleDistribution || vehicleDistribution.length === 0) {
     return { lightDutyCount: 0, mediumDutyCount: 0, heavyDutyCount: 0 };
@@ -77,10 +81,16 @@ function getPeakYearVehicleCount(vehicleDistribution: VehicleDistribution[] | nu
   let maxHeavy = 0;
 
   // Find the maximum vehicle count across all years for each type
+  // Prefer total active vehicles over new purchases for accurate station sizing
   vehicleDistribution.forEach(year => {
-    maxLight = Math.max(maxLight, year.light || 0);
-    maxMedium = Math.max(maxMedium, year.medium || 0);
-    maxHeavy = Math.max(maxHeavy, year.heavy || 0);
+    // Use total active vehicles if available (for station sizing based on peak operations)
+    const lightCount = year.totalActiveLight !== undefined ? year.totalActiveLight : (year.light || 0);
+    const mediumCount = year.totalActiveMedium !== undefined ? year.totalActiveMedium : (year.medium || 0);
+    const heavyCount = year.totalActiveHeavy !== undefined ? year.totalActiveHeavy : (year.heavy || 0);
+    
+    maxLight = Math.max(maxLight, lightCount);
+    maxMedium = Math.max(maxMedium, mediumCount);
+    maxHeavy = Math.max(maxHeavy, heavyCount);
   });
 
   return {
@@ -91,7 +101,7 @@ function getPeakYearVehicleCount(vehicleDistribution: VehicleDistribution[] | nu
 }
 
 // Station cost calculation
-export function calculateStationCost(config: StationConfig, vehicleParams?: VehicleParameters, vehicleDistribution?: VehicleDistribution[] | null): number {
+export function calculateStationCost(config: StationConfig, vehicleParams?: VehicleParameters, vehicleDistribution?: VehicleDistribution[] | null, fuelPrices?: FuelPrices): number {
   // If no vehicle params provided, return default costs
   if (!vehicleParams) {
     const defaultCost = config.stationType === 'fast' ? 2200000 : 1200000; // Default to medium size
@@ -116,7 +126,7 @@ export function calculateStationCost(config: StationConfig, vehicleParams?: Vehi
   }
 
   // Calculate annual GGE (Gasoline Gallon Equivalent) consumption
-  // Formula: (Annual Miles / (MPG × CNG Efficiency Factor)) × Vehicle Count
+  // Formula: (Annual Miles / MPG) × Vehicle Count × Fuel-to-CNG Conversion Factor × CNG Efficiency Factor
   
   // CNG efficiency factors (fuel economy reduction)
   const cngEfficiencyFactors = {
@@ -125,16 +135,37 @@ export function calculateStationCost(config: StationConfig, vehicleParams?: Vehi
     heavy: 0.90     // 90% efficiency (10% reduction)
   };
   
-  // Calculate annual GGE per vehicle type
-  const lightAnnualGGE = vehicleParams.lightDutyAnnualMiles / (vehicleParams.lightDutyMPG * cngEfficiencyFactors.light);
-  const mediumAnnualGGE = vehicleParams.mediumDutyAnnualMiles / (vehicleParams.mediumDutyMPG * cngEfficiencyFactors.medium);
-  const heavyAnnualGGE = vehicleParams.heavyDutyAnnualMiles / (vehicleParams.heavyDutyMPG * cngEfficiencyFactors.heavy);
+  // Default conversion factors if not provided
+  const defaultFuelPrices = {
+    gasolineToCngConversionFactor: 1.0,
+    dieselToCngConversionFactor: 1.136  // Diesel has more energy content per gallon
+  };
   
-  // Total annual GGE consumption for the fleet
-  const annualGGE = 
+  const conversionFactors = fuelPrices || defaultFuelPrices;
+  
+  // Calculate annual GGE per vehicle type including conversion factors
+  const lightConversionFactor = vehicleParams.lightDutyFuelType === 'gasoline' 
+    ? conversionFactors.gasolineToCngConversionFactor 
+    : conversionFactors.dieselToCngConversionFactor;
+  const mediumConversionFactor = vehicleParams.mediumDutyFuelType === 'gasoline' 
+    ? conversionFactors.gasolineToCngConversionFactor 
+    : conversionFactors.dieselToCngConversionFactor;
+  const heavyConversionFactor = vehicleParams.heavyDutyFuelType === 'gasoline' 
+    ? conversionFactors.gasolineToCngConversionFactor 
+    : conversionFactors.dieselToCngConversionFactor;
+  
+  const lightAnnualGGE = (vehicleParams.lightDutyAnnualMiles / vehicleParams.lightDutyMPG) * lightConversionFactor / cngEfficiencyFactors.light;
+  const mediumAnnualGGE = (vehicleParams.mediumDutyAnnualMiles / vehicleParams.mediumDutyMPG) * mediumConversionFactor / cngEfficiencyFactors.medium;
+  const heavyAnnualGGE = (vehicleParams.heavyDutyAnnualMiles / vehicleParams.heavyDutyMPG) * heavyConversionFactor / cngEfficiencyFactors.heavy;
+  
+  // Total annual GGE consumption for the fleet (base energy demand)
+  const baseAnnualGGE = 
     (vehicleCounts.lightDutyCount * lightAnnualGGE) + 
     (vehicleCounts.mediumDutyCount * mediumAnnualGGE) + 
     (vehicleCounts.heavyDutyCount * heavyAnnualGGE);
+  
+  // Apply station design factor for compressor/venting losses, uptime derate, and growth reserve
+  const annualGGE = baseAnnualGGE * STATION_DESIGN_FACTOR;
   
   // Station sizing and pricing based on annual GGE consumption
   // Each station size has a maximum capacity it can handle
@@ -193,7 +224,12 @@ export function applyVehicleLifecycle(
   timeHorizon: number
 ): VehicleDistribution[] {
   const vehicleCosts = getVehicleCosts(vehicleParams);
-  const VEHICLE_LIFESPAN = 7; // All vehicles have 7-year lifespan
+  // Use per-class lifespans from vehicle parameters
+  const VEHICLE_LIFESPANS = {
+    light: vehicleParams.lightDutyLifespan,
+    medium: vehicleParams.mediumDutyLifespan,
+    heavy: vehicleParams.heavyDutyLifespan
+  };
   
   // Create enhanced distribution array
   const enhancedDistribution: VehicleDistribution[] = [];
@@ -215,16 +251,25 @@ export function applyVehicleLifecycle(
       heavy: currentYear.heavy
     };
     
-    // Calculate replacements needed this year (vehicles purchased 7 years ago)
-    const replacementYear = yearIndex - VEHICLE_LIFESPAN;
+    // Calculate replacements needed this year (vehicles purchased lifespan + 1 years ago)
     let replacements = { light: 0, medium: 0, heavy: 0 };
     
-    if (replacementYear >= 0 && baseDistribution[replacementYear]) {
-      replacements = {
-        light: baseDistribution[replacementYear].light,
-        medium: baseDistribution[replacementYear].medium,
-        heavy: baseDistribution[replacementYear].heavy
-      };
+    // Check for light duty replacements (lifespan + 1 years ago)
+    const lightReplacementYear = yearIndex - VEHICLE_LIFESPANS.light - 1;
+    if (lightReplacementYear >= 0 && baseDistribution[lightReplacementYear]) {
+      replacements.light = baseDistribution[lightReplacementYear].light;
+    }
+    
+    // Check for medium duty replacements (lifespan + 1 years ago)
+    const mediumReplacementYear = yearIndex - VEHICLE_LIFESPANS.medium - 1;
+    if (mediumReplacementYear >= 0 && baseDistribution[mediumReplacementYear]) {
+      replacements.medium = baseDistribution[mediumReplacementYear].medium;
+    }
+    
+    // Check for heavy duty replacements (lifespan + 1 years ago)
+    const heavyReplacementYear = yearIndex - VEHICLE_LIFESPANS.heavy - 1;
+    if (heavyReplacementYear >= 0 && baseDistribution[heavyReplacementYear]) {
+      replacements.heavy = baseDistribution[heavyReplacementYear].heavy;
     }
     
     // Calculate replacement investment
@@ -244,13 +289,24 @@ export function applyVehicleLifecycle(
     let totalReplacedMedium = 0;
     let totalReplacedHeavy = 0;
     
-    // Sum up all replacements from previous years
+    // Sum up all replacements from previous years using per-class lifespans
     for (let prevYear = 0; prevYear < yearIndex; prevYear++) {
-      const replYear = prevYear - VEHICLE_LIFESPAN;
-      if (replYear >= 0 && baseDistribution[replYear]) {
-        totalReplacedLight += baseDistribution[replYear].light;
-        totalReplacedMedium += baseDistribution[replYear].medium;
-        totalReplacedHeavy += baseDistribution[replYear].heavy;
+      // Check for light duty that expired
+      const lightReplYear = prevYear - VEHICLE_LIFESPANS.light - 1;
+      if (lightReplYear >= 0 && baseDistribution[lightReplYear]) {
+        totalReplacedLight += baseDistribution[lightReplYear].light;
+      }
+      
+      // Check for medium duty that expired
+      const mediumReplYear = prevYear - VEHICLE_LIFESPANS.medium - 1;
+      if (mediumReplYear >= 0 && baseDistribution[mediumReplYear]) {
+        totalReplacedMedium += baseDistribution[mediumReplYear].medium;
+      }
+      
+      // Check for heavy duty that expired
+      const heavyReplYear = prevYear - VEHICLE_LIFESPANS.heavy - 1;
+      if (heavyReplYear >= 0 && baseDistribution[heavyReplYear]) {
+        totalReplacedHeavy += baseDistribution[heavyReplYear].heavy;
       }
     }
     
@@ -283,7 +339,7 @@ export function applyVehicleLifecycle(
 }
 
 // Get station size information
-export function getStationSizeInfo(config: StationConfig, vehicleParams?: VehicleParameters, vehicleDistribution?: VehicleDistribution[] | null): { size: number; capacity: number; annualGGE: number; baseCost: number; finalCost: number } | null {
+export function getStationSizeInfo(config: StationConfig, vehicleParams?: VehicleParameters, vehicleDistribution?: VehicleDistribution[] | null, fuelPrices?: FuelPrices): { size: number; capacity: number; annualGGE: number; baseCost: number; finalCost: number } | null {
   if (!vehicleParams) return null;
   
   // Always determine vehicle counts based on peak year usage (maximum vehicles in any single year)
@@ -307,14 +363,37 @@ export function getStationSizeInfo(config: StationConfig, vehicleParams?: Vehicl
     heavy: 0.90
   };
   
-  const lightAnnualGGE = vehicleParams.lightDutyAnnualMiles / (vehicleParams.lightDutyMPG * cngEfficiencyFactors.light);
-  const mediumAnnualGGE = vehicleParams.mediumDutyAnnualMiles / (vehicleParams.mediumDutyMPG * cngEfficiencyFactors.medium);
-  const heavyAnnualGGE = vehicleParams.heavyDutyAnnualMiles / (vehicleParams.heavyDutyMPG * cngEfficiencyFactors.heavy);
+  // Default conversion factors if not provided
+  const defaultFuelPrices = {
+    gasolineToCngConversionFactor: 1.0,
+    dieselToCngConversionFactor: 1.136  // Diesel has more energy content per gallon
+  };
   
-  const annualGGE = 
+  const conversionFactors = fuelPrices || defaultFuelPrices;
+  
+  // Calculate annual GGE per vehicle type including conversion factors
+  const lightConversionFactor = vehicleParams.lightDutyFuelType === 'gasoline' 
+    ? conversionFactors.gasolineToCngConversionFactor 
+    : conversionFactors.dieselToCngConversionFactor;
+  const mediumConversionFactor = vehicleParams.mediumDutyFuelType === 'gasoline' 
+    ? conversionFactors.gasolineToCngConversionFactor 
+    : conversionFactors.dieselToCngConversionFactor;
+  const heavyConversionFactor = vehicleParams.heavyDutyFuelType === 'gasoline' 
+    ? conversionFactors.gasolineToCngConversionFactor 
+    : conversionFactors.dieselToCngConversionFactor;
+  
+  const lightAnnualGGE = (vehicleParams.lightDutyAnnualMiles / vehicleParams.lightDutyMPG) * lightConversionFactor / cngEfficiencyFactors.light;
+  const mediumAnnualGGE = (vehicleParams.mediumDutyAnnualMiles / vehicleParams.mediumDutyMPG) * mediumConversionFactor / cngEfficiencyFactors.medium;
+  const heavyAnnualGGE = (vehicleParams.heavyDutyAnnualMiles / vehicleParams.heavyDutyMPG) * heavyConversionFactor / cngEfficiencyFactors.heavy;
+  
+  // Total annual GGE consumption for the fleet (base energy demand)
+  const baseAnnualGGE = 
     (vehicleCounts.lightDutyCount * lightAnnualGGE) + 
     (vehicleCounts.mediumDutyCount * mediumAnnualGGE) + 
     (vehicleCounts.heavyDutyCount * heavyAnnualGGE);
+  
+  // Apply station design factor for compressor/venting losses, uptime derate, and growth reserve
+  const annualGGE = baseAnnualGGE * STATION_DESIGN_FACTOR;
   
   // Station sizes (same as in calculateStationCost)
   const stationSizes = {
@@ -623,7 +702,7 @@ export function calculateROI(
   }
   
   // Calculate station cost based on vehicle parameters
-  const stationCost = calculateStationCost(stationConfig, vehicleParams, vehicleDistribution);
+  const stationCost = calculateStationCost(stationConfig, vehicleParams, vehicleDistribution, fuelPrices);
   
   // Total investment - only include station cost upfront if turnkey is true
   const totalInvestment = totalVehicleInvestment + (stationConfig.turnkey ? stationCost : 0);

@@ -14,7 +14,8 @@ export default function DeploymentTimeline() {
     vehicleDistribution,
     results,
     stationConfig,
-    vehicleParameters
+    vehicleParameters,
+    fuelPrices
   } = useCalculator();
 
   // Format currency
@@ -65,7 +66,7 @@ export default function DeploymentTimeline() {
                 // For year 1, also show station cost separately
                 const isFirstYear = year === 1;
                 // Calculate station cost properly using the calculator function
-                const calculatedStationCost = calculateStationCost(stationConfig, vehicleParameters);
+                const calculatedStationCost = calculateStationCost(stationConfig, vehicleParameters, vehicleDistribution, fuelPrices);
                 // Station cost logic for INVESTMENT calculation (not operational costs):
                 // - Turnkey: Include full station cost in Year 1 only (actual investment)
                 // - Non-turnkey: No station investment (tariff fees are operational, already in yearlySavings)
@@ -82,34 +83,6 @@ export default function DeploymentTimeline() {
                 }
                 const totalYearInvestment = vehicleInvestment + stationCostInvestment;
                 
-                // Calculate cumulative savings up to this year
-                let cumulativeFuelSavings = 0;
-                let cumulativeMaintenanceSavings = 0;
-                let cumulativeOperationalSavings = 0;
-                let cumulativeInvestments = 0;
-                
-                for (let i = 0; i < year; i++) {
-                  cumulativeFuelSavings += results.yearlyFuelSavings[i] || 0;
-                  cumulativeMaintenanceSavings += results.yearlyMaintenanceSavings[i] || 0;
-                  cumulativeOperationalSavings += results.yearlySavings[i] || 0;
-                  
-                  // Calculate actual investments for this past year (not operational costs)
-                  const pastYearData = vehicleDistribution[i] || { investment: 0, replacementInvestment: 0 };
-                  const pastVehicleInvestment = (pastYearData.investment || 0) + (pastYearData.replacementInvestment || 0);
-                  const pastIsFirstYear = (i + 1) === 1;
-                  let pastStationInvestment = 0;
-                  if (stationConfig.turnkey) {
-                    pastStationInvestment = pastIsFirstYear ? calculatedStationCost : 0;
-                  } else {
-                    // Non-turnkey: no station investment (tariff fees are operational, already in yearlySavings)
-                    pastStationInvestment = 0;
-                  }
-                  cumulativeInvestments += pastVehicleInvestment + pastStationInvestment;
-                }
-                
-                // Calculate true cumulative net savings/cost
-                const cumulativeTotalSavings = cumulativeOperationalSavings - cumulativeInvestments;
-                
                 // Calculate totals for new requirements format
                 const totalNewVehicles = light + medium + heavy;
                 const totalReplacements = (yearData.lightReplacements || 0) + (yearData.mediumReplacements || 0) + (yearData.heavyReplacements || 0);
@@ -118,10 +91,44 @@ export default function DeploymentTimeline() {
                 // Get annual savings for this year (not cumulative)
                 const annualFuelSavings = results.yearlyFuelSavings[year - 1] || 0;
                 const annualMaintenanceSavings = results.yearlyMaintenanceSavings[year - 1] || 0;
-                const annualOperationalSavings = results.yearlySavings[year - 1] || 0; // This is fuel + maintenance - tariff fees
+                const annualTariffFees = results.yearlyTariffFees[year - 1] || 0;
                 
-                // Calculate true Annual Net Savings/Cost by subtracting investments
-                const annualNetSavings = annualOperationalSavings - totalYearInvestment;
+                // Calculate Annual Net Savings/Cost per user requirements:
+                // (Fuel Savings + Maintenance Savings) - (Vehicle Investment + Station Investment + Tariff Fees)
+                const totalAnnualSavings = annualFuelSavings + annualMaintenanceSavings;
+                const annualNetSavings = totalAnnualSavings - totalYearInvestment - annualTariffFees;
+                
+                // Calculate Cumulative Net Savings/Cost per user requirements:
+                // For Year 2 onwards: Previous Year's Cumulative + Current Year's Annual Net
+                let cumulativeNetSavings = 0;
+                
+                if (year === 1) {
+                  // Year 1: Cumulative = Annual Net
+                  cumulativeNetSavings = annualNetSavings;
+                } else {
+                  // Year 2+: Previous Cumulative + Current Annual Net
+                  // Calculate all previous years' annual net savings
+                  let runningCumulative = 0;
+                  for (let i = 0; i < year; i++) {
+                    const pastYearData = vehicleDistribution[i] || { investment: 0, replacementInvestment: 0 };
+                    const pastVehicleInvestment = (pastYearData.investment || 0) + (pastYearData.replacementInvestment || 0);
+                    const pastIsFirstYear = (i + 1) === 1;
+                    let pastStationInvestment = 0;
+                    if (stationConfig.turnkey) {
+                      pastStationInvestment = pastIsFirstYear ? calculatedStationCost : 0;
+                    }
+                    const pastTotalInvestment = pastVehicleInvestment + pastStationInvestment;
+                    
+                    const pastFuelSavings = results.yearlyFuelSavings[i] || 0;
+                    const pastMaintenanceSavings = results.yearlyMaintenanceSavings[i] || 0;
+                    const pastTariffFees = results.yearlyTariffFees[i] || 0;
+                    const pastTotalSavings = pastFuelSavings + pastMaintenanceSavings;
+                    const pastAnnualNet = pastTotalSavings - pastTotalInvestment - pastTariffFees;
+                    
+                    runningCumulative += pastAnnualNet;
+                  }
+                  cumulativeNetSavings = runningCumulative;
+                }
 
                 return (
                   <div key={year} className={`year-block bg-white dark:bg-gray-800 border rounded-lg shadow-sm p-3 ${borderClass}`}>
@@ -219,8 +226,8 @@ export default function DeploymentTimeline() {
                       {/* Cumulative Net Savings/Cost */}
                       <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-2">
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Cumulative Net Savings/Cost</span>
-                        <span className={`text-sm font-semibold ${cumulativeTotalSavings >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} data-testid={`cumulative-net-savings-year-${year}`}>
-                          {formatCurrency(cumulativeTotalSavings)}
+                        <span className={`text-sm font-semibold ${cumulativeNetSavings >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} data-testid={`cumulative-net-savings-year-${year}`}>
+                          {formatCurrency(cumulativeNetSavings)}
                         </span>
                       </div>
                     </div>

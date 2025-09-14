@@ -11,7 +11,8 @@ export default function StationConfiguration() {
     stationConfig, 
     updateStationConfig,
     vehicleParameters,
-    vehicleDistribution
+    vehicleDistribution,
+    fuelPrices
   } = useCalculator();
 
   // Always determine vehicle counts based on peak year usage (maximum vehicles in any single year)
@@ -44,11 +45,11 @@ export default function StationConfiguration() {
   }
 
   // Get station size information
-  const stationSizeInfo = getStationSizeInfo(stationConfig, vehicleParameters, vehicleDistribution);
+  const stationSizeInfo = getStationSizeInfo(stationConfig, vehicleParameters, vehicleDistribution, fuelPrices);
   
   // Use centralized station cost calculation
   const getStationCost = () => {
-    return calculateStationCost(stationConfig, vehicleParameters, vehicleDistribution);
+    return calculateStationCost(stationConfig, vehicleParameters, vehicleDistribution, fuelPrices);
   };
   
   // Calculate capacity utilization for progress bar
