@@ -58,8 +58,9 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
     // CNG price calculation with electricity and business rate
     const ELECTRICITY_COST_PER_GGE = 0.08;
     const businessRate = stationConfig.businessType === 'cgc' ? 0.192 : 0.18;
-    const baseCngPrice = fuelPrices.cngPrice;
-    const cngWithElectricity = baseCngPrice + ELECTRICITY_COST_PER_GGE;
+    // Calculate effective CNG price (base price minus tax credit)
+    const effectiveCngPrice = Math.max(0, fuelPrices.cngPrice - fuelPrices.cngTaxCredit);
+    const cngWithElectricity = effectiveCngPrice + ELECTRICITY_COST_PER_GGE;
     const cngWithBusinessRate = cngWithElectricity * (1 + businessRate);
     const adjustedCngPrice = cngWithBusinessRate * yearMultiplier;
     

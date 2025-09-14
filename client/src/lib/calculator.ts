@@ -754,9 +754,9 @@ export function calculateROI(
     const adjustedGasolinePrice = fuelPrices.gasolinePrice * yearMultiplier;
     const adjustedDieselPrice = fuelPrices.dieselPrice * yearMultiplier;
     
-    // Calculate CNG price without business rate (electricity already included in base price)
-    const baseCngPrice = fuelPrices.cngPrice;
-    const adjustedCngPrice = baseCngPrice * yearMultiplier;
+    // Calculate effective CNG price (base price minus tax credit)
+    const effectiveCngPrice = Math.max(0, fuelPrices.cngPrice - fuelPrices.cngTaxCredit);
+    const adjustedCngPrice = effectiveCngPrice * yearMultiplier;
     
     // Calculate fuel savings for each vehicle type using proper fuel efficiency accounting
     const lightConventionalPrice = vehicleParams.lightDutyFuelType === 'gasoline' ? adjustedGasolinePrice : adjustedDieselPrice;
@@ -943,8 +943,9 @@ export function calculateROI(
   // Calculate cost per mile metrics
   const costPerMileGasoline = fuelPrices.gasolinePrice / FUEL_EFFICIENCY.light.gasoline;
   
-  // Calculate CNG price without business rate (electricity already included in base price)
-  const costPerMileCNG = fuelPrices.cngPrice / FUEL_EFFICIENCY.light.cng;
+  // Calculate effective CNG price (base price minus tax credit) for cost per mile
+  const effectiveCngPrice = Math.max(0, fuelPrices.cngPrice - fuelPrices.cngTaxCredit);
+  const costPerMileCNG = effectiveCngPrice / FUEL_EFFICIENCY.light.cng;
   
   const costReduction = ((costPerMileGasoline - costPerMileCNG) / costPerMileGasoline) * 100;
   

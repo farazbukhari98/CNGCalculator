@@ -75,6 +75,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     gasolinePrice: 3.38,
     dieselPrice: 3.84,
     cngPrice: 0.82, // Base CNG rate before business rate and electricity cost
+    cngTaxCredit: 0.00, // Default to $0.00 tax credit per gallon
     annualIncrease: 0,
     gasolineToCngConversionFactor: 1,
     dieselToCngConversionFactor: 1

@@ -10,9 +10,12 @@ import {
 export default function FuelPrices() {
   const { fuelPrices, updateFuelPrices } = useCalculator();
 
-  // Calculate fuel savings percentages
-  const cngVsGasolineSavings = Math.round(((fuelPrices.gasolinePrice - fuelPrices.cngPrice) / fuelPrices.gasolinePrice) * 100 * 10) / 10;
-  const cngVsDieselSavings = Math.round(((fuelPrices.dieselPrice - fuelPrices.cngPrice) / fuelPrices.dieselPrice) * 100 * 10) / 10;
+  // Calculate effective CNG price (after tax credit)
+  const effectiveCngPrice = Math.max(0, fuelPrices.cngPrice - fuelPrices.cngTaxCredit);
+  
+  // Calculate fuel savings percentages using effective CNG price
+  const cngVsGasolineSavings = Math.round(((fuelPrices.gasolinePrice - effectiveCngPrice) / fuelPrices.gasolinePrice) * 100 * 10) / 10;
+  const cngVsDieselSavings = Math.round(((fuelPrices.dieselPrice - effectiveCngPrice) / fuelPrices.dieselPrice) * 100 * 10) / 10;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-md p-3 space-y-3">
@@ -102,6 +105,7 @@ export default function FuelPrices() {
                 cngPrice: parseFloat(e.target.value) || 0 
               })
             }
+            data-testid="input-cng-price"
           />
           <TooltipProvider>
             <Tooltip>
@@ -113,6 +117,42 @@ export default function FuelPrices() {
               <TooltipContent>
                 <p>CNG price per gasoline gallon equivalent (GGE)</p>
                 <p className="text-xs text-gray-400 mt-1">Note: Electricity costs are included in this price</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </div>
+
+      {/* CNG Tax Credit */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          CNG Tax Credit Per Gallon ($/GGE)
+        </label>
+        <div className="flex items-center">
+          <input
+            type="number"
+            className="block w-full rounded-md border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+            min="0"
+            step="0.01"
+            value={fuelPrices.cngTaxCredit}
+            onChange={(e) => 
+              updateFuelPrices({ 
+                ...fuelPrices, 
+                cngTaxCredit: parseFloat(e.target.value) || 0 
+              })
+            }
+            data-testid="input-cng-tax-credit"
+          />
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="ml-2 text-gray-500 dark:text-gray-400 cursor-help">
+                  <Info size={18} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Tax credit or rebate per gallon of CNG used</p>
+                <p className="text-xs text-gray-400 mt-1">This amount is subtracted from the CNG price in all calculations</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

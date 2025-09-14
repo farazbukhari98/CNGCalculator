@@ -33,6 +33,7 @@ export interface FuelPrices {
   gasolinePrice: number;
   dieselPrice: number;
   cngPrice: number;
+  cngTaxCredit: number; // Tax credit per gallon, subtracted from CNG price
   annualIncrease: number;
   gasolineToCngConversionFactor: number;
   dieselToCngConversionFactor: number;
