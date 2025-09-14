@@ -22,7 +22,7 @@ type FinancialAnalysisProps = {
 };
 
 export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: FinancialAnalysisProps) {
-  const { results, timeHorizon, stationConfig } = useCalculator();
+  const { results, timeHorizon, stationConfig, fuelPrices } = useCalculator();
 
   // If no results yet, don't render anything
   if (!results) return null;
@@ -42,7 +42,7 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
   const { vehicleParameters, vehicleDistribution } = useCalculator();
   
   // Calculate appropriate station cost based on the current fleet configuration
-  const calculatedStationCost = calculateStationCost(stationConfig, vehicleParameters, vehicleDistribution);
+  const calculatedStationCost = calculateStationCost(stationConfig, vehicleParameters, vehicleDistribution, fuelPrices);
   
   // For turnkey, station cost is included in total investment (the difference between total and vehicle investments)
   // For non-turnkey, use the calculated station cost directly
@@ -241,8 +241,8 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
                   "Fleet composition (light/medium/heavy duty mix)"
                 ]}
                 simpleDescription={stationConfig.turnkey ? 
-                  "Year-by-year breakdown of your capital investments, including both vehicles and station infrastructure." :
-                  "Year-by-year breakdown of your vehicle investments only (station costs financed separately)."}
+                  "Complete timeline showing capital investments across all years, with detailed breakdown by vehicle type and station infrastructure." :
+                  "Complete timeline showing vehicle investments across all years, with detailed breakdown by vehicle type (station costs financed separately)."}
               />
             </h2>
             <div className="h-64">
