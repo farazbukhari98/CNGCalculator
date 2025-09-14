@@ -13,10 +13,10 @@ export default function StationConfiguration() {
     vehicleDistribution
   } = useCalculator();
 
-  // Determine vehicle counts based on sizing method for display
+  // Always determine vehicle counts based on peak year usage (maximum vehicles in any single year)
   let vehicleCounts: { lightDutyCount: number, mediumDutyCount: number, heavyDutyCount: number };
   
-  if (stationConfig.sizingMethod === 'peak' && vehicleDistribution) {
+  if (vehicleDistribution) {
     // Use peak year vehicle counts from deployment strategy
     let maxLight = 0;
     let maxMedium = 0;
@@ -34,7 +34,7 @@ export default function StationConfiguration() {
       heavyDutyCount: maxHeavy
     };
   } else {
-    // Use total vehicle counts (default behavior)
+    // Fallback to total vehicle counts if no distribution available yet
     vehicleCounts = {
       lightDutyCount: vehicleParameters.lightDutyCount,
       mediumDutyCount: vehicleParameters.mediumDutyCount,
@@ -122,48 +122,10 @@ export default function StationConfiguration() {
         </div>
         <Progress value={capacityPercentage} className="h-2 mt-2" />
         <p className="text-xs text-gray-500 mt-1">
-          {stationConfig.sizingMethod === 'peak' ? 
-            `Peak year vehicles: ${vehicleCounts.lightDutyCount} Light, ${vehicleCounts.mediumDutyCount} Medium, ${vehicleCounts.heavyDutyCount} Heavy (w/ CNG efficiency: 95%/92.5%/90%)` :
-            `Total vehicles: ${vehicleCounts.lightDutyCount} Light, ${vehicleCounts.mediumDutyCount} Medium, ${vehicleCounts.heavyDutyCount} Heavy (w/ CNG efficiency: 95%/92.5%/90%)`
-          }
+          Peak year vehicles: {vehicleCounts.lightDutyCount} Light, {vehicleCounts.mediumDutyCount} Medium, {vehicleCounts.heavyDutyCount} Heavy (w/ CNG efficiency: 95%/92.5%/90%)
         </p>
       </div>
       
-      {/* Station Sizing Method */}
-      <div className="border-t pt-3 mt-3">
-        <Label className="block text-sm font-medium text-gray-700 mb-2">Station Sizing Method</Label>
-        <RadioGroup 
-          className="grid grid-cols-1 gap-3"
-          value={stationConfig.sizingMethod}
-          onValueChange={(value) => updateStationConfig({...stationConfig, sizingMethod: value as 'total' | 'peak'})}
-        >
-          <div className="relative">
-            <RadioGroupItem value="total" id="sizingTotal" className="absolute opacity-0" />
-            <Label 
-              htmlFor="sizingTotal" 
-              className="flex flex-col items-start p-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-blue-50 data-[state=checked]:border-blue-500"
-            >
-              <span className="text-sm font-medium">Total Vehicle Count</span>
-              <span className="text-xs text-gray-500 mt-1">Size station for all {vehicleParameters.lightDutyCount + vehicleParameters.mediumDutyCount + vehicleParameters.heavyDutyCount} vehicles from day one</span>
-            </Label>
-          </div>
-          <div className="relative">
-            <RadioGroupItem value="peak" id="sizingPeak" className="absolute opacity-0" />
-            <Label 
-              htmlFor="sizingPeak" 
-              className="flex flex-col items-start p-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-blue-50 data-[state=checked]:border-blue-500"
-            >
-              <span className="text-sm font-medium">Peak Year Usage</span>
-              <span className="text-xs text-gray-500 mt-1">Size station for peak year: {vehicleCounts.lightDutyCount + vehicleCounts.mediumDutyCount + vehicleCounts.heavyDutyCount} vehicles max</span>
-            </Label>
-          </div>
-        </RadioGroup>
-        <p className="text-xs text-gray-500 mt-1">
-          {stationConfig.sizingMethod === 'total' 
-            ? "Station will be sized for maximum capacity regardless of deployment timeline" 
-            : "Station will be sized for the peak year of your deployment strategy"}
-        </p>
-      </div>
       
       {/* Turnkey Option */}
       <div className="border-t pt-3 mt-3">

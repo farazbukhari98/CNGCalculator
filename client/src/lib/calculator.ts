@@ -100,14 +100,14 @@ export function calculateStationCost(config: StationConfig, vehicleParams?: Vehi
     return Math.round(defaultCost * turnkeyMultiplier);
   }
   
-  // Determine vehicle counts based on sizing method
+  // Always determine vehicle counts based on peak year usage (maximum vehicles in any single year)
   let vehicleCounts: { lightDutyCount: number, mediumDutyCount: number, heavyDutyCount: number };
   
-  if (config.sizingMethod === 'peak' && vehicleDistribution) {
+  if (vehicleDistribution) {
     // Use peak year vehicle counts from deployment strategy
     vehicleCounts = getPeakYearVehicleCount(vehicleDistribution);
   } else {
-    // Use total vehicle counts (default behavior)
+    // Fallback to total vehicle counts if no distribution available yet
     vehicleCounts = {
       lightDutyCount: vehicleParams.lightDutyCount,
       mediumDutyCount: vehicleParams.mediumDutyCount,
@@ -286,12 +286,13 @@ export function applyVehicleLifecycle(
 export function getStationSizeInfo(config: StationConfig, vehicleParams?: VehicleParameters, vehicleDistribution?: VehicleDistribution[] | null): { size: number; capacity: number; annualGGE: number; baseCost: number; finalCost: number } | null {
   if (!vehicleParams) return null;
   
-  // Determine vehicle counts based on sizing method
+  // Always determine vehicle counts based on peak year usage (maximum vehicles in any single year)
   let vehicleCounts: { lightDutyCount: number, mediumDutyCount: number, heavyDutyCount: number };
   
-  if (config.sizingMethod === 'peak' && vehicleDistribution) {
+  if (vehicleDistribution) {
     vehicleCounts = getPeakYearVehicleCount(vehicleDistribution);
   } else {
+    // Fallback to total vehicle counts if no distribution available yet
     vehicleCounts = {
       lightDutyCount: vehicleParams.lightDutyCount,
       mediumDutyCount: vehicleParams.mediumDutyCount,
