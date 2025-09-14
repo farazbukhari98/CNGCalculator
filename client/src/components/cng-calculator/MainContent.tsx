@@ -4,6 +4,7 @@ import { useComparison } from "@/contexts/ComparisonContext";
 import { useDarkMode } from "@/contexts/DarkModeContext";
 import { useTooltips } from "@/contexts/TooltipContext";
 import FleetConfiguration from "./FleetConfiguration";
+import VehicleDeploymentStrategy from "./VehicleDeploymentStrategy";
 import DeploymentTimeline from "./DeploymentTimeline";
 import FinancialAnalysis from "./FinancialAnalysis";
 import AdditionalMetrics from "./AdditionalMetrics";
@@ -415,6 +416,8 @@ export default function MainContent() {
 
       {/* Main content sections */}
       <FleetConfiguration showCashflow={showCashflow} />
+      
+      <VehicleDeploymentStrategy />
       
       <DeploymentTimeline />
       
