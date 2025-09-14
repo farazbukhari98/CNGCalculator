@@ -154,6 +154,76 @@ export default function FuelPrices() {
         </div>
       </div>
 
+      {/* Gasoline-to-CNG Conversion Factor */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Gasoline-to-CNG Conversion Factor
+        </label>
+        <div className="flex items-center">
+          <input
+            type="number"
+            className="block w-full rounded-md border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+            min="0"
+            step="0.01"
+            value={fuelPrices.gasolineToCngConversionFactor}
+            onChange={(e) => 
+              updateFuelPrices({ 
+                ...fuelPrices, 
+                gasolineToCngConversionFactor: parseFloat(e.target.value) || 0 
+              })
+            }
+            data-testid="input-gasoline-cng-conversion"
+          />
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="ml-2 text-gray-500 dark:text-gray-400 cursor-help">
+                  <Info size={18} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Conversion factor for gasoline to CNG equivalency</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </div>
+
+      {/* Diesel-to-CNG Conversion Factor */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Diesel-to-CNG Conversion Factor
+        </label>
+        <div className="flex items-center">
+          <input
+            type="number"
+            className="block w-full rounded-md border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+            min="0"
+            step="0.01"
+            value={fuelPrices.dieselToCngConversionFactor}
+            onChange={(e) => 
+              updateFuelPrices({ 
+                ...fuelPrices, 
+                dieselToCngConversionFactor: parseFloat(e.target.value) || 0 
+              })
+            }
+            data-testid="input-diesel-cng-conversion"
+          />
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="ml-2 text-gray-500 dark:text-gray-400 cursor-help">
+                  <Info size={18} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Conversion factor for diesel to CNG equivalency</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </div>
+
       {/* Fuel Price Comparison */}
       <div className="border-t pt-3 mt-3">
         <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Fuel Price Comparison</h3>

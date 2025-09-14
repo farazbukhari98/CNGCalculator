@@ -34,6 +34,8 @@ export interface FuelPrices {
   dieselPrice: number;
   cngPrice: number;
   annualIncrease: number;
+  gasolineToCngConversionFactor: number;
+  dieselToCngConversionFactor: number;
 }
 
 // Deployment strategies

@@ -75,7 +75,9 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     gasolinePrice: 3.38,
     dieselPrice: 3.84,
     cngPrice: 0.82, // Base CNG rate before business rate and electricity cost
-    annualIncrease: 0
+    annualIncrease: 0,
+    gasolineToCngConversionFactor: 1,
+    dieselToCngConversionFactor: 1
   });
 
   const [timeHorizon, setTimeHorizon] = useState<number>(15); // Default to 15 years
