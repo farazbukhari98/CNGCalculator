@@ -91,6 +91,16 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
   const currencyFormatter = (value: number) => {
     return `$${value.toLocaleString()}`;
   };
+  
+  // Compact currency formatter for Y-axis to save space
+  const currencyCompactFormatter = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      notation: 'compact',
+      maximumFractionDigits: 1
+    }).format(value);
+  };
 
   // Calculate Y-axis domain for charts when hiding negative values
   const getYAxisDomain = (data: any[], key: string) => {
@@ -255,10 +265,10 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 {/* New stacked investment chart showing all years in time horizon */}
-                <BarChart data={vehicleInvestmentData} margin={{ top: 5, right: 30, left: 100, bottom: 5 }}>
+                <BarChart data={vehicleInvestmentData} margin={{ top: 5, right: 30, left: 80, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="year" />
-                  <YAxis tickFormatter={currencyFormatter} width={80} tickMargin={12} label={{ value: 'Investment ($)', angle: -90, position: 'outside' }} />
+                  <YAxis tickFormatter={currencyCompactFormatter} width={72} tickMargin={10} tickLine={false} />
                   <RechartsTooltip 
                     formatter={(value, name) => {
                       if (typeof value === 'number' && value > 0) {
