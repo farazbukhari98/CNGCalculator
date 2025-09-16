@@ -4,6 +4,15 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 export default function VehicleDeploymentStrategy() {
   const { 
@@ -15,6 +24,8 @@ export default function VehicleDeploymentStrategy() {
   } = useCalculator();
 
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [showDialog, setShowDialog] = useState(false);
+  const [dialogMessage, setDialogMessage] = useState("");
 
   // Generate array of years based on time horizon
   const years = Array.from({ length: timeHorizon }, (_, i) => i + 1);
@@ -60,9 +71,20 @@ export default function VehicleDeploymentStrategy() {
     
     // Validate that the new total doesn't exceed the maximum allowed
     if (newTotalDistributed > maxAllowed) {
+      // Show popup dialog instead of just validation errors
+      const vehicleTypeCapitalized = vehicleType.charAt(0).toUpperCase() + vehicleType.slice(1);
+      setDialogMessage(
+        `Cannot add additional ${vehicleTypeCapitalized} Duty vehicles. ` +
+        `You are trying to assign ${numValue} vehicles in Year ${year}, but this would result in ` +
+        `${newTotalDistributed} total ${vehicleTypeCapitalized} Duty vehicles, exceeding your fleet limit of ${maxAllowed}. ` +
+        `Please increase the fleet size in the Fleet Configuration section within the Global Settings sidebar menu first.`
+      );
+      setShowDialog(true);
+      
+      // Also set validation errors for the bottom alert (optional - keeping existing behavior)
       const errors = [`Cannot assign ${numValue} ${vehicleType} duty vehicles in Year ${year}. This would result in ${newTotalDistributed} total ${vehicleType} duty vehicles, exceeding the limit of ${maxAllowed}.`];
       setValidationErrors(errors);
-      return;
+      return; // Don't update the value
     }
     
     // Clear validation errors if the input is valid
@@ -337,6 +359,30 @@ export default function VehicleDeploymentStrategy() {
             </p>
           </div>
         )}
+
+        {/* Fleet Limit Exceeded Dialog */}
+        <Dialog open={showDialog} onOpenChange={setShowDialog}>
+          <DialogContent className="sm:max-w-[425px]" data-testid="dialog-fleet-limit">
+            <DialogHeader>
+              <DialogTitle className="text-red-600 dark:text-red-400 flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                Fleet Limit Exceeded
+              </DialogTitle>
+              <DialogDescription className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                {dialogMessage}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end mt-4">
+              <Button 
+                onClick={() => setShowDialog(false)}
+                className="px-6"
+                data-testid="button-dialog-ok"
+              >
+                OK
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
