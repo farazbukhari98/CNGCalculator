@@ -31,7 +31,8 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
     timeHorizon, 
     vehicleParameters, 
     stationConfig,
-    fuelPrices 
+    fuelPrices,
+    vehicleDistribution
   } = useCalculator();
 
   // If no results yet, don't render anything
@@ -549,7 +550,23 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
               <div className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700">
                 <div className="text-xs text-gray-500 mb-1 dark:text-gray-300">Fleet Size</div>
                 <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                  {vehicleParameters.lightDutyCount + vehicleParameters.mediumDutyCount + vehicleParameters.heavyDutyCount} vehicles
+                  {(() => {
+                    // Use same logic as FleetConfiguration to get actual vehicle counts
+                    if (deploymentStrategy === 'manual' && vehicleDistribution) {
+                      // Sum up totals from manual distribution
+                      const totals = vehicleDistribution.reduce(
+                        (acc, year) => ({
+                          light: acc.light + (year.light || 0),
+                          medium: acc.medium + (year.medium || 0),
+                          heavy: acc.heavy + (year.heavy || 0)
+                        }),
+                        { light: 0, medium: 0, heavy: 0 }
+                      );
+                      return totals.light + totals.medium + totals.heavy;
+                    }
+                    // For non-manual strategies, use original parameters
+                    return vehicleParameters.lightDutyCount + vehicleParameters.mediumDutyCount + vehicleParameters.heavyDutyCount;
+                  })()} vehicles
                 </div>
               </div>
               <div className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700">
@@ -567,7 +584,23 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
               </div>
               <div className="text-sm text-blue-800 dark:text-blue-200">
                 {(() => {
-                  const totalVehicles = vehicleParameters.lightDutyCount + vehicleParameters.mediumDutyCount + vehicleParameters.heavyDutyCount;
+                  // Use same logic as FleetConfiguration to get actual vehicle counts
+                  const totalVehicles = (() => {
+                    if (deploymentStrategy === 'manual' && vehicleDistribution) {
+                      // Sum up totals from manual distribution
+                      const totals = vehicleDistribution.reduce(
+                        (acc, year) => ({
+                          light: acc.light + (year.light || 0),
+                          medium: acc.medium + (year.medium || 0),
+                          heavy: acc.heavy + (year.heavy || 0)
+                        }),
+                        { light: 0, medium: 0, heavy: 0 }
+                      );
+                      return totals.light + totals.medium + totals.heavy;
+                    }
+                    // For non-manual strategies, use original parameters
+                    return vehicleParameters.lightDutyCount + vehicleParameters.mediumDutyCount + vehicleParameters.heavyDutyCount;
+                  })();
                   
                   if (deploymentStrategy === 'immediate') {
                     return `All ${totalVehicles} vehicles converted immediately for maximum savings.`;
