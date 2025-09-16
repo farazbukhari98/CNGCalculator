@@ -256,7 +256,7 @@ export default function GlobalSettings() {
         <div className="flex flex-wrap gap-2">
           <div className="relative">
             <div
-              className={`flex items-center justify-center px-3 py-2 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
+              className={`flex items-center justify-center px-5 py-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
                 deploymentStrategy === 'manual' 
                   ? "bg-green-50 border-green-500 border-2 dark:bg-green-900/20 dark:border-green-500" 
                   : "border-gray-200 dark:border-gray-600"
@@ -265,7 +265,7 @@ export default function GlobalSettings() {
               data-testid="button-manual-distribution"
             >
               {deploymentStrategy === 'manual' && (
-                <div className="absolute top-1 left-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                <div className="absolute top-2 left-2 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
                   <Check className="w-2.5 h-2.5 text-white" />
                 </div>
               )}
@@ -277,7 +277,7 @@ export default function GlobalSettings() {
             <>
               <div className="relative">
                 <div
-                  className={`flex items-center justify-center px-3 py-2 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
+                  className={`flex items-center justify-center px-5 py-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
                     deploymentStrategy === 'phased' 
                       ? "bg-green-50 border-green-500 border-2 dark:bg-green-900/20 dark:border-green-500" 
                       : "border-gray-200 dark:border-gray-600"
@@ -286,7 +286,7 @@ export default function GlobalSettings() {
                   data-testid="button-even-distribution"
                 >
                   {deploymentStrategy === 'phased' && (
-                    <div className="absolute top-1 left-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                    <div className="absolute top-2 left-2 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
                       <Check className="w-2.5 h-2.5 text-white" />
                     </div>
                   )}
@@ -295,7 +295,7 @@ export default function GlobalSettings() {
               </div>
               <div className="relative">
                 <div
-                  className={`flex items-center justify-center px-3 py-2 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
+                  className={`flex items-center justify-center px-5 py-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
                     deploymentStrategy === 'aggressive' 
                       ? "bg-green-50 border-green-500 border-2 dark:bg-green-900/20 dark:border-green-500" 
                       : "border-gray-200 dark:border-gray-600"
@@ -304,7 +304,7 @@ export default function GlobalSettings() {
                   data-testid="button-front-loaded"
                 >
                   {deploymentStrategy === 'aggressive' && (
-                    <div className="absolute top-1 left-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                    <div className="absolute top-2 left-2 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
                       <Check className="w-2.5 h-2.5 text-white" />
                     </div>
                   )}
@@ -313,7 +313,7 @@ export default function GlobalSettings() {
               </div>
               <div className="relative">
                 <div
-                  className={`flex items-center justify-center px-3 py-2 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
+                  className={`flex items-center justify-center px-5 py-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
                     deploymentStrategy === 'deferred' 
                       ? "bg-green-50 border-green-500 border-2 dark:bg-green-900/20 dark:border-green-500" 
                       : "border-gray-200 dark:border-gray-600"
@@ -322,7 +322,7 @@ export default function GlobalSettings() {
                   data-testid="button-back-loaded"
                 >
                   {deploymentStrategy === 'deferred' && (
-                    <div className="absolute top-1 left-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                    <div className="absolute top-2 left-2 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
                       <Check className="w-2.5 h-2.5 text-white" />
                     </div>
                   )}
