@@ -7,7 +7,8 @@ export default function VehicleDeploymentStrategy() {
     timeHorizon,
     deploymentStrategy,
     updateManualDistribution,
-    vehicleDistribution
+    vehicleDistribution,
+    targetVehicleCounts
   } = useCalculator();
 
   // Generate array of years based on time horizon
@@ -30,6 +31,55 @@ export default function VehicleDeploymentStrategy() {
     const yearData = vehicleDistribution[year - 1];
     if (!yearData) return 0;
     return yearData[vehicleType] || 0;
+  };
+
+  // Calculate total vehicle counts across all years
+  const getTotalVehicleCount = (vehicleType: 'light' | 'medium' | 'heavy'): number => {
+    return years.reduce((sum, year) => sum + getVehicleCount(year, vehicleType), 0);
+  };
+
+  // Get target count for vehicle type
+  const getTargetCount = (vehicleType: 'light' | 'medium' | 'heavy'): number => {
+    switch (vehicleType) {
+      case 'light': return targetVehicleCounts.lightDutyTarget;
+      case 'medium': return targetVehicleCounts.mediumDutyTarget;
+      case 'heavy': return targetVehicleCounts.heavyDutyTarget;
+      default: return 0;
+    }
+  };
+
+  // Check if a vehicle type exceeds its target
+  const isExceedingTarget = (vehicleType: 'light' | 'medium' | 'heavy'): boolean => {
+    return getTotalVehicleCount(vehicleType) > getTargetCount(vehicleType);
+  };
+
+  // Check if adding a vehicle to a specific year would exceed the target
+  const wouldExceedTarget = (year: number, vehicleType: 'light' | 'medium' | 'heavy', newValue: number): boolean => {
+    const currentCount = getVehicleCount(year, vehicleType);
+    const totalOtherYears = getTotalVehicleCount(vehicleType) - currentCount;
+    return (totalOtherYears + newValue) > getTargetCount(vehicleType);
+  };
+
+  // Enhanced input change handler with validation
+  const handleInputChangeWithValidation = (year: number, vehicleType: 'light' | 'medium' | 'heavy', value: string) => {
+    const numValue = parseInt(value) || 0;
+    
+    // Allow the change regardless of validation (users can exceed targets but get visual feedback)
+    updateManualDistribution(year, {
+      [vehicleType]: numValue
+    });
+  };
+
+  // Get input styling based on validation
+  const getInputStyling = (year: number, vehicleType: 'light' | 'medium' | 'heavy'): string => {
+    const baseClasses = "w-20 text-center mx-auto";
+    const currentValue = getVehicleCount(year, vehicleType);
+    
+    if (wouldExceedTarget(year, vehicleType, currentValue)) {
+      return `${baseClasses} border-red-500 bg-red-50 dark:bg-red-900/20 focus:border-red-500 focus:ring-red-500`;
+    }
+    
+    return baseClasses;
   };
 
   return (
@@ -80,8 +130,8 @@ export default function VehicleDeploymentStrategy() {
                         type="number"
                         min="0"
                         value={getVehicleCount(year, 'light')}
-                        onChange={(e) => handleInputChange(year, 'light', e.target.value)}
-                        className="w-20 text-center mx-auto"
+                        onChange={(e) => handleInputChangeWithValidation(year, 'light', e.target.value)}
+                        className={getInputStyling(year, 'light')}
                         data-testid={`input-light-year-${year}`}
                       />
                     ) : (
@@ -108,8 +158,8 @@ export default function VehicleDeploymentStrategy() {
                         type="number"
                         min="0"
                         value={getVehicleCount(year, 'medium')}
-                        onChange={(e) => handleInputChange(year, 'medium', e.target.value)}
-                        className="w-20 text-center mx-auto"
+                        onChange={(e) => handleInputChangeWithValidation(year, 'medium', e.target.value)}
+                        className={getInputStyling(year, 'medium')}
                         data-testid={`input-medium-year-${year}`}
                       />
                     ) : (
@@ -136,8 +186,8 @@ export default function VehicleDeploymentStrategy() {
                         type="number"
                         min="0"
                         value={getVehicleCount(year, 'heavy')}
-                        onChange={(e) => handleInputChange(year, 'heavy', e.target.value)}
-                        className="w-20 text-center mx-auto"
+                        onChange={(e) => handleInputChangeWithValidation(year, 'heavy', e.target.value)}
+                        className={getInputStyling(year, 'heavy')}
                         data-testid={`input-heavy-year-${year}`}
                       />
                     ) : (
@@ -152,36 +202,72 @@ export default function VehicleDeploymentStrategy() {
           </table>
         </div>
 
-        {/* Summary information */}
+        {/* Summary information with target validation */}
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
             <div className="text-center">
-              <span className="font-medium text-gray-600 dark:text-gray-400">Total Light Duty:</span>
-              <span className="ml-2 font-semibold text-blue-600 dark:text-blue-400" data-testid="total-light">
-                {years.reduce((sum, year) => sum + getVehicleCount(year, 'light'), 0)}
-              </span>
+              <span className="font-medium text-gray-600 dark:text-gray-400">Light Duty:</span>
+              <div className="mt-1">
+                <span className={`font-semibold ${isExceedingTarget('light') ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`} data-testid="total-light">
+                  {getTotalVehicleCount('light')}
+                </span>
+                <span className="text-gray-500 dark:text-gray-400"> / {getTargetCount('light')} target</span>
+              </div>
+              {isExceedingTarget('light') && (
+                <div className="text-xs text-red-600 dark:text-red-400 mt-1" data-testid="warning-light">
+                  Exceeds target by {getTotalVehicleCount('light') - getTargetCount('light')}
+                </div>
+              )}
             </div>
             <div className="text-center">
-              <span className="font-medium text-gray-600 dark:text-gray-400">Total Medium Duty:</span>
-              <span className="ml-2 font-semibold text-green-600 dark:text-green-400" data-testid="total-medium">
-                {years.reduce((sum, year) => sum + getVehicleCount(year, 'medium'), 0)}
-              </span>
+              <span className="font-medium text-gray-600 dark:text-gray-400">Medium Duty:</span>
+              <div className="mt-1">
+                <span className={`font-semibold ${isExceedingTarget('medium') ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`} data-testid="total-medium">
+                  {getTotalVehicleCount('medium')}
+                </span>
+                <span className="text-gray-500 dark:text-gray-400"> / {getTargetCount('medium')} target</span>
+              </div>
+              {isExceedingTarget('medium') && (
+                <div className="text-xs text-red-600 dark:text-red-400 mt-1" data-testid="warning-medium">
+                  Exceeds target by {getTotalVehicleCount('medium') - getTargetCount('medium')}
+                </div>
+              )}
             </div>
             <div className="text-center">
-              <span className="font-medium text-gray-600 dark:text-gray-400">Total Heavy Duty:</span>
-              <span className="ml-2 font-semibold text-red-600 dark:text-red-400" data-testid="total-heavy">
-                {years.reduce((sum, year) => sum + getVehicleCount(year, 'heavy'), 0)}
-              </span>
+              <span className="font-medium text-gray-600 dark:text-gray-400">Heavy Duty:</span>
+              <div className="mt-1">
+                <span className={`font-semibold ${isExceedingTarget('heavy') ? 'text-red-600 dark:text-red-400' : 'text-red-600 dark:text-red-400'}`} data-testid="total-heavy">
+                  {getTotalVehicleCount('heavy')}
+                </span>
+                <span className="text-gray-500 dark:text-gray-400"> / {getTargetCount('heavy')} target</span>
+              </div>
+              {isExceedingTarget('heavy') && (
+                <div className="text-xs text-red-600 dark:text-red-400 mt-1" data-testid="warning-heavy">
+                  Exceeds target by {getTotalVehicleCount('heavy') - getTargetCount('heavy')}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {isManualMode && (
-          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
-            <p className="text-sm text-blue-700 dark:text-blue-300">
-              <span className="font-medium">Manual Distribution Mode:</span> Enter the number of vehicles to deploy each year. 
-              Changes will automatically update your financial calculations.
-            </p>
+          <div className="mt-4 space-y-3">
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                <span className="font-medium">Manual Distribution Mode:</span> Enter the number of vehicles to deploy each year. 
+                Changes will automatically update your financial calculations.
+              </p>
+            </div>
+            
+            {/* Show validation warnings if any targets are exceeded */}
+            {(isExceedingTarget('light') || isExceedingTarget('medium') || isExceedingTarget('heavy')) && (
+              <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-md border border-red-200 dark:border-red-800" data-testid="validation-warning">
+                <p className="text-sm text-red-700 dark:text-red-300">
+                  <span className="font-medium">⚠️ Target Exceeded:</span> Some vehicle counts exceed the targets set in Fleet Configuration. 
+                  Adjust the targets or reduce deployment numbers to stay within limits.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

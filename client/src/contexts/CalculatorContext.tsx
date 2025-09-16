@@ -5,7 +5,8 @@ import {
   FuelPrices,
   DeploymentStrategy,
   CalculationResults,
-  VehicleDistribution 
+  VehicleDistribution,
+  TargetVehicleCounts 
 } from "@/types/calculator";
 import { calculateROI, distributeVehicles, applyVehicleLifecycle } from "@/lib/calculator";
 
@@ -20,6 +21,7 @@ interface CalculatorContextType {
   results: CalculationResults | null;
   sidebarCollapsed: boolean;
   hideNegativeValues: boolean;
+  targetVehicleCounts: TargetVehicleCounts;
   
   updateVehicleParameters: (params: VehicleParameters) => void;
   updateStationConfig: (config: StationConfig) => void;
@@ -31,6 +33,7 @@ interface CalculatorContextType {
   calculateResults: () => void;
   toggleSidebar: () => void;
   toggleHideNegativeValues: () => void;
+  updateTargetVehicleCounts: (targets: TargetVehicleCounts) => void;
 }
 
 // Create the context
@@ -87,6 +90,11 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   const [results, setResults] = useState<CalculationResults | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [hideNegativeValues, setHideNegativeValues] = useState<boolean>(false);
+  const [targetVehicleCounts, setTargetVehicleCounts] = useState<TargetVehicleCounts>({
+    lightDutyTarget: 10,
+    mediumDutyTarget: 5,
+    heavyDutyTarget: 2
+  });
 
   // Automatically recalculate when any parameter changes
   useEffect(() => {
@@ -293,6 +301,11 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     setHideNegativeValues(prev => !prev);
   };
 
+  // Method to update target vehicle counts
+  const updateTargetVehicleCounts = (targets: TargetVehicleCounts) => {
+    setTargetVehicleCounts(targets);
+  };
+
   // Context value
   const value = {
     vehicleParameters,
@@ -304,6 +317,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     results,
     sidebarCollapsed,
     hideNegativeValues,
+    targetVehicleCounts,
     
     updateVehicleParameters,
     updateStationConfig,
@@ -314,7 +328,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     updateManualDistribution,
     calculateResults,
     toggleSidebar,
-    toggleHideNegativeValues
+    toggleHideNegativeValues,
+    updateTargetVehicleCounts
   };
 
   return (

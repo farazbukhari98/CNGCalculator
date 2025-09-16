@@ -1,5 +1,6 @@
 import { useCalculator } from "@/contexts/CalculatorContext";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { formatPaybackPeriod } from "@/lib/utils";
 import { MetricInfoTooltip } from "./MetricInfoTooltip";
 import { calculateStationCost } from "@/lib/calculator";
@@ -16,7 +17,9 @@ export default function FleetConfiguration({ showCashflow }: FleetConfigurationP
     timeHorizon,
     deploymentStrategy,
     vehicleDistribution,
-    fuelPrices
+    fuelPrices,
+    targetVehicleCounts,
+    updateTargetVehicleCounts
   } = useCalculator();
 
   // Calculate vehicle distribution percentages (use manual distribution totals if in manual mode)
@@ -101,6 +104,15 @@ export default function FleetConfiguration({ showCashflow }: FleetConfigurationP
     return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
+  // Handle target count input changes
+  const handleTargetChange = (vehicleType: 'lightDutyTarget' | 'mediumDutyTarget' | 'heavyDutyTarget', value: string) => {
+    const numValue = parseInt(value) || 0;
+    updateTargetVehicleCounts({
+      ...targetVehicleCounts,
+      [vehicleType]: numValue
+    });
+  };
+
   return (
     <Card className="bg-white rounded-lg shadow mb-6 dark:bg-gray-800">
       <CardContent className="p-6">
@@ -109,52 +121,111 @@ export default function FleetConfiguration({ showCashflow }: FleetConfigurationP
           {/* Vehicle Distribution */}
           <div className="bg-gray-50 p-4 rounded-lg dark:bg-gray-700">
             <h3 className="text-sm font-medium text-gray-700 mb-3 dark:text-gray-200">Vehicle Distribution</h3>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Light Duty ({actualCounts.light})
-                </span>
+            
+            {/* Target Count Inputs */}
+            <div className="mb-4 space-y-3">
+              <h4 className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-2">Target Counts</h4>
+              
+              {/* Light Duty Target */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                  <span className="text-xs text-gray-600 dark:text-gray-300">Light Duty Target</span>
+                </div>
+                <Input
+                  type="number"
+                  value={targetVehicleCounts.lightDutyTarget}
+                  onChange={(e) => handleTargetChange('lightDutyTarget', e.target.value)}
+                  className="w-16 h-6 text-xs text-center"
+                  data-testid="input-light-duty-target"
+                  min="0"
+                />
               </div>
-              <span className="text-sm font-medium dark:text-gray-200">{lightDutyPercentage}%</span>
-            </div>
-            <div className="h-2 w-full bg-gray-200 dark:bg-gray-600 rounded-full mb-3">
-              <div 
-                className="h-2 bg-blue-500 rounded-full" 
-                style={{ width: `${lightDutyPercentage}%` }}
-              ></div>
+              
+              {/* Medium Duty Target */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                  <span className="text-xs text-gray-600 dark:text-gray-300">Medium Duty Target</span>
+                </div>
+                <Input
+                  type="number"
+                  value={targetVehicleCounts.mediumDutyTarget}
+                  onChange={(e) => handleTargetChange('mediumDutyTarget', e.target.value)}
+                  className="w-16 h-6 text-xs text-center"
+                  data-testid="input-medium-duty-target"
+                  min="0"
+                />
+              </div>
+              
+              {/* Heavy Duty Target */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                  <span className="text-xs text-gray-600 dark:text-gray-300">Heavy Duty Target</span>
+                </div>
+                <Input
+                  type="number"
+                  value={targetVehicleCounts.heavyDutyTarget}
+                  onChange={(e) => handleTargetChange('heavyDutyTarget', e.target.value)}
+                  className="w-16 h-6 text-xs text-center"
+                  data-testid="input-heavy-duty-target"
+                  min="0"
+                />
+              </div>
             </div>
             
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Medium Duty ({actualCounts.medium})
-                </span>
+            {/* Current Distribution Display */}
+            <div className="border-t dark:border-gray-600 pt-3">
+              <h4 className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-2">Current Distribution</h4>
+              
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    Light Duty ({actualCounts.light})
+                  </span>
+                </div>
+                <span className="text-sm font-medium dark:text-gray-200">{lightDutyPercentage}%</span>
               </div>
-              <span className="text-sm font-medium dark:text-gray-200">{mediumDutyPercentage}%</span>
-            </div>
-            <div className="h-2 w-full bg-gray-200 dark:bg-gray-600 rounded-full mb-3">
-              <div 
-                className="h-2 bg-green-500 rounded-full" 
-                style={{ width: `${mediumDutyPercentage}%` }}
-              ></div>
-            </div>
-            
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Heavy Duty ({actualCounts.heavy})
-                </span>
+              <div className="h-2 w-full bg-gray-200 dark:bg-gray-600 rounded-full mb-3">
+                <div 
+                  className="h-2 bg-blue-500 rounded-full" 
+                  style={{ width: `${lightDutyPercentage}%` }}
+                ></div>
               </div>
-              <span className="text-sm font-medium dark:text-gray-200">{heavyDutyPercentage}%</span>
-            </div>
-            <div className="h-2 w-full bg-gray-200 dark:bg-gray-600 rounded-full">
-              <div 
-                className="h-2 bg-red-500 rounded-full" 
-                style={{ width: `${heavyDutyPercentage}%` }}
-              ></div>
+              
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    Medium Duty ({actualCounts.medium})
+                  </span>
+                </div>
+                <span className="text-sm font-medium dark:text-gray-200">{mediumDutyPercentage}%</span>
+              </div>
+              <div className="h-2 w-full bg-gray-200 dark:bg-gray-600 rounded-full mb-3">
+                <div 
+                  className="h-2 bg-green-500 rounded-full" 
+                  style={{ width: `${mediumDutyPercentage}%` }}
+                ></div>
+              </div>
+              
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    Heavy Duty ({actualCounts.heavy})
+                  </span>
+                </div>
+                <span className="text-sm font-medium dark:text-gray-200">{heavyDutyPercentage}%</span>
+              </div>
+              <div className="h-2 w-full bg-gray-200 dark:bg-gray-600 rounded-full">
+                <div 
+                  className="h-2 bg-red-500 rounded-full" 
+                  style={{ width: `${heavyDutyPercentage}%` }}
+                ></div>
+              </div>
             </div>
           </div>
           
