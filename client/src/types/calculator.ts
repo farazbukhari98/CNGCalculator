@@ -1,10 +1,3 @@
-// Target vehicle counts for deployment planning
-export interface TargetVehicleCounts {
-  lightDutyTarget: number;
-  mediumDutyTarget: number;
-  heavyDutyTarget: number;
-}
-
 // Vehicle parameters
 export interface VehicleParameters {
   lightDutyCount: number;
