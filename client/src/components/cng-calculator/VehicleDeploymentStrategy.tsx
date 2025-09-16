@@ -1,14 +1,20 @@
 import { useCalculator } from "@/contexts/CalculatorContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 export default function VehicleDeploymentStrategy() {
   const { 
     timeHorizon,
     deploymentStrategy,
     updateManualDistribution,
-    vehicleDistribution
+    vehicleDistribution,
+    vehicleParameters
   } = useCalculator();
+
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   // Generate array of years based on time horizon
   const years = Array.from({ length: timeHorizon }, (_, i) => i + 1);
@@ -16,9 +22,49 @@ export default function VehicleDeploymentStrategy() {
   // Check if we're in manual mode
   const isManualMode = deploymentStrategy === 'manual';
 
-  // Handle input change for manual distribution
+  // Calculate total distributed vehicles for a specific type across all years
+  const getTotalDistributed = (vehicleType: 'light' | 'medium' | 'heavy'): number => {
+    if (!vehicleDistribution) return 0;
+    return vehicleDistribution.reduce((total, yearData) => {
+      return total + (yearData[vehicleType] || 0);
+    }, 0);
+  };
+
+  // Get maximum allowed vehicles for a specific type
+  const getMaxAllowed = (vehicleType: 'light' | 'medium' | 'heavy'): number => {
+    switch (vehicleType) {
+      case 'light': return vehicleParameters.lightDutyCount;
+      case 'medium': return vehicleParameters.mediumDutyCount;
+      case 'heavy': return vehicleParameters.heavyDutyCount;
+      default: return 0;
+    }
+  };
+
+  // Get remaining vehicles that can be assigned for a specific type
+  const getRemainingVehicles = (vehicleType: 'light' | 'medium' | 'heavy'): number => {
+    const maxAllowed = getMaxAllowed(vehicleType);
+    const totalDistributed = getTotalDistributed(vehicleType);
+    return Math.max(0, maxAllowed - totalDistributed);
+  };
+
+  // Handle input change for manual distribution with validation
   const handleInputChange = (year: number, vehicleType: 'light' | 'medium' | 'heavy', value: string) => {
     const numValue = parseInt(value) || 0;
+    const maxAllowed = getMaxAllowed(vehicleType);
+    const currentDistributed = getTotalDistributed(vehicleType);
+    const currentYearValue = getVehicleCount(year, vehicleType);
+    const newTotalDistributed = currentDistributed - currentYearValue + numValue;
+    
+    // Validate that the new total doesn't exceed the maximum allowed
+    if (newTotalDistributed > maxAllowed) {
+      const errors = [`Cannot assign ${numValue} ${vehicleType} duty vehicles in Year ${year}. This would result in ${newTotalDistributed} total ${vehicleType} duty vehicles, exceeding the limit of ${maxAllowed}.`];
+      setValidationErrors(errors);
+      return;
+    }
+    
+    // Clear validation errors if the input is valid
+    setValidationErrors([]);
+    
     updateManualDistribution(year, {
       [vehicleType]: numValue
     });
@@ -152,35 +198,81 @@ export default function VehicleDeploymentStrategy() {
           </table>
         </div>
 
+        {/* Validation Errors */}
+        {isManualMode && validationErrors.length > 0 && (
+          <div className="mt-4">
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                {validationErrors.map((error, index) => (
+                  <div key={index} className="text-sm">{error}</div>
+                ))}
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
+
         {/* Summary information */}
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-            <div className="text-center">
-              <span className="font-medium text-gray-600 dark:text-gray-400">Total Light Duty:</span>
-              <span className="ml-2 font-semibold text-blue-600 dark:text-blue-400" data-testid="total-light">
-                {years.reduce((sum, year) => sum + getVehicleCount(year, 'light'), 0)}
-              </span>
+          {isManualMode ? (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+              <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded">
+                <div className="font-medium text-blue-800 dark:text-blue-200 mb-1">Light Duty</div>
+                <div className="text-xs text-blue-600 dark:text-blue-300 mb-1">
+                  Distributed: <span className="font-semibold" data-testid="distributed-light">{getTotalDistributed('light')}</span> / <span className="font-semibold">{getMaxAllowed('light')}</span>
+                </div>
+                <div className="text-xs text-blue-600 dark:text-blue-300">
+                  Remaining: <span className="font-semibold" data-testid="remaining-light">{getRemainingVehicles('light')}</span>
+                </div>
+              </div>
+              <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded">
+                <div className="font-medium text-green-800 dark:text-green-200 mb-1">Medium Duty</div>
+                <div className="text-xs text-green-600 dark:text-green-300 mb-1">
+                  Distributed: <span className="font-semibold" data-testid="distributed-medium">{getTotalDistributed('medium')}</span> / <span className="font-semibold">{getMaxAllowed('medium')}</span>
+                </div>
+                <div className="text-xs text-green-600 dark:text-green-300">
+                  Remaining: <span className="font-semibold" data-testid="remaining-medium">{getRemainingVehicles('medium')}</span>
+                </div>
+              </div>
+              <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded">
+                <div className="font-medium text-red-800 dark:text-red-200 mb-1">Heavy Duty</div>
+                <div className="text-xs text-red-600 dark:text-red-300 mb-1">
+                  Distributed: <span className="font-semibold" data-testid="distributed-heavy">{getTotalDistributed('heavy')}</span> / <span className="font-semibold">{getMaxAllowed('heavy')}</span>
+                </div>
+                <div className="text-xs text-red-600 dark:text-red-300">
+                  Remaining: <span className="font-semibold" data-testid="remaining-heavy">{getRemainingVehicles('heavy')}</span>
+                </div>
+              </div>
             </div>
-            <div className="text-center">
-              <span className="font-medium text-gray-600 dark:text-gray-400">Total Medium Duty:</span>
-              <span className="ml-2 font-semibold text-green-600 dark:text-green-400" data-testid="total-medium">
-                {years.reduce((sum, year) => sum + getVehicleCount(year, 'medium'), 0)}
-              </span>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+              <div className="text-center">
+                <span className="font-medium text-gray-600 dark:text-gray-400">Total Light Duty:</span>
+                <span className="ml-2 font-semibold text-blue-600 dark:text-blue-400" data-testid="total-light">
+                  {years.reduce((sum, year) => sum + getVehicleCount(year, 'light'), 0)}
+                </span>
+              </div>
+              <div className="text-center">
+                <span className="font-medium text-gray-600 dark:text-gray-400">Total Medium Duty:</span>
+                <span className="ml-2 font-semibold text-green-600 dark:text-green-400" data-testid="total-medium">
+                  {years.reduce((sum, year) => sum + getVehicleCount(year, 'medium'), 0)}
+                </span>
+              </div>
+              <div className="text-center">
+                <span className="font-medium text-gray-600 dark:text-gray-400">Total Heavy Duty:</span>
+                <span className="ml-2 font-semibold text-red-600 dark:text-red-400" data-testid="total-heavy">
+                  {years.reduce((sum, year) => sum + getVehicleCount(year, 'heavy'), 0)}
+                </span>
+              </div>
             </div>
-            <div className="text-center">
-              <span className="font-medium text-gray-600 dark:text-gray-400">Total Heavy Duty:</span>
-              <span className="ml-2 font-semibold text-red-600 dark:text-red-400" data-testid="total-heavy">
-                {years.reduce((sum, year) => sum + getVehicleCount(year, 'heavy'), 0)}
-              </span>
-            </div>
-          </div>
+          )}
         </div>
 
         {isManualMode && (
           <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
             <p className="text-sm text-blue-700 dark:text-blue-300">
-              <span className="font-medium">Manual Distribution Mode:</span> Enter the number of vehicles to deploy each year. 
-              Changes will automatically update your financial calculations.
+              <span className="font-medium">Manual Distribution Mode:</span> Distribute your total fleet size across years. 
+              The totals are set in Fleet Configuration above. You cannot exceed the total number of vehicles for each type.
             </p>
           </div>
         )}

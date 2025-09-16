@@ -140,30 +140,9 @@ export default function DeploymentTimeline() {
                         <span className="text-xs text-gray-600 dark:text-gray-400"># of new vehicles purchased</span>
                         {deploymentStrategy === 'manual' ? (
                           <div className="flex items-center space-x-1">
-                            <Input
-                              type="number"
-                              min="0"
-                              value={light}
-                              onChange={(e) => handleInputChange(year, 'light', e.target.value)}
-                              className="text-xs w-12 h-6 p-1"
-                              data-testid={`input-light-year-${year}`}
-                            />
-                            <Input
-                              type="number"
-                              min="0"
-                              value={medium}
-                              onChange={(e) => handleInputChange(year, 'medium', e.target.value)}
-                              className="text-xs w-12 h-6 p-1"
-                              data-testid={`input-medium-year-${year}`}
-                            />
-                            <Input
-                              type="number"
-                              min="0"
-                              value={heavy}
-                              onChange={(e) => handleInputChange(year, 'heavy', e.target.value)}
-                              className="text-xs w-12 h-6 p-1"
-                              data-testid={`input-heavy-year-${year}`}
-                            />
+                            <span className="text-xs bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded border" data-testid={`readonly-light-year-${year}`}>L: {light}</span>
+                            <span className="text-xs bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded border" data-testid={`readonly-medium-year-${year}`}>M: {medium}</span>
+                            <span className="text-xs bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded border" data-testid={`readonly-heavy-year-${year}`}>H: {heavy}</span>
                             <span className="text-xs font-medium ml-2" data-testid={`total-new-vehicles-year-${year}`}>= {totalNewVehicles}</span>
                           </div>
                         ) : (

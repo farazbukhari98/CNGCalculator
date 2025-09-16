@@ -177,15 +177,14 @@ export default function GlobalSettings() {
         
         {/* Notice for manual mode */}
         {isManualMode && (
-          <div className="bg-amber-50 border border-amber-200 rounded-md p-2 mb-3">
-            <p className="text-xs text-amber-700">
-              In Manual Distribution Mode, vehicle counts are managed in the Deployment Timeline section.
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-2 mb-3">
+            <p className="text-xs text-blue-700">
+              Set total fleet size here, then distribute these vehicles across years in the Vehicle Deployment Strategy section.
             </p>
           </div>
         )}
 
-        {/* Vehicle Counts - Hidden in manual mode */}
-        {!isManualMode && (
+        {/* Vehicle Counts - Always show */}
           <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -244,7 +243,6 @@ export default function GlobalSettings() {
               </div>
             </div>
           </div>
-        )}
       </div>
 
       {/* Distribution Scenarios Section */}
