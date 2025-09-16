@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useCalculator } from "@/contexts/CalculatorContext";
 import { useComparison } from "@/contexts/ComparisonContext";
-import { Info, BarChart3, Plus, Truck, Eye, EyeOff, Edit3 } from "lucide-react";
+import { Info, BarChart3, Plus, Truck, Eye, EyeOff, Edit3, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -254,53 +254,81 @@ export default function GlobalSettings() {
         
         {/* Distribution scenario buttons */}
         <div className="flex flex-wrap gap-2">
-          <Button
-            size="sm"
-            variant={deploymentStrategy === 'manual' ? 'default' : 'outline'}
-            className={deploymentStrategy === 'manual' 
-              ? "px-3 py-1 text-xs rounded bg-blue-100 text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500" 
-              : "px-3 py-1 text-xs rounded bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"}
-            onClick={() => updateDeploymentStrategy('manual')}
-            data-testid="button-manual-distribution"
-          >
-            Manual Distribution
-          </Button>
+          <div className="relative">
+            <div
+              className={`flex items-center justify-center px-3 py-2 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
+                deploymentStrategy === 'manual' 
+                  ? "bg-green-50 border-green-500 border-2 dark:bg-green-900/20 dark:border-green-500" 
+                  : "border-gray-200 dark:border-gray-600"
+              }`}
+              onClick={() => updateDeploymentStrategy('manual')}
+              data-testid="button-manual-distribution"
+            >
+              {deploymentStrategy === 'manual' && (
+                <div className="absolute top-1 left-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="w-2.5 h-2.5 text-white" />
+                </div>
+              )}
+              <span className="text-xs font-medium dark:text-gray-300">Manual Distribution</span>
+            </div>
+          </div>
           
           {deploymentStrategy !== 'immediate' && (
             <>
-              <Button
-                size="sm"
-                variant={deploymentStrategy === 'phased' ? 'default' : 'outline'}
-                className={deploymentStrategy === 'phased' 
-                  ? "px-3 py-1 text-xs rounded bg-blue-100 text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                  : "px-3 py-1 text-xs rounded bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"}
-                onClick={() => setDistributionStrategy('phased')}
-                data-testid="button-even-distribution"
-              >
-                Even Distribution
-              </Button>
-              <Button
-                size="sm"
-                variant={deploymentStrategy === 'aggressive' ? 'default' : 'outline'}
-                className={deploymentStrategy === 'aggressive' 
-                  ? "px-3 py-1 text-xs rounded bg-blue-100 text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                  : "px-3 py-1 text-xs rounded bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"}
-                onClick={() => setDistributionStrategy('aggressive')}
-                data-testid="button-front-loaded"
-              >
-                Front-Loaded
-              </Button>
-              <Button
-                size="sm"
-                variant={deploymentStrategy === 'deferred' ? 'default' : 'outline'}
-                className={deploymentStrategy === 'deferred' 
-                  ? "px-3 py-1 text-xs rounded bg-blue-100 text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                  : "px-3 py-1 text-xs rounded bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"}
-                onClick={() => setDistributionStrategy('deferred')}
-                data-testid="button-back-loaded"
-              >
-                Back-Loaded
-              </Button>
+              <div className="relative">
+                <div
+                  className={`flex items-center justify-center px-3 py-2 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
+                    deploymentStrategy === 'phased' 
+                      ? "bg-green-50 border-green-500 border-2 dark:bg-green-900/20 dark:border-green-500" 
+                      : "border-gray-200 dark:border-gray-600"
+                  }`}
+                  onClick={() => setDistributionStrategy('phased')}
+                  data-testid="button-even-distribution"
+                >
+                  {deploymentStrategy === 'phased' && (
+                    <div className="absolute top-1 left-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                      <Check className="w-2.5 h-2.5 text-white" />
+                    </div>
+                  )}
+                  <span className="text-xs font-medium dark:text-gray-300">Even Distribution</span>
+                </div>
+              </div>
+              <div className="relative">
+                <div
+                  className={`flex items-center justify-center px-3 py-2 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
+                    deploymentStrategy === 'aggressive' 
+                      ? "bg-green-50 border-green-500 border-2 dark:bg-green-900/20 dark:border-green-500" 
+                      : "border-gray-200 dark:border-gray-600"
+                  }`}
+                  onClick={() => setDistributionStrategy('aggressive')}
+                  data-testid="button-front-loaded"
+                >
+                  {deploymentStrategy === 'aggressive' && (
+                    <div className="absolute top-1 left-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                      <Check className="w-2.5 h-2.5 text-white" />
+                    </div>
+                  )}
+                  <span className="text-xs font-medium dark:text-gray-300">Front-Loaded</span>
+                </div>
+              </div>
+              <div className="relative">
+                <div
+                  className={`flex items-center justify-center px-3 py-2 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
+                    deploymentStrategy === 'deferred' 
+                      ? "bg-green-50 border-green-500 border-2 dark:bg-green-900/20 dark:border-green-500" 
+                      : "border-gray-200 dark:border-gray-600"
+                  }`}
+                  onClick={() => setDistributionStrategy('deferred')}
+                  data-testid="button-back-loaded"
+                >
+                  {deploymentStrategy === 'deferred' && (
+                    <div className="absolute top-1 left-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                      <Check className="w-2.5 h-2.5 text-white" />
+                    </div>
+                  )}
+                  <span className="text-xs font-medium dark:text-gray-300">Back-Loaded</span>
+                </div>
+              </div>
             </>
           )}
         </div>
@@ -317,16 +345,23 @@ export default function GlobalSettings() {
         </label>
         <div className="flex space-x-2">
           {[10, 15].map((years) => (
-            <Button
-              key={years}
-              variant={timeHorizon === years ? "default" : "outline"}
-              className={timeHorizon === years 
-                ? "px-3 py-1 text-sm bg-blue-600 text-white dark:bg-blue-500 dark:text-white rounded shadow hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800" 
-                : "px-3 py-1 text-sm bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-100 rounded shadow hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800"}
-              onClick={() => updateTimeHorizon(years)}
-            >
-              {years} Years
-            </Button>
+            <div key={years} className="relative flex-1">
+              <div
+                className={`flex items-center justify-center p-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
+                  timeHorizon === years 
+                    ? "bg-green-50 border-green-500 border-2 dark:bg-green-900/20 dark:border-green-500" 
+                    : "border-gray-200 dark:border-gray-600"
+                }`}
+                onClick={() => updateTimeHorizon(years)}
+              >
+                {timeHorizon === years && (
+                  <div className="absolute top-2 left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-white" />
+                  </div>
+                )}
+                <span className="text-sm font-medium dark:text-gray-300">{years} Years</span>
+              </div>
+            </div>
           ))}
         </div>
       </div>
