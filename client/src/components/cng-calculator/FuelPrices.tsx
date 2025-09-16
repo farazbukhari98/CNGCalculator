@@ -197,7 +197,7 @@ export default function FuelPrices() {
       {/* Gasoline-to-CNG Conversion Factor */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Gasoline-to-CNG Conversion Factor
+          Gasoline-to-CNG Conversion Factor (per GGE)
         </label>
         <div className="flex items-center">
           <input
@@ -232,7 +232,7 @@ export default function FuelPrices() {
       {/* Diesel-to-CNG Conversion Factor */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Diesel-to-CNG Conversion Factor
+          Diesel-to-CNG Conversion Factor (per GGE)
         </label>
         <div className="flex items-center">
           <input
