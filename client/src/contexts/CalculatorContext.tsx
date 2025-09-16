@@ -88,35 +88,163 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [hideNegativeValues, setHideNegativeValues] = useState<boolean>(false);
 
+    // Helper function to detect if current distribution is over-allocated
+  const isOverAllocated = (distribution: VehicleDistribution[] | null, params: VehicleParameters, horizon: number) => {
+    if (!distribution || deploymentStrategy !== 'manual') return false;
+    
+    const visibleDistribution = distribution.slice(0, horizon);
+    
+    const totalLight = visibleDistribution.reduce((sum, year) => sum + (year.light || 0), 0);
+    const totalMedium = visibleDistribution.reduce((sum, year) => sum + (year.medium || 0), 0);
+    const totalHeavy = visibleDistribution.reduce((sum, year) => sum + (year.heavy || 0), 0);
+    
+    return totalLight > params.lightDutyCount || 
+           totalMedium > params.mediumDutyCount || 
+           totalHeavy > params.heavyDutyCount;
+  };
+  
+  // Helper function to clamp distribution to valid ranges
+  const clampDistribution = (distribution: VehicleDistribution[], params: VehicleParameters, horizon: number): VehicleDistribution[] => {
+    if (deploymentStrategy !== 'manual') return distribution;
+    
+    const clampedDistribution = [...distribution];
+    const vehicleCosts = {
+      light: params.lightDutyCost,
+      medium: params.mediumDutyCost,
+      heavy: params.heavyDutyCost
+    };
+    
+    // Only work with visible years (respecting timeHorizon)
+    const visibleYears = Math.min(horizon, clampedDistribution.length);
+    
+    // Calculate current totals across visible years
+    let totalLight = 0;
+    let totalMedium = 0;
+    let totalHeavy = 0;
+    
+    for (let i = 0; i < visibleYears; i++) {
+      totalLight += clampedDistribution[i].light || 0;
+      totalMedium += clampedDistribution[i].medium || 0;
+      totalHeavy += clampedDistribution[i].heavy || 0;
+    }
+    
+    // Calculate excess for each vehicle type
+    const excessLight = Math.max(0, totalLight - params.lightDutyCount);
+    const excessMedium = Math.max(0, totalMedium - params.mediumDutyCount);
+    const excessHeavy = Math.max(0, totalHeavy - params.heavyDutyCount);
+    
+    // Remove excess starting from the last visible year
+    if (excessLight > 0 || excessMedium > 0 || excessHeavy > 0) {
+      let remainingExcessLight = excessLight;
+      let remainingExcessMedium = excessMedium;
+      let remainingExcessHeavy = excessHeavy;
+      
+      for (let i = visibleYears - 1; i >= 0 && (remainingExcessLight > 0 || remainingExcessMedium > 0 || remainingExcessHeavy > 0); i--) {
+        const yearData = clampedDistribution[i];
+        
+        // Reduce light duty vehicles
+        if (remainingExcessLight > 0) {
+          const reduction = Math.min(remainingExcessLight, yearData.light || 0);
+          yearData.light = (yearData.light || 0) - reduction;
+          remainingExcessLight -= reduction;
+        }
+        
+        // Reduce medium duty vehicles
+        if (remainingExcessMedium > 0) {
+          const reduction = Math.min(remainingExcessMedium, yearData.medium || 0);
+          yearData.medium = (yearData.medium || 0) - reduction;
+          remainingExcessMedium -= reduction;
+        }
+        
+        // Reduce heavy duty vehicles
+        if (remainingExcessHeavy > 0) {
+          const reduction = Math.min(remainingExcessHeavy, yearData.heavy || 0);
+          yearData.heavy = (yearData.heavy || 0) - reduction;
+          remainingExcessHeavy -= reduction;
+        }
+        
+        // Recalculate investment for this year
+        yearData.investment = 
+          ((yearData.light || 0) * vehicleCosts.light) + 
+          ((yearData.medium || 0) * vehicleCosts.medium) + 
+          ((yearData.heavy || 0) * vehicleCosts.heavy);
+      }
+    }
+    
+    return clampedDistribution;
+  };
+
   // Automatically recalculate when any parameter changes
   useEffect(() => {
-    // First, distribute vehicles based on strategy
-    const baseDistribution = distributeVehicles(
-      vehicleParameters,
-      timeHorizon,
-      deploymentStrategy
-    );
-    
-    // Apply vehicle lifecycle management
-    const enhancedDistribution = applyVehicleLifecycle(
-      baseDistribution,
-      vehicleParameters,
-      timeHorizon
-    );
-    
-    setVehicleDistribution(enhancedDistribution);
-    
-    // Then calculate ROI and other metrics
-    if (enhancedDistribution) {
+    if (deploymentStrategy === 'manual' && vehicleDistribution) {
+      // For manual mode, check if current distribution is still valid
+      // If over-allocated or timeHorizon reduced, clamp the distribution
+      if (isOverAllocated(vehicleDistribution, vehicleParameters, timeHorizon)) {
+        const clampedDistribution = clampDistribution(vehicleDistribution, vehicleParameters, timeHorizon);
+        
+        // Apply vehicle lifecycle management to the clamped distribution
+        const enhancedDistribution = applyVehicleLifecycle(
+          clampedDistribution,
+          vehicleParameters,
+          timeHorizon
+        );
+        
+        setVehicleDistribution(enhancedDistribution);
+        
+        // Recalculate results with the clamped distribution
+        if (enhancedDistribution) {
+          const calculationResults = calculateROI(
+            vehicleParameters,
+            stationConfig,
+            fuelPrices,
+            timeHorizon,
+            deploymentStrategy,
+            enhancedDistribution
+          );
+          setResults(calculationResults);
+        }
+        return;
+      }
+      
+      // If no clamping needed, just recalculate results with existing distribution
       const calculationResults = calculateROI(
         vehicleParameters,
         stationConfig,
         fuelPrices,
         timeHorizon,
         deploymentStrategy,
-        enhancedDistribution
+        vehicleDistribution
       );
       setResults(calculationResults);
+    } else {
+      // For non-manual modes or when no existing distribution, generate new distribution
+      const baseDistribution = distributeVehicles(
+        vehicleParameters,
+        timeHorizon,
+        deploymentStrategy
+      );
+      
+      // Apply vehicle lifecycle management
+      const enhancedDistribution = applyVehicleLifecycle(
+        baseDistribution,
+        vehicleParameters,
+        timeHorizon
+      );
+      
+      setVehicleDistribution(enhancedDistribution);
+      
+      // Then calculate ROI and other metrics
+      if (enhancedDistribution) {
+        const calculationResults = calculateROI(
+          vehicleParameters,
+          stationConfig,
+          fuelPrices,
+          timeHorizon,
+          deploymentStrategy,
+          enhancedDistribution
+        );
+        setResults(calculationResults);
+      }
     }
   }, [vehicleParameters, stationConfig, fuelPrices, timeHorizon, deploymentStrategy]);
 

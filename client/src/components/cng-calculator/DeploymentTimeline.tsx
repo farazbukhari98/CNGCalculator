@@ -1,8 +1,6 @@
 import { useCalculator } from "@/contexts/CalculatorContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { formatPaybackPeriod } from "@/lib/utils";
-import { useState } from "react";
 import { MetricInfoTooltip } from "./MetricInfoTooltip";
 import { calculateStationCost } from "@/lib/calculator";
 
@@ -10,7 +8,6 @@ export default function DeploymentTimeline() {
   const { 
     timeHorizon,
     deploymentStrategy,
-    updateManualDistribution,
     vehicleDistribution,
     results,
     stationConfig,
@@ -26,16 +23,6 @@ export default function DeploymentTimeline() {
   // Only show years up to the selected time horizon
   const years = Array.from({ length: timeHorizon }, (_, i) => i + 1);
 
-  // Function to handle input change for manual distribution
-  const handleInputChange = (year: number, vehicleType: 'light' | 'medium' | 'heavy', value: string) => {
-    // Convert input to number
-    const numValue = parseInt(value) || 0;
-    
-    // Update the distribution
-    updateManualDistribution(year, {
-      [vehicleType]: numValue
-    });
-  };
 
   return (
     <Card className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6 deployment-timeline">

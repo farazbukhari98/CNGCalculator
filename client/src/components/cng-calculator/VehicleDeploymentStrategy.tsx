@@ -22,10 +22,12 @@ export default function VehicleDeploymentStrategy() {
   // Check if we're in manual mode
   const isManualMode = deploymentStrategy === 'manual';
 
-  // Calculate total distributed vehicles for a specific type across all years
+  // Calculate total distributed vehicles for a specific type across visible years only (respecting timeHorizon)
   const getTotalDistributed = (vehicleType: 'light' | 'medium' | 'heavy'): number => {
     if (!vehicleDistribution) return 0;
-    return vehicleDistribution.reduce((total, yearData) => {
+    // Only sum across visible years (respecting current timeHorizon)
+    const visibleDistribution = vehicleDistribution.slice(0, timeHorizon);
+    return visibleDistribution.reduce((total, yearData) => {
       return total + (yearData[vehicleType] || 0);
     }, 0);
   };
@@ -49,7 +51,8 @@ export default function VehicleDeploymentStrategy() {
 
   // Handle input change for manual distribution with validation
   const handleInputChange = (year: number, vehicleType: 'light' | 'medium' | 'heavy', value: string) => {
-    const numValue = parseInt(value) || 0;
+    // Harden input: prevent negative numbers and ensure valid integer
+    const numValue = Math.max(0, Math.floor(+value) || 0);
     const maxAllowed = getMaxAllowed(vehicleType);
     const currentDistributed = getTotalDistributed(vehicleType);
     const currentYearValue = getVehicleCount(year, vehicleType);
@@ -198,6 +201,64 @@ export default function VehicleDeploymentStrategy() {
           </table>
         </div>
 
+        {/* Over-allocation Warning */}
+        {isManualMode && (
+          (() => {
+            const totalLight = getTotalDistributed('light');
+            const totalMedium = getTotalDistributed('medium');
+            const totalHeavy = getTotalDistributed('heavy');
+            const maxLight = getMaxAllowed('light');
+            const maxMedium = getMaxAllowed('medium');
+            const maxHeavy = getMaxAllowed('heavy');
+            
+            const isOverAllocated = totalLight > maxLight || totalMedium > maxMedium || totalHeavy > maxHeavy;
+            const hasUnallocated = totalLight < maxLight || totalMedium < maxMedium || totalHeavy < maxHeavy;
+            
+            if (isOverAllocated) {
+              const overAllocations = [];
+              if (totalLight > maxLight) overAllocations.push(`Light duty: ${totalLight}/${maxLight} (excess: ${totalLight - maxLight})`);
+              if (totalMedium > maxMedium) overAllocations.push(`Medium duty: ${totalMedium}/${maxMedium} (excess: ${totalMedium - maxMedium})`);
+              if (totalHeavy > maxHeavy) overAllocations.push(`Heavy duty: ${totalHeavy}/${maxHeavy} (excess: ${totalHeavy - maxHeavy})`);
+              
+              return (
+                <div className="mt-4">
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <div className="text-sm font-medium mb-1">Over-allocation detected:</div>
+                      {overAllocations.map((allocation, index) => (
+                        <div key={index} className="text-sm">{allocation}</div>
+                      ))}
+                      <div className="text-sm mt-2 opacity-75">Excess vehicles have been automatically removed from the latest years.</div>
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              );
+            } else if (hasUnallocated) {
+              const unallocations = [];
+              if (totalLight < maxLight) unallocations.push(`Light duty: ${maxLight - totalLight} remaining`);
+              if (totalMedium < maxMedium) unallocations.push(`Medium duty: ${maxMedium - totalMedium} remaining`);
+              if (totalHeavy < maxHeavy) unallocations.push(`Heavy duty: ${maxHeavy - totalHeavy} remaining`);
+              
+              return (
+                <div className="mt-4">
+                  <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-900/20">
+                    <AlertTriangle className="h-4 w-4 text-blue-600" />
+                    <AlertDescription className="text-blue-700 dark:text-blue-300">
+                      <div className="text-sm font-medium mb-1">Vehicles not yet allocated:</div>
+                      {unallocations.map((unallocation, index) => (
+                        <div key={index} className="text-sm">{unallocation}</div>
+                      ))}
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              );
+            }
+            
+            return null;
+          })()
+        )}
+        
         {/* Validation Errors */}
         {isManualMode && validationErrors.length > 0 && (
           <div className="mt-4">
