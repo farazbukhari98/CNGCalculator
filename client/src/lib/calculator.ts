@@ -314,6 +314,16 @@ export function applyVehicleLifecycle(
     const totalActiveMedium = cumulativePurchases.medium - totalReplacedMedium + replacements.medium;
     const totalActiveHeavy = cumulativePurchases.heavy - totalReplacedHeavy + replacements.heavy;
     
+    // Debug logging for Year 1 heavy duty vehicles
+    if (yearIndex === 0 && cumulativePurchases.heavy > 0) {
+      console.log("Year 1 Debug - Heavy Duty:");
+      console.log("New purchases:", newPurchases.heavy);
+      console.log("Cumulative purchases:", cumulativePurchases.heavy);
+      console.log("Total replaced heavy:", totalReplacedHeavy);
+      console.log("Current replacements:", replacements.heavy);
+      console.log("Total active heavy:", totalActiveHeavy);
+    }
+    
     // Create enhanced year entry
     enhancedDistribution.push({
       // Original purchase data
@@ -449,6 +459,11 @@ export function distributeVehicles(
   const { lightDutyCount, mediumDutyCount, heavyDutyCount } = vehicleParams;
   const vehicleCosts = getVehicleCosts(vehicleParams);
   const distribution: VehicleDistribution[] = [];
+  
+  // Debug logging
+  console.log("distributeVehicles called with:");
+  console.log("Heavy duty count:", heavyDutyCount);
+  console.log("Strategy:", strategy);
   
   // Ensure distribution has elements for the full time horizon
   const ensureFullTimeHorizon = (dist: VehicleDistribution[]): VehicleDistribution[] => {

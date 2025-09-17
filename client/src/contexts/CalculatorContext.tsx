@@ -218,6 +218,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       setResults(calculationResults);
     } else {
       // For non-manual modes or when no existing distribution, generate new distribution
+      console.log("CalculatorContext: About to call distributeVehicles with heavy duty count:", vehicleParameters.heavyDutyCount);
       const baseDistribution = distributeVehicles(
         vehicleParameters,
         timeHorizon,
@@ -250,6 +251,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
 
   // Method to update vehicle parameters
   const updateVehicleParameters = (params: VehicleParameters) => {
+    console.log("updateVehicleParameters called with heavy duty count:", params.heavyDutyCount);
     setVehicleParameters(params);
   };
 
