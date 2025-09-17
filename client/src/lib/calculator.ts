@@ -251,23 +251,23 @@ export function applyVehicleLifecycle(
       heavy: currentYear.heavy
     };
     
-    // Calculate replacements needed this year (vehicles purchased lifespan + 1 years ago)
+    // Calculate replacements needed this year (vehicles purchased lifespan years ago)
     let replacements = { light: 0, medium: 0, heavy: 0 };
     
-    // Check for light duty replacements (lifespan + 1 years ago)
-    const lightReplacementYear = yearIndex - VEHICLE_LIFESPANS.light - 1;
+    // Check for light duty replacements (lifespan years ago)
+    const lightReplacementYear = yearIndex - VEHICLE_LIFESPANS.light;
     if (lightReplacementYear >= 0 && baseDistribution[lightReplacementYear]) {
       replacements.light = baseDistribution[lightReplacementYear].light;
     }
     
-    // Check for medium duty replacements (lifespan + 1 years ago)
-    const mediumReplacementYear = yearIndex - VEHICLE_LIFESPANS.medium - 1;
+    // Check for medium duty replacements (lifespan years ago)
+    const mediumReplacementYear = yearIndex - VEHICLE_LIFESPANS.medium;
     if (mediumReplacementYear >= 0 && baseDistribution[mediumReplacementYear]) {
       replacements.medium = baseDistribution[mediumReplacementYear].medium;
     }
     
-    // Check for heavy duty replacements (lifespan + 1 years ago)
-    const heavyReplacementYear = yearIndex - VEHICLE_LIFESPANS.heavy - 1;
+    // Check for heavy duty replacements (lifespan years ago)
+    const heavyReplacementYear = yearIndex - VEHICLE_LIFESPANS.heavy;
     if (heavyReplacementYear >= 0 && baseDistribution[heavyReplacementYear]) {
       replacements.heavy = baseDistribution[heavyReplacementYear].heavy;
     }
@@ -292,19 +292,19 @@ export function applyVehicleLifecycle(
     // Sum up all replacements from previous years using per-class lifespans
     for (let prevYear = 0; prevYear < yearIndex; prevYear++) {
       // Check for light duty that expired
-      const lightReplYear = prevYear - VEHICLE_LIFESPANS.light - 1;
+      const lightReplYear = prevYear - VEHICLE_LIFESPANS.light;
       if (lightReplYear >= 0 && baseDistribution[lightReplYear]) {
         totalReplacedLight += baseDistribution[lightReplYear].light;
       }
       
       // Check for medium duty that expired
-      const mediumReplYear = prevYear - VEHICLE_LIFESPANS.medium - 1;
+      const mediumReplYear = prevYear - VEHICLE_LIFESPANS.medium;
       if (mediumReplYear >= 0 && baseDistribution[mediumReplYear]) {
         totalReplacedMedium += baseDistribution[mediumReplYear].medium;
       }
       
       // Check for heavy duty that expired
-      const heavyReplYear = prevYear - VEHICLE_LIFESPANS.heavy - 1;
+      const heavyReplYear = prevYear - VEHICLE_LIFESPANS.heavy;
       if (heavyReplYear >= 0 && baseDistribution[heavyReplYear]) {
         totalReplacedHeavy += baseDistribution[heavyReplYear].heavy;
       }
