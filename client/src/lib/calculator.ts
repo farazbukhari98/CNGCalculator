@@ -8,7 +8,7 @@ import {
 } from "@/types/calculator";
 
 // Get vehicle costs from vehicleParameters (for compatibility with old code we'll create a helper function)
-const getVehicleCosts = (vehicleParams: VehicleParameters) => {
+export const getVehicleCosts = (vehicleParams: VehicleParameters) => {
   return {
     light: vehicleParams.lightDutyCost, // CNG conversion cost for light duty vehicles
     medium: vehicleParams.mediumDutyCost, // CNG conversion cost for medium duty vehicles

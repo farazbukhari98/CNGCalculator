@@ -7,7 +7,7 @@ import {
   CalculationResults,
   VehicleDistribution 
 } from "@/types/calculator";
-import { calculateROI, distributeVehicles, applyVehicleLifecycle } from "@/lib/calculator";
+import { calculateROI, distributeVehicles, applyVehicleLifecycle, getVehicleCosts } from "@/lib/calculator";
 
 // Context type
 interface CalculatorContextType {
@@ -103,6 +103,101 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
            totalHeavy > params.heavyDutyCount;
   };
   
+  // Helper function to scale manual distribution to match new vehicle counts
+  const scaleManualDistribution = (
+    distribution: VehicleDistribution[],
+    params: VehicleParameters,
+    horizon: number
+  ): VehicleDistribution[] => {
+    const vehicleCosts = getVehicleCosts(params);
+    
+    // Get current totals from distribution
+    const currentTotals = distribution.reduce(
+      (acc, year) => ({
+        light: acc.light + (year.light || 0),
+        medium: acc.medium + (year.medium || 0),
+        heavy: acc.heavy + (year.heavy || 0)
+      }),
+      { light: 0, medium: 0, heavy: 0 }
+    );
+    
+    // If all vehicles were in year 1, keep them in year 1 when scaling
+    const firstYearOnly = distribution.length > 0 && 
+      distribution[0].heavy === currentTotals.heavy &&
+      distribution[0].light === currentTotals.light &&
+      distribution[0].medium === currentTotals.medium;
+    
+    const scaledDistribution: VehicleDistribution[] = [];
+    
+    if (firstYearOnly) {
+      // Keep all vehicles in year 1
+      const yearInvestment = 
+        (params.lightDutyCount * vehicleCosts.light) + 
+        (params.mediumDutyCount * vehicleCosts.medium) + 
+        (params.heavyDutyCount * vehicleCosts.heavy);
+      
+      scaledDistribution.push({
+        light: params.lightDutyCount,
+        medium: params.mediumDutyCount,
+        heavy: params.heavyDutyCount,
+        investment: yearInvestment
+      });
+      
+      // Add empty years for the rest
+      for (let i = 1; i < horizon; i++) {
+        scaledDistribution.push({
+          light: 0,
+          medium: 0,
+          heavy: 0,
+          investment: 0
+        });
+      }
+    } else {
+      // Scale proportionally across years
+      const lightScale = currentTotals.light > 0 ? params.lightDutyCount / currentTotals.light : 0;
+      const mediumScale = currentTotals.medium > 0 ? params.mediumDutyCount / currentTotals.medium : 0;
+      const heavyScale = currentTotals.heavy > 0 ? params.heavyDutyCount / currentTotals.heavy : 0;
+      
+      let remainingLight = params.lightDutyCount;
+      let remainingMedium = params.mediumDutyCount;
+      let remainingHeavy = params.heavyDutyCount;
+      
+      for (let i = 0; i < horizon; i++) {
+        if (i < distribution.length) {
+          const year = distribution[i];
+          const scaledLight = Math.min(Math.round((year.light || 0) * lightScale), remainingLight);
+          const scaledMedium = Math.min(Math.round((year.medium || 0) * mediumScale), remainingMedium);
+          const scaledHeavy = Math.min(Math.round((year.heavy || 0) * heavyScale), remainingHeavy);
+          
+          remainingLight -= scaledLight;
+          remainingMedium -= scaledMedium;
+          remainingHeavy -= scaledHeavy;
+          
+          const yearInvestment = 
+            (scaledLight * vehicleCosts.light) + 
+            (scaledMedium * vehicleCosts.medium) + 
+            (scaledHeavy * vehicleCosts.heavy);
+          
+          scaledDistribution.push({
+            light: scaledLight,
+            medium: scaledMedium,
+            heavy: scaledHeavy,
+            investment: yearInvestment
+          });
+        } else {
+          scaledDistribution.push({
+            light: 0,
+            medium: 0,
+            heavy: 0,
+            investment: 0
+          });
+        }
+      }
+    }
+    
+    return scaledDistribution;
+  };
+  
   // Helper function to clamp distribution to valid ranges
   const clampDistribution = (distribution: VehicleDistribution[], params: VehicleParameters, horizon: number): VehicleDistribution[] => {
     if (deploymentStrategy !== 'manual') return distribution;
@@ -196,16 +291,17 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         
       
       if (parametersChanged) {
-        // Vehicle parameters changed, regenerate distribution
-        const baseDistribution = distributeVehicles(
+        // Vehicle parameters changed, preserve existing manual distribution pattern
+        // Scale the existing distribution to match new vehicle counts
+        const scaledDistribution = scaleManualDistribution(
+          vehicleDistribution,
           vehicleParameters,
-          timeHorizon,
-          deploymentStrategy
+          timeHorizon
         );
         
         // Apply vehicle lifecycle management
         const enhancedDistribution = applyVehicleLifecycle(
-          baseDistribution,
+          scaledDistribution,
           vehicleParameters,
           timeHorizon
         );
