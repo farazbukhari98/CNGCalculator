@@ -177,6 +177,56 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   // Automatically recalculate when any parameter changes
   useEffect(() => {
     if (deploymentStrategy === 'manual' && vehicleDistribution) {
+      
+      // Check if the total vehicle counts in the parameters have changed
+      // If so, we need to regenerate the distribution to reflect new totals
+      const currentDistributionTotals = vehicleDistribution.reduce(
+        (acc, year) => ({
+          light: acc.light + (year.light || 0),
+          medium: acc.medium + (year.medium || 0),
+          heavy: acc.heavy + (year.heavy || 0)
+        }),
+        { light: 0, medium: 0, heavy: 0 }
+      );
+      
+      const parametersChanged = 
+        currentDistributionTotals.light !== vehicleParameters.lightDutyCount ||
+        currentDistributionTotals.medium !== vehicleParameters.mediumDutyCount ||
+        currentDistributionTotals.heavy !== vehicleParameters.heavyDutyCount;
+        
+      
+      if (parametersChanged) {
+        // Vehicle parameters changed, regenerate distribution
+        const baseDistribution = distributeVehicles(
+          vehicleParameters,
+          timeHorizon,
+          deploymentStrategy
+        );
+        
+        // Apply vehicle lifecycle management
+        const enhancedDistribution = applyVehicleLifecycle(
+          baseDistribution,
+          vehicleParameters,
+          timeHorizon
+        );
+        
+        setVehicleDistribution(enhancedDistribution);
+        
+        // Calculate ROI and other metrics
+        if (enhancedDistribution) {
+          const calculationResults = calculateROI(
+            vehicleParameters,
+            stationConfig,
+            fuelPrices,
+            timeHorizon,
+            deploymentStrategy,
+            enhancedDistribution
+          );
+          setResults(calculationResults);
+        }
+        return;
+      }
+      
       // For manual mode, check if current distribution is still valid
       // If over-allocated or timeHorizon reduced, clamp the distribution
       if (isOverAllocated(vehicleDistribution, vehicleParameters, timeHorizon)) {
@@ -218,7 +268,6 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       setResults(calculationResults);
     } else {
       // For non-manual modes or when no existing distribution, generate new distribution
-      console.log("CalculatorContext: About to call distributeVehicles with heavy duty count:", vehicleParameters.heavyDutyCount);
       const baseDistribution = distributeVehicles(
         vehicleParameters,
         timeHorizon,
@@ -251,7 +300,6 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
 
   // Method to update vehicle parameters
   const updateVehicleParameters = (params: VehicleParameters) => {
-    console.log("updateVehicleParameters called with heavy duty count:", params.heavyDutyCount);
     setVehicleParameters(params);
   };
 
