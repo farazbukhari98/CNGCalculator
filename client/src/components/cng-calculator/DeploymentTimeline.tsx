@@ -39,6 +39,7 @@ export default function DeploymentTimeline() {
                 // Make sure we have data for this year, default to empty values if not
                 const yearData = vehicleDistribution[year - 1] || { light: 0, medium: 0, heavy: 0, investment: 0 };
                 const { light, medium, heavy } = yearData;
+                
                 let borderClass = "vehicle-type-light";
                 
                 if (medium >= light && medium >= heavy) {
