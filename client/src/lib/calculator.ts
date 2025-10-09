@@ -284,36 +284,30 @@ export function applyVehicleLifecycle(
     cumulativePurchases.heavy += newPurchases.heavy;
     
     // Calculate total active vehicles this year
-    // This is cumulative purchases minus vehicles that have been replaced
-    let totalReplacedLight = 0;
-    let totalReplacedMedium = 0;
-    let totalReplacedHeavy = 0;
+    // Active vehicles = all vehicles currently within their lifespan
+    let totalActiveLight = 0;
+    let totalActiveMedium = 0;
+    let totalActiveHeavy = 0;
     
-    // Sum up all replacements from previous years using per-class lifespans
-    for (let prevYear = 0; prevYear < yearIndex; prevYear++) {
-      // Check for light duty that expired
-      const lightReplYear = prevYear - VEHICLE_LIFESPANS.light;
-      if (lightReplYear >= 0 && baseDistribution[lightReplYear]) {
-        totalReplacedLight += baseDistribution[lightReplYear].light;
+    // Count vehicles still active from each past year (including current year)
+    for (let purchaseYear = 0; purchaseYear <= yearIndex; purchaseYear++) {
+      const yearData = baseDistribution[purchaseYear] || { light: 0, medium: 0, heavy: 0 };
+      
+      // Check if light duty vehicles from this purchase year are still active
+      if (yearIndex - purchaseYear < VEHICLE_LIFESPANS.light) {
+        totalActiveLight += yearData.light;
       }
       
-      // Check for medium duty that expired
-      const mediumReplYear = prevYear - VEHICLE_LIFESPANS.medium;
-      if (mediumReplYear >= 0 && baseDistribution[mediumReplYear]) {
-        totalReplacedMedium += baseDistribution[mediumReplYear].medium;
+      // Check if medium duty vehicles from this purchase year are still active
+      if (yearIndex - purchaseYear < VEHICLE_LIFESPANS.medium) {
+        totalActiveMedium += yearData.medium;
       }
       
-      // Check for heavy duty that expired
-      const heavyReplYear = prevYear - VEHICLE_LIFESPANS.heavy;
-      if (heavyReplYear >= 0 && baseDistribution[heavyReplYear]) {
-        totalReplacedHeavy += baseDistribution[heavyReplYear].heavy;
+      // Check if heavy duty vehicles from this purchase year are still active
+      if (yearIndex - purchaseYear < VEHICLE_LIFESPANS.heavy) {
+        totalActiveHeavy += yearData.heavy;
       }
     }
-    
-    const totalActiveLight = cumulativePurchases.light - totalReplacedLight + replacements.light;
-    const totalActiveMedium = cumulativePurchases.medium - totalReplacedMedium + replacements.medium;
-    const totalActiveHeavy = cumulativePurchases.heavy - totalReplacedHeavy + replacements.heavy;
-    
     
     // Create enhanced year entry
     enhancedDistribution.push({
