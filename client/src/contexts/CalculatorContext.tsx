@@ -17,6 +17,7 @@ interface CalculatorContextType {
   timeHorizon: number;
   deploymentStrategy: DeploymentStrategy;
   vehicleDistribution: VehicleDistribution[] | null;
+  enhancedDistribution: VehicleDistribution[] | null;
   results: CalculationResults | null;
   sidebarCollapsed: boolean;
   hideNegativeValues: boolean;
@@ -84,6 +85,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   const [timeHorizon, setTimeHorizon] = useState<number>(15); // Default to 15 years
   const [deploymentStrategy, setDeploymentStrategy] = useState<DeploymentStrategy>("manual"); // Default to manual distribution
   const [vehicleDistribution, setVehicleDistribution] = useState<VehicleDistribution[] | null>(null);
+  const [enhancedDistribution, setEnhancedDistribution] = useState<VehicleDistribution[] | null>(null);
   const [results, setResults] = useState<CalculationResults | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [hideNegativeValues, setHideNegativeValues] = useState<boolean>(false);
@@ -299,14 +301,16 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           timeHorizon
         );
         
-        // Apply vehicle lifecycle management
+        // Store scaled distribution (without lifecycle enhancements)
+        setVehicleDistribution(scaledDistribution);
+        
+        // Apply vehicle lifecycle management for calculations only
         const enhancedDistribution = applyVehicleLifecycle(
           scaledDistribution,
           vehicleParameters,
           timeHorizon
         );
-        
-        setVehicleDistribution(enhancedDistribution);
+        setEnhancedDistribution(enhancedDistribution);
         
         // Calculate ROI and other metrics
         if (enhancedDistribution) {
@@ -328,14 +332,16 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       if (isOverAllocated(vehicleDistribution, vehicleParameters, timeHorizon)) {
         const clampedDistribution = clampDistribution(vehicleDistribution, vehicleParameters, timeHorizon);
         
-        // Apply vehicle lifecycle management to the clamped distribution
+        // Store clamped distribution (without lifecycle enhancements)
+        setVehicleDistribution(clampedDistribution);
+        
+        // Apply vehicle lifecycle management for calculations only
         const enhancedDistribution = applyVehicleLifecycle(
           clampedDistribution,
           vehicleParameters,
           timeHorizon
         );
-        
-        setVehicleDistribution(enhancedDistribution);
+        setEnhancedDistribution(enhancedDistribution);
         
         // Recalculate results with the clamped distribution
         if (enhancedDistribution) {
@@ -371,13 +377,16 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       );
       
       // Apply vehicle lifecycle management
+      // Store base distribution (without lifecycle enhancements)
+      setVehicleDistribution(baseDistribution);
+      
+      // Apply vehicle lifecycle management for calculations only
       const enhancedDistribution = applyVehicleLifecycle(
         baseDistribution,
         vehicleParameters,
         timeHorizon
       );
-      
-      setVehicleDistribution(enhancedDistribution);
+      setEnhancedDistribution(enhancedDistribution);
       
       // Then calculate ROI and other metrics
       if (enhancedDistribution) {
@@ -430,13 +439,15 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     );
     
     // Apply vehicle lifecycle management
+    // Store base distribution (without lifecycle enhancements)
+    setVehicleDistribution(baseDistribution);
+    
+    // Apply vehicle lifecycle management for calculations only
     const enhancedDistribution = applyVehicleLifecycle(
       baseDistribution,
       vehicleParameters,
       timeHorizon
     );
-    
-    setVehicleDistribution(enhancedDistribution);
     
     // Recalculate results with the new distribution
     if (enhancedDistribution) {
@@ -463,13 +474,16 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       );
       
       // Apply vehicle lifecycle management
+      // Store base distribution (without lifecycle enhancements)
+      setVehicleDistribution(baseDistribution);
+      
+      // Apply vehicle lifecycle management for calculations only
       const enhancedDistribution = applyVehicleLifecycle(
         baseDistribution,
         vehicleParameters,
         timeHorizon
       );
-      
-      setVehicleDistribution(enhancedDistribution);
+      setEnhancedDistribution(enhancedDistribution);
       
       // Recalculate with new distribution
       if (enhancedDistribution) {

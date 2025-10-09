@@ -289,6 +289,12 @@ export function applyVehicleLifecycle(
     let totalActiveMedium = 0;
     let totalActiveHeavy = 0;
     
+    // Debug logging for Year 1 to understand the issue
+    if (yearIndex === 0) {
+      console.log('Year 1 Debug - Base Distribution:', baseDistribution.slice(0, 5));
+      console.log('Year 1 Debug - Current Year Data:', currentYear);
+    }
+    
     // Count vehicles still active from each past year (including current year)
     for (let purchaseYear = 0; purchaseYear <= yearIndex; purchaseYear++) {
       const yearData = baseDistribution[purchaseYear] || { light: 0, medium: 0, heavy: 0 };
@@ -307,6 +313,16 @@ export function applyVehicleLifecycle(
       if (yearIndex - purchaseYear < VEHICLE_LIFESPANS.heavy) {
         totalActiveHeavy += yearData.heavy;
       }
+    }
+    
+    // Debug logging for Year 1 totals
+    if (yearIndex === 0) {
+      console.log('Year 1 Debug - Total Active:', { 
+        light: totalActiveLight, 
+        medium: totalActiveMedium, 
+        heavy: totalActiveHeavy,
+        total: totalActiveLight + totalActiveMedium + totalActiveHeavy 
+      });
     }
     
     // Create enhanced year entry
