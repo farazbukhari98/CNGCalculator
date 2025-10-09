@@ -358,16 +358,26 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         return;
       }
       
-      // If no clamping needed, just recalculate results with existing distribution
-      const calculationResults = calculateROI(
+      // If no clamping needed, still apply lifecycle management
+      const enhancedDistribution = applyVehicleLifecycle(
+        vehicleDistribution,
         vehicleParameters,
-        stationConfig,
-        fuelPrices,
-        timeHorizon,
-        deploymentStrategy,
-        vehicleDistribution
+        timeHorizon
       );
-      setResults(calculationResults);
+      setEnhancedDistribution(enhancedDistribution);
+      
+      // Then recalculate results with the enhanced distribution
+      if (enhancedDistribution) {
+        const calculationResults = calculateROI(
+          vehicleParameters,
+          stationConfig,
+          fuelPrices,
+          timeHorizon,
+          deploymentStrategy,
+          enhancedDistribution
+        );
+        setResults(calculationResults);
+      }
     } else {
       // For non-manual modes or when no existing distribution, generate new distribution
       const baseDistribution = distributeVehicles(
