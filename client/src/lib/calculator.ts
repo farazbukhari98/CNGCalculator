@@ -224,6 +224,7 @@ export function applyVehicleLifecycle(
   timeHorizon: number
 ): VehicleDistribution[] {
   const vehicleCosts = getVehicleCosts(vehicleParams);
+  
   // Use per-class lifespans from vehicle parameters
   const VEHICLE_LIFESPANS = {
     light: vehicleParams.lightDutyLifespan,
@@ -234,39 +235,26 @@ export function applyVehicleLifecycle(
   // Create enhanced distribution array
   const enhancedDistribution: VehicleDistribution[] = [];
   
-  // Track cumulative vehicles purchased by year for replacement calculation
-  const cumulativePurchases = {
-    light: 0,
-    medium: 0,
-    heavy: 0
-  };
-  
   for (let yearIndex = 0; yearIndex < timeHorizon; yearIndex++) {
+    // Get the base distribution for this year (new purchases only)
     const currentYear = baseDistribution[yearIndex] || { light: 0, medium: 0, heavy: 0, investment: 0 };
     
-    // New vehicle purchases this year
-    const newPurchases = {
-      light: currentYear.light,
-      medium: currentYear.medium,
-      heavy: currentYear.heavy
-    };
-    
-    // Calculate replacements needed this year (vehicles purchased lifespan years ago)
+    // Calculate replacements needed this year
     let replacements = { light: 0, medium: 0, heavy: 0 };
     
-    // Check for light duty replacements (lifespan years ago)
+    // Check for light duty replacements (vehicles purchased lifespan years ago)
     const lightReplacementYear = yearIndex - VEHICLE_LIFESPANS.light;
     if (lightReplacementYear >= 0 && baseDistribution[lightReplacementYear]) {
       replacements.light = baseDistribution[lightReplacementYear].light;
     }
     
-    // Check for medium duty replacements (lifespan years ago)
+    // Check for medium duty replacements
     const mediumReplacementYear = yearIndex - VEHICLE_LIFESPANS.medium;
     if (mediumReplacementYear >= 0 && baseDistribution[mediumReplacementYear]) {
       replacements.medium = baseDistribution[mediumReplacementYear].medium;
     }
     
-    // Check for heavy duty replacements (lifespan years ago)
+    // Check for heavy duty replacements
     const heavyReplacementYear = yearIndex - VEHICLE_LIFESPANS.heavy;
     if (heavyReplacementYear >= 0 && baseDistribution[heavyReplacementYear]) {
       replacements.heavy = baseDistribution[heavyReplacementYear].heavy;
@@ -278,43 +266,39 @@ export function applyVehicleLifecycle(
       (replacements.medium * vehicleCosts.medium) + 
       (replacements.heavy * vehicleCosts.heavy);
     
-    // Update cumulative purchases (add new purchases)
-    cumulativePurchases.light += newPurchases.light;
-    cumulativePurchases.medium += newPurchases.medium;
-    cumulativePurchases.heavy += newPurchases.heavy;
-    
     // Calculate total active vehicles this year
-    // Active vehicles = all vehicles currently within their lifespan
+    // Count all vehicles that are still within their lifespan
     let totalActiveLight = 0;
     let totalActiveMedium = 0;
     let totalActiveHeavy = 0;
     
-    // Count vehicles still active from each past year (including current year)
+    // Look back through previous years to count active vehicles
     for (let purchaseYear = 0; purchaseYear <= yearIndex; purchaseYear++) {
       const yearData = baseDistribution[purchaseYear] || { light: 0, medium: 0, heavy: 0 };
+      const vehicleAge = yearIndex - purchaseYear;
       
       // Check if light duty vehicles from this purchase year are still active
-      if (yearIndex - purchaseYear < VEHICLE_LIFESPANS.light) {
+      if (vehicleAge < VEHICLE_LIFESPANS.light && yearData.light > 0) {
         totalActiveLight += yearData.light;
       }
       
       // Check if medium duty vehicles from this purchase year are still active
-      if (yearIndex - purchaseYear < VEHICLE_LIFESPANS.medium) {
+      if (vehicleAge < VEHICLE_LIFESPANS.medium && yearData.medium > 0) {
         totalActiveMedium += yearData.medium;
       }
       
       // Check if heavy duty vehicles from this purchase year are still active
-      if (yearIndex - purchaseYear < VEHICLE_LIFESPANS.heavy) {
+      if (vehicleAge < VEHICLE_LIFESPANS.heavy && yearData.heavy > 0) {
         totalActiveHeavy += yearData.heavy;
       }
     }
     
-    // Create enhanced year entry
+    // Create enhanced year entry with all vehicle tracking data
     enhancedDistribution.push({
-      // Original purchase data
-      light: newPurchases.light,
-      medium: newPurchases.medium,
-      heavy: newPurchases.heavy,
+      // New purchases this year (from base distribution)
+      light: currentYear.light,
+      medium: currentYear.medium,
+      heavy: currentYear.heavy,
       investment: currentYear.investment,
       
       // Replacement data
@@ -323,7 +307,7 @@ export function applyVehicleLifecycle(
       heavyReplacements: replacements.heavy,
       replacementInvestment: replacementInvestment,
       
-      // Total active vehicles
+      // Total active vehicles (including all vehicles within their lifespan)
       totalActiveLight: totalActiveLight,
       totalActiveMedium: totalActiveMedium,
       totalActiveHeavy: totalActiveHeavy
@@ -630,13 +614,22 @@ export function distributeVehicles(
     // Ensure we have distribution entries for all years
     ensureFullTimeHorizon(distribution);
   } else if (strategy === 'manual') {
-    // For manual distribution, initialize with placeholder values 
-    // that will be updated by the user input
+    // For manual distribution, initialize with an even distribution
+    // Calculate base vehicles per year with remainder handling
+    const lightPerYear = Math.floor(lightDutyCount / timeHorizon);
+    const mediumPerYear = Math.floor(mediumDutyCount / timeHorizon);
+    const heavyPerYear = Math.floor(heavyDutyCount / timeHorizon);
+    
+    // Calculate remainder vehicles to distribute in early years
+    const lightRemainder = lightDutyCount % timeHorizon;
+    const mediumRemainder = mediumDutyCount % timeHorizon;
+    const heavyRemainder = heavyDutyCount % timeHorizon;
+    
     for (let i = 0; i < timeHorizon; i++) {
-      // For initial setup, evenly distribute vehicles
-      const lightThisYear = Math.ceil(lightDutyCount / timeHorizon);
-      const mediumThisYear = Math.ceil(mediumDutyCount / timeHorizon);
-      const heavyThisYear = Math.ceil(heavyDutyCount / timeHorizon);
+      // Add one extra vehicle in early years if there's a remainder
+      const lightThisYear = lightPerYear + (i < lightRemainder ? 1 : 0);
+      const mediumThisYear = mediumPerYear + (i < mediumRemainder ? 1 : 0);
+      const heavyThisYear = heavyPerYear + (i < heavyRemainder ? 1 : 0);
       
       const yearInvestment = 
         (lightThisYear * vehicleCosts.light) + 
