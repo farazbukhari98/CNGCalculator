@@ -438,7 +438,6 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       strategy
     );
     
-    // Apply vehicle lifecycle management
     // Store base distribution (without lifecycle enhancements)
     setVehicleDistribution(baseDistribution);
     
@@ -448,6 +447,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       vehicleParameters,
       timeHorizon
     );
+    setEnhancedDistribution(enhancedDistribution);
     
     // Recalculate results with the new distribution
     if (enhancedDistribution) {
@@ -589,6 +589,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     timeHorizon,
     deploymentStrategy,
     vehicleDistribution,
+    enhancedDistribution,
     results,
     sidebarCollapsed,
     hideNegativeValues,

@@ -9,6 +9,7 @@ export default function DeploymentTimeline() {
     timeHorizon,
     deploymentStrategy,
     vehicleDistribution,
+    enhancedDistribution,
     results,
     stationConfig,
     vehicleParameters,
@@ -32,12 +33,12 @@ export default function DeploymentTimeline() {
         </div>
         
         {/* Timeline Visualization - Only show if we have results */}
-        {results && vehicleDistribution && (
+        {results && enhancedDistribution && (
           <div className="timeline-scroll overflow-x-auto">
             <div className="min-w-max grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
               {years.map((year) => {
-                // Make sure we have data for this year, default to empty values if not
-                const yearData = vehicleDistribution[year - 1] || { light: 0, medium: 0, heavy: 0, investment: 0 };
+                // Use enhanced distribution for display (includes lifecycle data)
+                const yearData = enhancedDistribution[year - 1] || { light: 0, medium: 0, heavy: 0, investment: 0 };
                 const { light, medium, heavy } = yearData;
                 
                 let borderClass = "vehicle-type-light";
