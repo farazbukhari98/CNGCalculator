@@ -99,7 +99,7 @@ export default function DeploymentTimeline() {
                   // Calculate all previous years' annual net savings
                   let runningCumulative = 0;
                   for (let i = 0; i < year; i++) {
-                    const pastYearData = vehicleDistribution[i] || { investment: 0, replacementInvestment: 0 };
+                    const pastYearData = enhancedDistribution[i] || { investment: 0, replacementInvestment: 0 };
                     const pastVehicleInvestment = (pastYearData.investment || 0) + (pastYearData.replacementInvestment || 0);
                     const pastIsFirstYear = (i + 1) === 1;
                     let pastStationInvestment = 0;
