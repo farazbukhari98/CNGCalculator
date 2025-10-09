@@ -517,6 +517,9 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         ...vehicle
       };
       
+      console.log(`Updating manual distribution for Year ${year}:`, vehicle);
+      console.log('Updated year data:', updatedYearData);
+      
       // Recalculate the investment for this year based on the updated vehicle counts
       if (vehicle.light !== undefined || vehicle.medium !== undefined || vehicle.heavy !== undefined) {
         // Get current vehicle counts
