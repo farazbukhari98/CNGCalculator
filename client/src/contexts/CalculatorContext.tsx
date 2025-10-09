@@ -438,6 +438,9 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       strategy
     );
     
+    // Debug logging
+    console.log('Base Distribution from distributeVehicles:', baseDistribution);
+    
     // Store base distribution (without lifecycle enhancements)
     setVehicleDistribution(baseDistribution);
     
@@ -447,6 +450,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       vehicleParameters,
       timeHorizon
     );
+    
+    console.log('Enhanced Distribution after lifecycle:', enhancedDistribution);
     setEnhancedDistribution(enhancedDistribution);
     
     // Recalculate results with the new distribution

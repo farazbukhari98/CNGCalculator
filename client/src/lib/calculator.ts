@@ -477,6 +477,15 @@ export function distributeVehicles(
     const mediumRemainder = mediumDutyCount % timeHorizon;
     const heavyRemainder = heavyDutyCount % timeHorizon;
     
+    // Debug logging
+    console.log('Phased Distribution Debug:', {
+      lightDutyCount,
+      timeHorizon,
+      lightPerYear,
+      lightRemainder,
+      expectedPerYear: lightDutyCount / timeHorizon
+    });
+    
     for (let i = 0; i < timeHorizon; i++) {
       // Add one extra vehicle in early years if there's a remainder
       const lightThisYear = lightPerYear + (i < lightRemainder ? 1 : 0);
@@ -487,6 +496,8 @@ export function distributeVehicles(
         (lightThisYear * vehicleCosts.light) + 
         (mediumThisYear * vehicleCosts.medium) + 
         (heavyThisYear * vehicleCosts.heavy);
+      
+      console.log(`Year ${i + 1} distribution:`, { light: lightThisYear, medium: mediumThisYear, heavy: heavyThisYear });
       
       distribution.push({
         light: lightThisYear,

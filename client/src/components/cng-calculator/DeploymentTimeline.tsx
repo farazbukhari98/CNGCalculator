@@ -39,7 +39,14 @@ export default function DeploymentTimeline() {
               {years.map((year) => {
                 // Use enhanced distribution for display (includes lifecycle data)
                 const yearData = enhancedDistribution[year - 1] || { light: 0, medium: 0, heavy: 0, investment: 0 };
-                const { light, medium, heavy } = yearData;
+                console.log(`Deployment Timeline Year ${year}:`, yearData);
+                // Extract the values we need for display
+                const light = yearData.light || 0;
+                const medium = yearData.medium || 0;
+                const heavy = yearData.heavy || 0;
+                const totalActiveLight = yearData.totalActiveLight || 0;
+                const totalActiveMedium = yearData.totalActiveMedium || 0;
+                const totalActiveHeavy = yearData.totalActiveHeavy || 0;
                 
                 let borderClass = "vehicle-type-light";
                 
