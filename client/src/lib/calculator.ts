@@ -483,22 +483,21 @@ export function distributeVehicles(
     }
   } else if (strategy === 'phased') {
     // Evenly distribute vehicles across years
-    const lightPerYear = Math.ceil(lightDutyCount / timeHorizon);
-    const mediumPerYear = Math.ceil(mediumDutyCount / timeHorizon);
-    const heavyPerYear = Math.ceil(heavyDutyCount / timeHorizon);
+    // Calculate how many vehicles to purchase each year
+    const lightPerYear = Math.floor(lightDutyCount / timeHorizon);
+    const mediumPerYear = Math.floor(mediumDutyCount / timeHorizon);
+    const heavyPerYear = Math.floor(heavyDutyCount / timeHorizon);
     
-    let remainingLight = lightDutyCount;
-    let remainingMedium = mediumDutyCount;
-    let remainingHeavy = heavyDutyCount;
+    // Calculate remainder vehicles to distribute in early years
+    const lightRemainder = lightDutyCount % timeHorizon;
+    const mediumRemainder = mediumDutyCount % timeHorizon;
+    const heavyRemainder = heavyDutyCount % timeHorizon;
     
     for (let i = 0; i < timeHorizon; i++) {
-      const lightThisYear = Math.min(lightPerYear, remainingLight);
-      const mediumThisYear = Math.min(mediumPerYear, remainingMedium);
-      const heavyThisYear = Math.min(heavyPerYear, remainingHeavy);
-      
-      remainingLight -= lightThisYear;
-      remainingMedium -= mediumThisYear;
-      remainingHeavy -= heavyThisYear;
+      // Add one extra vehicle in early years if there's a remainder
+      const lightThisYear = lightPerYear + (i < lightRemainder ? 1 : 0);
+      const mediumThisYear = mediumPerYear + (i < mediumRemainder ? 1 : 0);
+      const heavyThisYear = heavyPerYear + (i < heavyRemainder ? 1 : 0);
       
       const yearInvestment = 
         (lightThisYear * vehicleCosts.light) + 
