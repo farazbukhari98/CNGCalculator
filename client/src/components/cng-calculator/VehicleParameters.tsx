@@ -28,7 +28,7 @@ export default function VehicleParameters() {
 
   // Parse number input (for MPG and Lifespan)
   const parseNumber = (value: string): number => {
-    return parseInt(value) || 0;
+    return parseFloat(value) || 0;
   };
 
   return (
@@ -250,6 +250,7 @@ export default function VehicleParameters() {
                         type="number"
                         min="1"
                         max="50"
+                        step="0.1"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
                         value={vehicleParameters.lightDutyMPG}
                         onChange={(e) => updateVehicleParameters({ 
@@ -273,6 +274,7 @@ export default function VehicleParameters() {
                         type="number"
                         min="1"
                         max="30"
+                        step="0.1"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
                         value={vehicleParameters.mediumDutyMPG}
                         onChange={(e) => updateVehicleParameters({ 
@@ -296,6 +298,7 @@ export default function VehicleParameters() {
                         type="number"
                         min="1"
                         max="20"
+                        step="0.1"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
                         value={vehicleParameters.heavyDutyMPG}
                         onChange={(e) => updateVehicleParameters({ 
