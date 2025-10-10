@@ -625,33 +625,14 @@ export function distributeVehicles(
     // Ensure we have distribution entries for all years
     ensureFullTimeHorizon(distribution);
   } else if (strategy === 'manual') {
-    // For manual distribution, initialize with an even distribution
-    // Calculate base vehicles per year with remainder handling
-    const lightPerYear = Math.floor(lightDutyCount / timeHorizon);
-    const mediumPerYear = Math.floor(mediumDutyCount / timeHorizon);
-    const heavyPerYear = Math.floor(heavyDutyCount / timeHorizon);
-    
-    // Calculate remainder vehicles to distribute in early years
-    const lightRemainder = lightDutyCount % timeHorizon;
-    const mediumRemainder = mediumDutyCount % timeHorizon;
-    const heavyRemainder = heavyDutyCount % timeHorizon;
-    
+    // For manual distribution, start with an empty distribution (all zeros)
+    // Users will fill in their desired distribution manually
     for (let i = 0; i < timeHorizon; i++) {
-      // Add one extra vehicle in early years if there's a remainder
-      const lightThisYear = lightPerYear + (i < lightRemainder ? 1 : 0);
-      const mediumThisYear = mediumPerYear + (i < mediumRemainder ? 1 : 0);
-      const heavyThisYear = heavyPerYear + (i < heavyRemainder ? 1 : 0);
-      
-      const yearInvestment = 
-        (lightThisYear * vehicleCosts.light) + 
-        (mediumThisYear * vehicleCosts.medium) + 
-        (heavyThisYear * vehicleCosts.heavy);
-      
       distribution.push({
-        light: lightThisYear,
-        medium: mediumThisYear,
-        heavy: heavyThisYear,
-        investment: yearInvestment
+        light: 0,
+        medium: 0,
+        heavy: 0,
+        investment: 0
       });
     }
   } else {
