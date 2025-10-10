@@ -267,31 +267,30 @@ export function applyVehicleLifecycle(
       (replacements.heavy * vehicleCosts.heavy);
     
     // Calculate total active vehicles this year
-    // Count all vehicles that are still within their lifespan
-    let totalActiveLight = 0;
-    let totalActiveMedium = 0;
-    let totalActiveHeavy = 0;
+    // Once all planned vehicles are deployed, fleet size remains constant through replacements
     
-    // Look back through previous years to count active vehicles
-    for (let purchaseYear = 0; purchaseYear <= yearIndex; purchaseYear++) {
-      const yearData = baseDistribution[purchaseYear] || { light: 0, medium: 0, heavy: 0 };
-      const vehicleAge = yearIndex - purchaseYear;
-      
-      // Check if light duty vehicles from this purchase year are still active
-      if (vehicleAge < VEHICLE_LIFESPANS.light && yearData.light > 0) {
-        totalActiveLight += yearData.light;
-      }
-      
-      // Check if medium duty vehicles from this purchase year are still active
-      if (vehicleAge < VEHICLE_LIFESPANS.medium && yearData.medium > 0) {
-        totalActiveMedium += yearData.medium;
-      }
-      
-      // Check if heavy duty vehicles from this purchase year are still active
-      if (vehicleAge < VEHICLE_LIFESPANS.heavy && yearData.heavy > 0) {
-        totalActiveHeavy += yearData.heavy;
-      }
+    // Calculate cumulative vehicles deployed up to this year
+    let cumulativeLight = 0;
+    let cumulativeMedium = 0;
+    let cumulativeHeavy = 0;
+    
+    for (let i = 0; i <= yearIndex; i++) {
+      const yearData = baseDistribution[i] || { light: 0, medium: 0, heavy: 0 };
+      cumulativeLight += yearData.light;
+      cumulativeMedium += yearData.medium;
+      cumulativeHeavy += yearData.heavy;
     }
+    
+    // Calculate total planned fleet size
+    const totalPlannedLight = baseDistribution.reduce((sum, year) => sum + year.light, 0);
+    const totalPlannedMedium = baseDistribution.reduce((sum, year) => sum + year.medium, 0);
+    const totalPlannedHeavy = baseDistribution.reduce((sum, year) => sum + year.heavy, 0);
+    
+    // Active fleet = min(cumulative deployed, total planned)
+    // This ensures fleet size grows until all vehicles are deployed, then stays constant
+    const totalActiveLight = Math.min(cumulativeLight, totalPlannedLight);
+    const totalActiveMedium = Math.min(cumulativeMedium, totalPlannedMedium);
+    const totalActiveHeavy = Math.min(cumulativeHeavy, totalPlannedHeavy);
     
     // Create enhanced year entry with all vehicle tracking data
     enhancedDistribution.push({
