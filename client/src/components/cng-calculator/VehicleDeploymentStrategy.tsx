@@ -354,8 +354,9 @@ export default function VehicleDeploymentStrategy() {
         {isManualMode && (
           <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
             <p className="text-sm text-blue-700 dark:text-blue-300">
-              <span className="font-medium">Manual Distribution Mode:</span> Distribute your total fleet size across years. 
-              The totals are set in Fleet Configuration above. You cannot exceed the total number of vehicles for each type.
+              <span className="font-medium">Manual Distribution Mode:</span> The deployment timeline has been cleared. 
+              Enter the number of vehicles you want to deploy each year. 
+              The maximum totals are set in Fleet Configuration above. You cannot exceed the total number of vehicles for each type.
             </p>
           </div>
         )}
