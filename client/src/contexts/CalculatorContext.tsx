@@ -552,16 +552,26 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       // Update the distribution state
       setVehicleDistribution(newDistribution);
       
-      // Recalculate results with the new distribution
-      const calculationResults = calculateROI(
+      // Apply lifecycle management to the updated distribution
+      const enhancedDist = applyVehicleLifecycle(
+        newDistribution,
         vehicleParameters,
-        stationConfig,
-        fuelPrices,
-        timeHorizon,
-        deploymentStrategy,
-        newDistribution
+        timeHorizon
       );
-      setResults(calculationResults);
+      setEnhancedDistribution(enhancedDist);
+      
+      // Recalculate results with the enhanced distribution
+      if (enhancedDist) {
+        const calculationResults = calculateROI(
+          vehicleParameters,
+          stationConfig,
+          fuelPrices,
+          timeHorizon,
+          deploymentStrategy,
+          enhancedDist
+        );
+        setResults(calculationResults);
+      }
     }
   };
 
