@@ -232,6 +232,8 @@ export function applyVehicleLifecycle(
     heavy: vehicleParams.heavyDutyLifespan
   };
   
+  console.log('Vehicle Lifespans:', VEHICLE_LIFESPANS);
+  
   // Create enhanced distribution array
   const enhancedDistribution: VehicleDistribution[] = [];
   
@@ -246,6 +248,9 @@ export function applyVehicleLifecycle(
     const lightReplacementYear = yearIndex - VEHICLE_LIFESPANS.light;
     if (lightReplacementYear >= 0 && baseDistribution[lightReplacementYear]) {
       replacements.light = baseDistribution[lightReplacementYear].light;
+      if (replacements.light > 0) {
+        console.log(`Year ${yearIndex + 1}: Replacing ${replacements.light} light duty vehicles from Year ${lightReplacementYear + 1} (${VEHICLE_LIFESPANS.light} year lifespan)`);
+      }
     }
     
     // Check for medium duty replacements
