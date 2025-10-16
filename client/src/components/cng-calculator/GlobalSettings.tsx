@@ -1,9 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCalculator } from "@/contexts/CalculatorContext";
 import { useComparison } from "@/contexts/ComparisonContext";
-import { Info, BarChart3, Plus, Truck, Eye, EyeOff, Edit3, Check } from "lucide-react";
+import { Info, BarChart3, Plus, Truck, Eye, EyeOff, Edit3, Check, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   Tooltip,
   TooltipContent,
@@ -18,6 +25,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 export default function GlobalSettings() {
   const { 
@@ -27,10 +35,13 @@ export default function GlobalSettings() {
     updateTimeHorizon,
     updateDeploymentStrategy,
     updateVehicleParameters,
+    updateStationConfig,
+    updateFuelPrices,
     results,
     hideNegativeValues,
     toggleHideNegativeValues,
-    setDistributionStrategy
+    setDistributionStrategy,
+    calculateResults
   } = useCalculator();
 
   const { 
@@ -40,8 +51,12 @@ export default function GlobalSettings() {
     canAddMoreComparisons
   } = useComparison();
 
+  const { toast } = useToast();
   const [showCustomNameDialog, setShowCustomNameDialog] = useState(false);
   const [customName, setCustomName] = useState("");
+  const [savedStrategies, setSavedStrategies] = useState<any[]>([]);
+  const [selectedStrategy, setSelectedStrategy] = useState<string>("");
+  const [isLoadingStrategies, setIsLoadingStrategies] = useState(false);
 
   // Strategy descriptions
   const strategyDescriptions = {
@@ -72,6 +87,61 @@ export default function GlobalSettings() {
 
   // Check if manual deployment is selected
   const isManualMode = deploymentStrategy === 'manual';
+
+  // Fetch saved strategies on component mount
+  useEffect(() => {
+    fetchSavedStrategies();
+  }, []);
+
+  const fetchSavedStrategies = async () => {
+    try {
+      setIsLoadingStrategies(true);
+      const response = await fetch('/api/strategies');
+      if (response.ok) {
+        const strategies = await response.json();
+        setSavedStrategies(strategies);
+      }
+    } catch (error) {
+      console.error('Error fetching strategies:', error);
+    } finally {
+      setIsLoadingStrategies(false);
+    }
+  };
+
+  const handleLoadStrategy = async (strategyId: string) => {
+    if (!strategyId) return;
+    
+    try {
+      const response = await fetch(`/api/strategies/${strategyId}`);
+      if (response.ok) {
+        const strategy = await response.json();
+        
+        // Load all the strategy parameters
+        updateVehicleParameters(strategy.vehicleParameters);
+        updateStationConfig(strategy.stationConfig);
+        updateFuelPrices(strategy.fuelPrices);
+        updateTimeHorizon(strategy.timeHorizon);
+        updateDeploymentStrategy(strategy.deploymentStrategy);
+        
+        // Trigger recalculation
+        setTimeout(() => {
+          calculateResults();
+        }, 100);
+        
+        toast({
+          title: "Strategy Loaded",
+          description: `Successfully loaded "${strategy.name}" strategy`
+        });
+      }
+    } catch (error) {
+      console.error('Error loading strategy:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load strategy",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <div className="bg-white rounded-md p-3 space-y-3">
@@ -366,6 +436,57 @@ export default function GlobalSettings() {
         </div>
       </div>
 
+      {/* Load Saved Strategy */}
+      <div className="pt-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Load Saved Strategy
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="ml-2 inline-block text-gray-500 dark:text-gray-400 cursor-help">
+                  <Info size={16} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="w-60">
+                <p className="text-xs">Load a previously saved strategy configuration to quickly restore all your settings and parameters.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </label>
+        <Select value={selectedStrategy} onValueChange={handleLoadStrategy} disabled={isLoadingStrategies}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder={isLoadingStrategies ? "Loading..." : "Select a saved strategy"}>
+              {selectedStrategy && savedStrategies.find(s => s.id === selectedStrategy)?.name}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {savedStrategies.length === 0 ? (
+              <SelectItem value="no-strategies" disabled>
+                <span className="text-gray-500">No saved strategies</span>
+              </SelectItem>
+            ) : (
+              savedStrategies.map((strategy) => (
+                <SelectItem key={strategy.id} value={strategy.id}>
+                  <div className="flex items-center gap-2">
+                    <FolderOpen className="h-3 w-3" />
+                    <span>{strategy.name}</span>
+                    {strategy.deploymentStrategy && (
+                      <Badge variant="outline" className="ml-2 text-xs">
+                        {strategy.deploymentStrategy}
+                      </Badge>
+                    )}
+                  </div>
+                </SelectItem>
+              ))
+            )}
+          </SelectContent>
+        </Select>
+        {savedStrategies.length > 0 && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            {savedStrategies.length} saved {savedStrategies.length === 1 ? 'strategy' : 'strategies'} available
+          </p>
+        )}
+      </div>
 
       {/* Chart Display Options */}
       <div className="pt-2">
