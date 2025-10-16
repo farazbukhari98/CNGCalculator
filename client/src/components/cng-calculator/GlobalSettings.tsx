@@ -136,8 +136,7 @@ export default function GlobalSettings() {
         
         // Handle deployment strategy and vehicle distribution carefully
         if (strategy.deploymentStrategy === 'manual' && strategy.vehicleDistribution) {
-          // For manual mode, set the strategy first without recalculating distribution
-          // then restore the saved distribution
+          // For manual mode, use updateDeploymentStrategy which doesn't recalculate
           updateDeploymentStrategy('manual');
           
           // Wait for state to settle, then restore the saved manual distribution
@@ -152,14 +151,9 @@ export default function GlobalSettings() {
             });
           }, 300);
         } else {
-          // For non-manual strategies, update deployment strategy normally
-          // This will automatically calculate the correct distribution
-          updateDeploymentStrategy(strategy.deploymentStrategy);
-          
-          // Trigger recalculation after a short delay
-          setTimeout(() => {
-            calculateResults();
-          }, 200);
+          // For non-manual strategies, use setDistributionStrategy
+          // which properly updates both the deployment strategy and recalculates distribution
+          setDistributionStrategy(strategy.deploymentStrategy);
         }
         
         toast({
@@ -353,11 +347,92 @@ export default function GlobalSettings() {
       <div className="border-b border-gray-200 pb-3">
         <div className="flex items-center mb-2">
           <BarChart3 className="h-4 w-4 mr-1 text-gray-600" />
-          <h4 className="text-sm font-medium text-gray-700">Distribution Scenarios</h4>
+          <h4 className="text-sm font-medium text-gray-700">Deployment Strategy</h4>
         </div>
         
-        {/* Distribution scenario buttons */}
+        {/* Deployment strategy buttons - Show all strategies */}
         <div className="flex flex-wrap gap-2">
+          {/* Immediate */}
+          <div className="relative">
+            <div
+              className={`flex items-center justify-center px-5 py-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
+                deploymentStrategy === 'immediate' 
+                  ? "bg-green-50 border-green-500 border-2 dark:bg-green-900/20 dark:border-green-500" 
+                  : "border-gray-200 dark:border-gray-600"
+              }`}
+              onClick={() => setDistributionStrategy('immediate')}
+              data-testid="button-immediate-distribution"
+            >
+              {deploymentStrategy === 'immediate' && (
+                <div className="absolute top-2 left-2 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="w-2.5 h-2.5 text-white" />
+                </div>
+              )}
+              <span className="text-xs font-medium dark:text-gray-300">Immediate</span>
+            </div>
+          </div>
+
+          {/* Phased */}
+          <div className="relative">
+            <div
+              className={`flex items-center justify-center px-5 py-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
+                deploymentStrategy === 'phased' 
+                  ? "bg-green-50 border-green-500 border-2 dark:bg-green-900/20 dark:border-green-500" 
+                  : "border-gray-200 dark:border-gray-600"
+              }`}
+              onClick={() => setDistributionStrategy('phased')}
+              data-testid="button-phased-distribution"
+            >
+              {deploymentStrategy === 'phased' && (
+                <div className="absolute top-2 left-2 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="w-2.5 h-2.5 text-white" />
+                </div>
+              )}
+              <span className="text-xs font-medium dark:text-gray-300">Phased</span>
+            </div>
+          </div>
+
+          {/* Aggressive */}
+          <div className="relative">
+            <div
+              className={`flex items-center justify-center px-5 py-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
+                deploymentStrategy === 'aggressive' 
+                  ? "bg-green-50 border-green-500 border-2 dark:bg-green-900/20 dark:border-green-500" 
+                  : "border-gray-200 dark:border-gray-600"
+              }`}
+              onClick={() => setDistributionStrategy('aggressive')}
+              data-testid="button-aggressive-distribution"
+            >
+              {deploymentStrategy === 'aggressive' && (
+                <div className="absolute top-2 left-2 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="w-2.5 h-2.5 text-white" />
+                </div>
+              )}
+              <span className="text-xs font-medium dark:text-gray-300">Aggressive</span>
+            </div>
+          </div>
+
+          {/* Deferred */}
+          <div className="relative">
+            <div
+              className={`flex items-center justify-center px-5 py-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
+                deploymentStrategy === 'deferred' 
+                  ? "bg-green-50 border-green-500 border-2 dark:bg-green-900/20 dark:border-green-500" 
+                  : "border-gray-200 dark:border-gray-600"
+              }`}
+              onClick={() => setDistributionStrategy('deferred')}
+              data-testid="button-deferred-distribution"
+            >
+              {deploymentStrategy === 'deferred' && (
+                <div className="absolute top-2 left-2 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="w-2.5 h-2.5 text-white" />
+                </div>
+              )}
+              <span className="text-xs font-medium dark:text-gray-300">Deferred</span>
+            </div>
+          </div>
+
+          {/* Manual */}
           <div className="relative">
             <div
               className={`flex items-center justify-center px-5 py-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
@@ -373,68 +448,9 @@ export default function GlobalSettings() {
                   <Check className="w-2.5 h-2.5 text-white" />
                 </div>
               )}
-              <span className="text-xs font-medium dark:text-gray-300">Manual Distribution</span>
+              <span className="text-xs font-medium dark:text-gray-300">Manual</span>
             </div>
           </div>
-          
-          {deploymentStrategy !== 'immediate' && (
-            <>
-              <div className="relative">
-                <div
-                  className={`flex items-center justify-center px-5 py-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
-                    deploymentStrategy === 'phased' 
-                      ? "bg-green-50 border-green-500 border-2 dark:bg-green-900/20 dark:border-green-500" 
-                      : "border-gray-200 dark:border-gray-600"
-                  }`}
-                  onClick={() => setDistributionStrategy('phased')}
-                  data-testid="button-even-distribution"
-                >
-                  {deploymentStrategy === 'phased' && (
-                    <div className="absolute top-2 left-2 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                      <Check className="w-2.5 h-2.5 text-white" />
-                    </div>
-                  )}
-                  <span className="text-xs font-medium dark:text-gray-300">Even Distribution</span>
-                </div>
-              </div>
-              <div className="relative">
-                <div
-                  className={`flex items-center justify-center px-5 py-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
-                    deploymentStrategy === 'aggressive' 
-                      ? "bg-green-50 border-green-500 border-2 dark:bg-green-900/20 dark:border-green-500" 
-                      : "border-gray-200 dark:border-gray-600"
-                  }`}
-                  onClick={() => setDistributionStrategy('aggressive')}
-                  data-testid="button-front-loaded"
-                >
-                  {deploymentStrategy === 'aggressive' && (
-                    <div className="absolute top-2 left-2 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                      <Check className="w-2.5 h-2.5 text-white" />
-                    </div>
-                  )}
-                  <span className="text-xs font-medium dark:text-gray-300">Front-Loaded</span>
-                </div>
-              </div>
-              <div className="relative">
-                <div
-                  className={`flex items-center justify-center px-5 py-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 ${
-                    deploymentStrategy === 'deferred' 
-                      ? "bg-green-50 border-green-500 border-2 dark:bg-green-900/20 dark:border-green-500" 
-                      : "border-gray-200 dark:border-gray-600"
-                  }`}
-                  onClick={() => setDistributionStrategy('deferred')}
-                  data-testid="button-back-loaded"
-                >
-                  {deploymentStrategy === 'deferred' && (
-                    <div className="absolute top-2 left-2 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                      <Check className="w-2.5 h-2.5 text-white" />
-                    </div>
-                  )}
-                  <span className="text-xs font-medium dark:text-gray-300">Back-Loaded</span>
-                </div>
-              </div>
-            </>
-          )}
         </div>
         
         <p className="text-xs text-gray-500 mt-2">
