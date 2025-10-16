@@ -1,5 +1,5 @@
 import { useCalculator } from "@/contexts/CalculatorContext";
-import { Info, DollarSign, Clock, Gauge, Navigation } from "lucide-react";
+import { Info, DollarSign, Clock, Gauge, Navigation, Percent } from "lucide-react";
 import { 
   Tooltip,
   TooltipContent,
@@ -463,6 +463,125 @@ export default function VehicleParameters() {
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Fuel type affects pricing calculations and maintenance savings (diesel vehicles receive additional maintenance savings)
+              </p>
+            </div>
+            
+            <Separator />
+            
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">CNG Efficiency Loss (%)</h3>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Light Duty
+                  </label>
+                  <div className="flex items-center">
+                    <div className="relative flex-1">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
+                        <Percent className="h-3.5 w-3.5 text-gray-500" />
+                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        max="30"
+                        step="0.1"
+                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
+                        value={(vehicleParameters.lightDutyCngEfficiencyLoss * 100).toFixed(1)}
+                        onChange={(e) => updateVehicleParameters({ 
+                          ...vehicleParameters, 
+                          lightDutyCngEfficiencyLoss: parseNumber(e.target.value) / 100
+                        })}
+                      />
+                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="ml-2 text-gray-500 cursor-help">
+                            <Info size={16} />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>CNG vehicles typically have 5% lower fuel economy due to energy density differences</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Medium Duty
+                  </label>
+                  <div className="flex items-center">
+                    <div className="relative flex-1">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
+                        <Percent className="h-3.5 w-3.5 text-gray-500" />
+                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        max="30"
+                        step="0.1"
+                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
+                        value={(vehicleParameters.mediumDutyCngEfficiencyLoss * 100).toFixed(1)}
+                        onChange={(e) => updateVehicleParameters({ 
+                          ...vehicleParameters, 
+                          mediumDutyCngEfficiencyLoss: parseNumber(e.target.value) / 100
+                        })}
+                      />
+                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="ml-2 text-gray-500 cursor-help">
+                            <Info size={16} />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>CNG vehicles typically have 7.5% lower fuel economy due to energy density differences</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Heavy Duty
+                  </label>
+                  <div className="flex items-center">
+                    <div className="relative flex-1">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
+                        <Percent className="h-3.5 w-3.5 text-gray-500" />
+                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        max="30"
+                        step="0.1"
+                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
+                        value={(vehicleParameters.heavyDutyCngEfficiencyLoss * 100).toFixed(1)}
+                        onChange={(e) => updateVehicleParameters({ 
+                          ...vehicleParameters, 
+                          heavyDutyCngEfficiencyLoss: parseNumber(e.target.value) / 100
+                        })}
+                      />
+                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="ml-2 text-gray-500 cursor-help">
+                            <Info size={16} />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>CNG vehicles typically have 10% lower fuel economy due to energy density differences</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                CNG vehicles have lower energy density than gasoline/diesel, requiring more fuel for the same distance
               </p>
             </div>
           </div>
