@@ -2,7 +2,7 @@
 
 This is a comprehensive CNG (Compressed Natural Gas) fleet conversion calculator built as a full-stack web application. The tool helps fleet managers and business decision-makers analyze the financial and operational impacts of converting their vehicle fleets from traditional gasoline/diesel to CNG. It provides detailed calculations for investment costs, payback periods, fuel savings, emissions reductions, and ROI analysis across different deployment strategies and time horizons.
 
-The application features an interactive interface with configurable vehicle parameters, station configurations, fuel pricing, and multiple deployment strategies. Users can perform sensitivity analysis, compare different strategies, and export comprehensive reports.
+The application features an interactive interface with configurable vehicle parameters, station configurations, fuel pricing, and multiple deployment strategies. Users can perform sensitivity analysis, compare different strategies, export comprehensive reports, and save/load strategy configurations for future reference.
 
 # User Preferences
 
