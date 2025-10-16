@@ -37,6 +37,7 @@ export default function GlobalSettings() {
     updateVehicleParameters,
     updateStationConfig,
     updateFuelPrices,
+    updateManualDistribution,
     results,
     hideNegativeValues,
     toggleHideNegativeValues,
@@ -123,10 +124,24 @@ export default function GlobalSettings() {
         updateTimeHorizon(strategy.timeHorizon);
         updateDeploymentStrategy(strategy.deploymentStrategy);
         
-        // Trigger recalculation
-        setTimeout(() => {
-          calculateResults();
-        }, 100);
+        // If the deployment strategy is manual and we have saved vehicle distribution, restore it
+        if (strategy.deploymentStrategy === 'manual' && strategy.vehicleDistribution) {
+          // Wait a bit for the state to update, then load each year's distribution
+          setTimeout(() => {
+            strategy.vehicleDistribution.forEach((yearData: any, index: number) => {
+              updateManualDistribution(index + 1, {
+                light: yearData.light || 0,
+                medium: yearData.medium || 0,
+                heavy: yearData.heavy || 0
+              });
+            });
+          }, 200);
+        } else {
+          // For non-manual strategies, just trigger recalculation
+          setTimeout(() => {
+            calculateResults();
+          }, 100);
+        }
         
         toast({
           title: "Strategy Loaded",
