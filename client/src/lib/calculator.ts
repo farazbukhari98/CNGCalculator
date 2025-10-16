@@ -128,11 +128,11 @@ export function calculateStationCost(config: StationConfig, vehicleParams?: Vehi
   // Calculate annual GGE (Gasoline Gallon Equivalent) consumption
   // Formula: (Annual Miles / MPG) × Vehicle Count × Fuel-to-CNG Conversion Factor × CNG Efficiency Factor
   
-  // CNG efficiency factors (fuel economy reduction)
+  // CNG efficiency factors (fuel economy reduction) - use configurable values from vehicle parameters
   const cngEfficiencyFactors = {
-    light: 0.95,    // 95% efficiency (5% reduction)
-    medium: 0.925,  // 92.5% efficiency (7.5% reduction)  
-    heavy: 0.90     // 90% efficiency (10% reduction)
+    light: 1 - vehicleParams.lightDutyCngEfficiencyLoss,    // Apply configurable efficiency loss
+    medium: 1 - vehicleParams.mediumDutyCngEfficiencyLoss,  // Apply configurable efficiency loss  
+    heavy: 1 - vehicleParams.heavyDutyCngEfficiencyLoss     // Apply configurable efficiency loss
   };
   
   // Default conversion factors if not provided
@@ -334,11 +334,11 @@ export function getStationSizeInfo(config: StationConfig, vehicleParams?: Vehicl
     };
   }
 
-  // Calculate annual GGE (same logic as calculateStationCost)
+  // Calculate annual GGE (same logic as calculateStationCost) - use configurable values
   const cngEfficiencyFactors = {
-    light: 0.95,
-    medium: 0.925,
-    heavy: 0.90
+    light: 1 - vehicleParams.lightDutyCngEfficiencyLoss,
+    medium: 1 - vehicleParams.mediumDutyCngEfficiencyLoss,
+    heavy: 1 - vehicleParams.heavyDutyCngEfficiencyLoss
   };
   
   // Default conversion factors if not provided
