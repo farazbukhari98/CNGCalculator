@@ -62,7 +62,11 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     // Default fuel types: light duty gasoline, medium/heavy duty diesel
     lightDutyFuelType: 'gasoline',
     mediumDutyFuelType: 'diesel',
-    heavyDutyFuelType: 'diesel'
+    heavyDutyFuelType: 'diesel',
+    // Default CNG efficiency loss percentages
+    lightDutyCngEfficiencyLoss: 0.05,   // 5% loss
+    mediumDutyCngEfficiencyLoss: 0.075, // 7.5% loss
+    heavyDutyCngEfficiencyLoss: 0.10    // 10% loss
   });
 
   const [stationConfig, setStationConfig] = useState<StationConfig>({
