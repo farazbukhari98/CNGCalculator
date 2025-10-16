@@ -385,6 +385,10 @@ export default function MainContent() {
       
       setShowSaveDialog(false);
       setStrategyName("");
+      
+      // Trigger a refresh of saved strategies list
+      // This will be picked up by GlobalSettings component
+      window.dispatchEvent(new Event('strategySaved'));
     } catch (error) {
       console.error('Error saving strategy:', error);
       toast({

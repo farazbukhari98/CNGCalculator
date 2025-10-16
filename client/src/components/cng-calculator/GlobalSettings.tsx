@@ -89,9 +89,20 @@ export default function GlobalSettings() {
   // Check if manual deployment is selected
   const isManualMode = deploymentStrategy === 'manual';
 
-  // Fetch saved strategies on component mount
+  // Fetch saved strategies on component mount and when a new strategy is saved
   useEffect(() => {
     fetchSavedStrategies();
+    
+    // Listen for strategy saved events
+    const handleStrategySaved = () => {
+      fetchSavedStrategies();
+    };
+    
+    window.addEventListener('strategySaved', handleStrategySaved);
+    
+    return () => {
+      window.removeEventListener('strategySaved', handleStrategySaved);
+    };
   }, []);
 
   const fetchSavedStrategies = async () => {
@@ -117,17 +128,21 @@ export default function GlobalSettings() {
       if (response.ok) {
         const strategy = await response.json();
         
-        // Load all the strategy parameters
+        // Load all the strategy parameters EXCEPT deployment strategy first
         updateVehicleParameters(strategy.vehicleParameters);
         updateStationConfig(strategy.stationConfig);
         updateFuelPrices(strategy.fuelPrices);
         updateTimeHorizon(strategy.timeHorizon);
-        updateDeploymentStrategy(strategy.deploymentStrategy);
         
-        // If the deployment strategy is manual and we have saved vehicle distribution, restore it
+        // Handle deployment strategy and vehicle distribution carefully
         if (strategy.deploymentStrategy === 'manual' && strategy.vehicleDistribution) {
-          // Wait a bit for the state to update, then load each year's distribution
+          // For manual mode, set the strategy first without recalculating distribution
+          // then restore the saved distribution
+          updateDeploymentStrategy('manual');
+          
+          // Wait for state to settle, then restore the saved manual distribution
           setTimeout(() => {
+            // Restore each year's distribution from the saved data
             strategy.vehicleDistribution.forEach((yearData: any, index: number) => {
               updateManualDistribution(index + 1, {
                 light: yearData.light || 0,
@@ -135,12 +150,16 @@ export default function GlobalSettings() {
                 heavy: yearData.heavy || 0
               });
             });
-          }, 200);
+          }, 300);
         } else {
-          // For non-manual strategies, just trigger recalculation
+          // For non-manual strategies, update deployment strategy normally
+          // This will automatically calculate the correct distribution
+          updateDeploymentStrategy(strategy.deploymentStrategy);
+          
+          // Trigger recalculation after a short delay
           setTimeout(() => {
             calculateResults();
-          }, 100);
+          }, 200);
         }
         
         toast({
