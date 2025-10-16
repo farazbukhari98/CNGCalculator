@@ -15,15 +15,31 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, PanelLeft, PanelRight, Moon, Sun } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Download, PanelLeft, PanelRight, Moon, Sun, Save } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
 export default function MainContent() {
-  const { deploymentStrategy, results, vehicleParameters, stationConfig, fuelPrices, timeHorizon, hideNegativeValues } = useCalculator();
+  const { 
+    deploymentStrategy, 
+    results, 
+    vehicleParameters, 
+    stationConfig, 
+    fuelPrices, 
+    timeHorizon, 
+    hideNegativeValues,
+    vehicleDistribution
+  } = useCalculator();
   const { darkMode, toggleDarkMode } = useDarkMode();
+  const { toast } = useToast();
   const [showCashflow, setShowCashflow] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [strategyName, setStrategyName] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   
   // Function to handle PDF export
@@ -325,6 +341,62 @@ export default function MainContent() {
     }
   };
 
+  // Function to handle saving strategy
+  const handleSaveStrategy = async () => {
+    if (!results || !strategyName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a name for your strategy",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setIsSaving(true);
+      
+      const strategyData = {
+        name: strategyName.trim(),
+        deploymentStrategy,
+        vehicleParameters,
+        stationConfig,
+        fuelPrices,
+        timeHorizon,
+        vehicleDistribution: vehicleDistribution || [],
+        calculatedResults: results
+      };
+      
+      const response = await fetch('/api/strategies', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(strategyData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to save strategy');
+      }
+      
+      toast({
+        title: "Success",
+        description: "Strategy saved successfully"
+      });
+      
+      setShowSaveDialog(false);
+      setStrategyName("");
+    } catch (error) {
+      console.error('Error saving strategy:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save strategy. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Strategy titles and taglines
   const strategyTitles = {
     immediate: "Immediate Purchase Strategy",
@@ -450,6 +522,15 @@ export default function MainContent() {
             <Button 
               variant="outline" 
               className="inline-flex items-center dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600 dark:border-gray-600"
+              onClick={() => setShowSaveDialog(true)}
+              disabled={!results}
+            >
+              <Save className="h-5 w-5 mr-2" />
+              Save Strategy
+            </Button>
+            <Button 
+              variant="outline" 
+              className="inline-flex items-center dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600 dark:border-gray-600"
               onClick={handleExportPDF}
               disabled={isExporting}
             >
@@ -471,6 +552,64 @@ export default function MainContent() {
           </div>
         </>
       )}
+      
+      {/* Save Strategy Dialog */}
+      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Save Strategy</DialogTitle>
+            <DialogDescription>
+              Save your current strategy configuration for future reference
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div>
+              <Label htmlFor="strategyName" className="text-sm font-medium">
+                Strategy Name
+              </Label>
+              <Input
+                id="strategyName"
+                value={strategyName}
+                onChange={(e) => setStrategyName(e.target.value)}
+                placeholder="Enter a descriptive name..."
+                className="mt-2"
+                maxLength={100}
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                This name will help you identify this strategy configuration later
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowSaveDialog(false);
+                setStrategyName("");
+              }}
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveStrategy}
+              disabled={isSaving || !strategyName.trim()}
+            >
+              {isSaving ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Saving...
+                </>
+              ) : (
+                "Save Strategy"
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
