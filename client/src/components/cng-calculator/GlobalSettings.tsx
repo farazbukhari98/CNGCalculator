@@ -128,33 +128,53 @@ export default function GlobalSettings() {
       if (response.ok) {
         const strategy = await response.json();
         
+        // First, clear any existing manual distribution by setting a non-manual strategy temporarily
+        // This ensures we start fresh without old values
+        if (deploymentStrategy === 'manual') {
+          setDistributionStrategy('immediate');
+        }
+        
         // Load all the strategy parameters EXCEPT deployment strategy first
         updateVehicleParameters(strategy.vehicleParameters);
         updateStationConfig(strategy.stationConfig);
         updateFuelPrices(strategy.fuelPrices);
         updateTimeHorizon(strategy.timeHorizon);
         
-        // Handle deployment strategy and vehicle distribution carefully
-        if (strategy.deploymentStrategy === 'manual' && strategy.vehicleDistribution) {
-          // For manual mode, use updateDeploymentStrategy which doesn't recalculate
-          updateDeploymentStrategy('manual');
-          
-          // Wait for state to settle, then restore the saved manual distribution
-          setTimeout(() => {
-            // Restore each year's distribution from the saved data
-            strategy.vehicleDistribution.forEach((yearData: any, index: number) => {
-              updateManualDistribution(index + 1, {
-                light: yearData.light || 0,
-                medium: yearData.medium || 0,
-                heavy: yearData.heavy || 0
-              });
-            });
-          }, 300);
-        } else {
-          // For non-manual strategies, use setDistributionStrategy
-          // which properly updates both the deployment strategy and recalculates distribution
-          setDistributionStrategy(strategy.deploymentStrategy);
-        }
+        // Small delay to let the parameters update
+        setTimeout(() => {
+          // Handle deployment strategy and vehicle distribution carefully
+          if (strategy.deploymentStrategy === 'manual' && strategy.vehicleDistribution) {
+            // For manual mode, use updateDeploymentStrategy which doesn't recalculate
+            updateDeploymentStrategy('manual');
+            
+            // Wait for state to settle, then restore the saved manual distribution
+            setTimeout(() => {
+              // First, clear all years to 0
+              for (let year = 1; year <= strategy.timeHorizon; year++) {
+                updateManualDistribution(year, {
+                  light: 0,
+                  medium: 0,
+                  heavy: 0
+                });
+              }
+              
+              // Then restore each year's distribution from the saved data
+              setTimeout(() => {
+                strategy.vehicleDistribution.forEach((yearData: any, index: number) => {
+                  updateManualDistribution(index + 1, {
+                    light: yearData.light || 0,
+                    medium: yearData.medium || 0,
+                    heavy: yearData.heavy || 0
+                  });
+                });
+              }, 100);
+            }, 200);
+          } else {
+            // For non-manual strategies, use setDistributionStrategy
+            // which properly updates both the deployment strategy and recalculates distribution
+            setDistributionStrategy(strategy.deploymentStrategy);
+          }
+        }, 100);
         
         toast({
           title: "Strategy Loaded",
