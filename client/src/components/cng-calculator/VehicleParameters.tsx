@@ -41,6 +41,19 @@ export default function VehicleParameters() {
   const displayMPG = (value: number): string => {
     return (value / 10).toFixed(1);
   };
+  
+  // Format number with commas for display
+  const formatWithCommas = (value: number): string => {
+    if (!value) return "";
+    return value.toLocaleString('en-US');
+  };
+  
+  // Parse comma-formatted input back to number
+  const parseCommaNumber = (value: string): number => {
+    // Remove commas and parse as integer
+    const cleanValue = value.replace(/,/g, '');
+    return parseInt(cleanValue) || 0;
+  };
 
   return (
     <div className="bg-white rounded-md p-3 space-y-3">
@@ -341,14 +354,12 @@ export default function VehicleParameters() {
                         <Navigation className="h-3.5 w-3.5 text-gray-500" />
                       </div>
                       <input
-                        type="number"
-                        min="1000"
-                        max="100000"
+                        type="text"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
-                        value={vehicleParameters.lightDutyAnnualMiles}
+                        value={formatWithCommas(vehicleParameters.lightDutyAnnualMiles)}
                         onChange={(e) => updateVehicleParameters({ 
                           ...vehicleParameters, 
-                          lightDutyAnnualMiles: parseWholeNumber(e.target.value)
+                          lightDutyAnnualMiles: parseCommaNumber(e.target.value)
                         })}
                       />
                     </div>
@@ -364,14 +375,12 @@ export default function VehicleParameters() {
                         <Navigation className="h-3.5 w-3.5 text-gray-500" />
                       </div>
                       <input
-                        type="number"
-                        min="1000"
-                        max="150000"
+                        type="text"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
-                        value={vehicleParameters.mediumDutyAnnualMiles}
+                        value={formatWithCommas(vehicleParameters.mediumDutyAnnualMiles)}
                         onChange={(e) => updateVehicleParameters({ 
                           ...vehicleParameters, 
-                          mediumDutyAnnualMiles: parseWholeNumber(e.target.value)
+                          mediumDutyAnnualMiles: parseCommaNumber(e.target.value)
                         })}
                       />
                     </div>
@@ -387,14 +396,12 @@ export default function VehicleParameters() {
                         <Navigation className="h-3.5 w-3.5 text-gray-500" />
                       </div>
                       <input
-                        type="number"
-                        min="1000"
-                        max="200000"
+                        type="text"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
-                        value={vehicleParameters.heavyDutyAnnualMiles}
+                        value={formatWithCommas(vehicleParameters.heavyDutyAnnualMiles)}
                         onChange={(e) => updateVehicleParameters({ 
                           ...vehicleParameters, 
-                          heavyDutyAnnualMiles: parseWholeNumber(e.target.value)
+                          heavyDutyAnnualMiles: parseCommaNumber(e.target.value)
                         })}
                       />
                     </div>
