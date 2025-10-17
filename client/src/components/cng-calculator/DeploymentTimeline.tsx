@@ -179,43 +179,6 @@ export default function DeploymentTimeline() {
                       </div>
                     </div>
                     
-                    {/* Annual GGE Requirements Section */}
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
-                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Annual GGE Requirements</div>
-                      <div className="ml-4 space-y-1">
-                        {totalActiveLight > 0 && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-600 dark:text-gray-400">Light Duty</span>
-                            <span className="text-xs font-medium" data-testid={`light-gge-year-${year}`}>
-                              {totalLightGGE.toLocaleString(undefined, { maximumFractionDigits: 0 })} GGE
-                            </span>
-                          </div>
-                        )}
-                        {totalActiveMedium > 0 && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-600 dark:text-gray-400">Medium Duty</span>
-                            <span className="text-xs font-medium" data-testid={`medium-gge-year-${year}`}>
-                              {totalMediumGGE.toLocaleString(undefined, { maximumFractionDigits: 0 })} GGE
-                            </span>
-                          </div>
-                        )}
-                        {totalActiveHeavy > 0 && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-600 dark:text-gray-400">Heavy Duty</span>
-                            <span className="text-xs font-medium" data-testid={`heavy-gge-year-${year}`}>
-                              {totalHeavyGGE.toLocaleString(undefined, { maximumFractionDigits: 0 })} GGE
-                            </span>
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-1">
-                          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Total Annual</span>
-                          <span className="text-xs font-bold text-blue-600 dark:text-blue-400" data-testid={`total-gge-year-${year}`}>
-                            {totalAnnualGGE.toLocaleString(undefined, { maximumFractionDigits: 0 })} GGE
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    
                     <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
                       {/* Investment Section */}
                       <div className="mb-3">

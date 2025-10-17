@@ -68,23 +68,37 @@ export default function FleetConfiguration({ showCashflow }: FleetConfigurationP
     (actualCounts.medium * mediumDutyCost) +
     (actualCounts.heavy * heavyDutyCost);
 
-  // Calculate annual GGE (Gasoline Gallon Equivalent) consumption for station sizing (use actual counts)
-  // Formula: (Annual Miles / (MPG × CNG Efficiency Factor)) × Vehicle Count
+  // Calculate annual GGE (Gasoline Gallon Equivalent) consumption for fleet
+  // Formula: (Annual Miles / MPG) × Fuel Conversion Factor / CNG Efficiency
   
-  // CNG efficiency factors (fuel economy reduction)
+  // CNG efficiency factors from vehicle parameters (stored as integer values, divide by 1000)
   const cngEfficiencyFactors = {
-    light: 0.95,    // 95% efficiency (5% reduction)
-    medium: 0.925,  // 92.5% efficiency (7.5% reduction)  
-    heavy: 0.90     // 90% efficiency (10% reduction)
+    light: 1 - (vehicleParameters.lightDutyCngEfficiencyLoss / 1000),
+    medium: 1 - (vehicleParameters.mediumDutyCngEfficiencyLoss / 1000),
+    heavy: 1 - (vehicleParameters.heavyDutyCngEfficiencyLoss / 1000)
   };
   
+  // Get fuel conversion factors based on fuel type
+  const lightConversionFactor = vehicleParameters.lightDutyFuelType === 'gasoline' 
+    ? (fuelPrices?.gasolineToCngConversionFactor || 1.0)
+    : (fuelPrices?.dieselToCngConversionFactor || 1.136);
+  const mediumConversionFactor = vehicleParameters.mediumDutyFuelType === 'gasoline'
+    ? (fuelPrices?.gasolineToCngConversionFactor || 1.0)
+    : (fuelPrices?.dieselToCngConversionFactor || 1.136);
+  const heavyConversionFactor = vehicleParameters.heavyDutyFuelType === 'gasoline'
+    ? (fuelPrices?.gasolineToCngConversionFactor || 1.0)
+    : (fuelPrices?.dieselToCngConversionFactor || 1.136);
+  
   // Calculate annual GGE per vehicle type
-  const lightAnnualGGE = vehicleParameters.lightDutyAnnualMiles / (vehicleParameters.lightDutyMPG * cngEfficiencyFactors.light);
-  const mediumAnnualGGE = vehicleParameters.mediumDutyAnnualMiles / (vehicleParameters.mediumDutyMPG * cngEfficiencyFactors.medium);
-  const heavyAnnualGGE = vehicleParameters.heavyDutyAnnualMiles / (vehicleParameters.heavyDutyMPG * cngEfficiencyFactors.heavy);
+  const lightAnnualGGE = (vehicleParameters.lightDutyAnnualMiles / vehicleParameters.lightDutyMPG) * 
+    lightConversionFactor / cngEfficiencyFactors.light;
+  const mediumAnnualGGE = (vehicleParameters.mediumDutyAnnualMiles / vehicleParameters.mediumDutyMPG) * 
+    mediumConversionFactor / cngEfficiencyFactors.medium;
+  const heavyAnnualGGE = (vehicleParameters.heavyDutyAnnualMiles / vehicleParameters.heavyDutyMPG) * 
+    heavyConversionFactor / cngEfficiencyFactors.heavy;
   
   // Total annual GGE consumption for the fleet (use actual counts)
-  const annualGGE = 
+  const totalAnnualFleetGGE = 
     (actualCounts.light * lightAnnualGGE) + 
     (actualCounts.medium * mediumAnnualGGE) + 
     (actualCounts.heavy * heavyAnnualGGE);
@@ -264,6 +278,29 @@ export default function FleetConfiguration({ showCashflow }: FleetConfigurationP
                 </span>
               </div>
             )}
+            
+            {/* Annual GGE Required - always show */}
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-600 dark:text-gray-300">
+                Annual GGE Required
+                <MetricInfoTooltip
+                  title="Annual GGE Required"
+                  description="Total Gasoline Gallon Equivalent (GGE) fuel consumption per year for the entire CNG fleet when fully deployed."
+                  calculation="Sum of (Vehicle Count × Annual Miles ÷ MPG × Fuel Conversion Factor ÷ CNG Efficiency) for each vehicle type"
+                  affectingVariables={[
+                    "Vehicle counts by type",
+                    "Annual miles driven per vehicle type",
+                    "MPG values for each vehicle type",
+                    "CNG efficiency loss percentages",
+                    "Fuel type conversion factors (gasoline/diesel)"
+                  ]}
+                  simpleDescription="Annual CNG fuel consumption for your entire fleet."
+                />
+              </span>
+              <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
+                {totalAnnualFleetGGE.toLocaleString(undefined, { maximumFractionDigits: 0 })} GGE
+              </span>
+            </div>
             
             {/* CO2 Reduction - always show */}
             <div className="flex items-center justify-between mb-2">
