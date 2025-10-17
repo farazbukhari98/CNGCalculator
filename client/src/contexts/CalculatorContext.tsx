@@ -9,6 +9,11 @@ import {
 } from "@/types/calculator";
 import { calculateROI, distributeVehicles, applyVehicleLifecycle, getVehicleCosts } from "@/lib/calculator";
 
+// Track which fields have been modified from defaults
+interface ModifiedFields {
+  [key: string]: boolean;
+}
+
 // Context type
 interface CalculatorContextType {
   vehicleParameters: VehicleParameters;
@@ -21,6 +26,7 @@ interface CalculatorContextType {
   results: CalculationResults | null;
   sidebarCollapsed: boolean;
   hideNegativeValues: boolean;
+  modifiedFields: ModifiedFields;
   
   updateVehicleParameters: (params: VehicleParameters) => void;
   updateStationConfig: (config: StationConfig) => void;
@@ -33,6 +39,9 @@ interface CalculatorContextType {
   calculateResults: () => void;
   toggleSidebar: () => void;
   toggleHideNegativeValues: () => void;
+  markFieldAsModified: (fieldName: string) => void;
+  isFieldModified: (fieldName: string) => boolean;
+  resetFieldModifications: () => void;
 }
 
 // Create the context
@@ -95,8 +104,9 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   const [results, setResults] = useState<CalculationResults | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [hideNegativeValues, setHideNegativeValues] = useState<boolean>(false);
+  const [modifiedFields, setModifiedFields] = useState<ModifiedFields>({});
 
-    // Helper function to detect if current distribution is over-allocated
+  // Helper function to detect if current distribution is over-allocated
   const isOverAllocated = (distribution: VehicleDistribution[] | null, params: VehicleParameters, horizon: number) => {
     if (!distribution || deploymentStrategy !== 'manual') return false;
     
@@ -665,6 +675,19 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     setHideNegativeValues(prev => !prev);
   };
 
+  // Field modification tracking methods
+  const markFieldAsModified = (fieldName: string) => {
+    setModifiedFields(prev => ({ ...prev, [fieldName]: true }));
+  };
+
+  const isFieldModified = (fieldName: string) => {
+    return modifiedFields[fieldName] || false;
+  };
+
+  const resetFieldModifications = () => {
+    setModifiedFields({});
+  };
+
   // Context value
   const value = {
     vehicleParameters,
@@ -677,6 +700,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     results,
     sidebarCollapsed,
     hideNegativeValues,
+    modifiedFields,
     
     updateVehicleParameters,
     updateStationConfig,
@@ -688,7 +712,10 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     setManualDistributionBulk,
     calculateResults,
     toggleSidebar,
-    toggleHideNegativeValues
+    toggleHideNegativeValues,
+    markFieldAsModified,
+    isFieldModified,
+    resetFieldModifications
   };
 
   return (

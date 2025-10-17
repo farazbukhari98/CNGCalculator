@@ -9,11 +9,14 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getFieldStyles, DEFAULT_VALUES } from "@/lib/fieldStyling";
 
 export default function VehicleParameters() {
   const { 
     vehicleParameters, 
-    updateVehicleParameters
+    updateVehicleParameters,
+    markFieldAsModified,
+    isFieldModified
   } = useCalculator();
 
   // Format cost input with dollar sign and commas
@@ -84,11 +87,18 @@ export default function VehicleParameters() {
                   <input
                     type="text"
                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-8"
+                    style={getFieldStyles(isFieldModified('lightDutyCost'))}
                     value={formatCost(vehicleParameters.lightDutyCost)}
-                    onChange={(e) => updateVehicleParameters({ 
-                      ...vehicleParameters, 
-                      lightDutyCost: parseCost(e.target.value)
-                    })}
+                    onChange={(e) => {
+                      const newValue = parseCost(e.target.value);
+                      if (newValue !== DEFAULT_VALUES.lightDutyCost) {
+                        markFieldAsModified('lightDutyCost');
+                      }
+                      updateVehicleParameters({ 
+                        ...vehicleParameters, 
+                        lightDutyCost: newValue
+                      });
+                    }}
                   />
                 </div>
                 <TooltipProvider>
@@ -118,11 +128,18 @@ export default function VehicleParameters() {
                   <input
                     type="text"
                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-8"
+                    style={getFieldStyles(isFieldModified('mediumDutyCost'))}
                     value={formatCost(vehicleParameters.mediumDutyCost)}
-                    onChange={(e) => updateVehicleParameters({ 
-                      ...vehicleParameters, 
-                      mediumDutyCost: parseCost(e.target.value) 
-                    })}
+                    onChange={(e) => {
+                      const newValue = parseCost(e.target.value);
+                      if (newValue !== DEFAULT_VALUES.mediumDutyCost) {
+                        markFieldAsModified('mediumDutyCost');
+                      }
+                      updateVehicleParameters({ 
+                        ...vehicleParameters, 
+                        mediumDutyCost: newValue
+                      });
+                    }}
                   />
                 </div>
                 <TooltipProvider>
