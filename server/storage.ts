@@ -14,6 +14,7 @@ export interface IStorage {
   saveStrategy(strategy: InsertSavedStrategy): Promise<SavedStrategy>;
   getAllStrategies(): Promise<SavedStrategy[]>;
   getStrategy(id: string): Promise<SavedStrategy | undefined>;
+  updateStrategyName(id: string, name: string): Promise<SavedStrategy | undefined>;
   deleteStrategy(id: string): Promise<void>;
 }
 
@@ -66,6 +67,15 @@ export class HybridStorage implements IStorage {
       .from(savedStrategies)
       .where(eq(savedStrategies.id, id));
     return strategy || undefined;
+  }
+
+  async updateStrategyName(id: string, name: string): Promise<SavedStrategy | undefined> {
+    const [updated] = await db
+      .update(savedStrategies)
+      .set({ name })
+      .where(eq(savedStrategies.id, id))
+      .returning();
+    return updated || undefined;
   }
 
   async deleteStrategy(id: string): Promise<void> {

@@ -46,6 +46,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/strategies/:id", async (req, res) => {
+    try {
+      const { name } = req.body;
+      if (!name || typeof name !== 'string') {
+        res.status(400).json({ error: "Invalid name" });
+        return;
+      }
+      const updated = await storage.updateStrategyName(req.params.id, name);
+      if (!updated) {
+        res.status(404).json({ error: "Strategy not found" });
+      } else {
+        res.json(updated);
+      }
+    } catch (error) {
+      console.error("Error updating strategy:", error);
+      res.status(500).json({ error: "Failed to update strategy" });
+    }
+  });
+
   app.delete("/api/strategies/:id", async (req, res) => {
     try {
       await storage.deleteStrategy(req.params.id);
