@@ -19,9 +19,6 @@ export const getVehicleCosts = (vehicleParams: VehicleParameters) => {
 // Diesel deduction factor (5 cents per mile)
 const DIESEL_DEDUCTION_PER_MILE = 0.05;
 
-// Station design factor to account for compressor/venting losses, uptime derate, and growth reserve
-const STATION_DESIGN_FACTOR = 1.2735;
-
 // CNG efficiency loss percentage
 const CNG_LOSS = {
   light: 0.05,   // 5% loss
@@ -158,14 +155,11 @@ export function calculateStationCost(config: StationConfig, vehicleParams?: Vehi
   const mediumAnnualGGE = (vehicleParams.mediumDutyAnnualMiles / vehicleParams.mediumDutyMPG) * mediumConversionFactor / cngEfficiencyFactors.medium;
   const heavyAnnualGGE = (vehicleParams.heavyDutyAnnualMiles / vehicleParams.heavyDutyMPG) * heavyConversionFactor / cngEfficiencyFactors.heavy;
   
-  // Total annual GGE consumption for the fleet (base energy demand)
-  const baseAnnualGGE = 
+  // Total annual GGE consumption for the fleet
+  const annualGGE = 
     (vehicleCounts.lightDutyCount * lightAnnualGGE) + 
     (vehicleCounts.mediumDutyCount * mediumAnnualGGE) + 
     (vehicleCounts.heavyDutyCount * heavyAnnualGGE);
-  
-  // Apply station design factor for compressor/venting losses, uptime derate, and growth reserve
-  const annualGGE = baseAnnualGGE * STATION_DESIGN_FACTOR;
   
   // Station sizing and pricing based on annual GGE consumption
   // Each station size has a maximum capacity it can handle
@@ -364,14 +358,11 @@ export function getStationSizeInfo(config: StationConfig, vehicleParams?: Vehicl
   const mediumAnnualGGE = (vehicleParams.mediumDutyAnnualMiles / vehicleParams.mediumDutyMPG) * mediumConversionFactor / cngEfficiencyFactors.medium;
   const heavyAnnualGGE = (vehicleParams.heavyDutyAnnualMiles / vehicleParams.heavyDutyMPG) * heavyConversionFactor / cngEfficiencyFactors.heavy;
   
-  // Total annual GGE consumption for the fleet (base energy demand)
-  const baseAnnualGGE = 
+  // Total annual GGE consumption for the fleet
+  const annualGGE = 
     (vehicleCounts.lightDutyCount * lightAnnualGGE) + 
     (vehicleCounts.mediumDutyCount * mediumAnnualGGE) + 
     (vehicleCounts.heavyDutyCount * heavyAnnualGGE);
-  
-  // Apply station design factor for compressor/venting losses, uptime derate, and growth reserve
-  const annualGGE = baseAnnualGGE * STATION_DESIGN_FACTOR;
   
   // Station sizes (same as in calculateStationCost)
   const stationSizes = {
