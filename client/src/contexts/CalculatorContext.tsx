@@ -29,6 +29,7 @@ interface CalculatorContextType {
   updateDeploymentStrategy: (strategy: DeploymentStrategy) => void;
   setDistributionStrategy: (strategy: DeploymentStrategy) => void;
   updateManualDistribution: (year: number, vehicle: Partial<VehicleDistribution>) => void;
+  setManualDistributionBulk: (distributions: VehicleDistribution[]) => void;
   calculateResults: () => void;
   toggleSidebar: () => void;
   toggleHideNegativeValues: () => void;
@@ -579,6 +580,56 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Method to update all manual distributions at once (bulk update)
+  const setManualDistributionBulk = (distributions: VehicleDistribution[]) => {
+    if (deploymentStrategy === 'manual') {
+      console.log('Setting manual distribution bulk:', distributions);
+      
+      // Create new distribution array with proper investments calculated
+      const newDistribution = distributions.map((yearData, index) => {
+        const light = yearData.light || 0;
+        const medium = yearData.medium || 0;
+        const heavy = yearData.heavy || 0;
+        
+        const investment = 
+          (light * vehicleParameters.lightDutyCost) + 
+          (medium * vehicleParameters.mediumDutyCost) + 
+          (heavy * vehicleParameters.heavyDutyCost);
+        
+        return {
+          light,
+          medium,
+          heavy,
+          investment
+        };
+      });
+      
+      // Update the distribution state
+      setVehicleDistribution(newDistribution);
+      
+      // Apply lifecycle management to the updated distribution
+      const enhancedDist = applyVehicleLifecycle(
+        newDistribution,
+        vehicleParameters,
+        timeHorizon
+      );
+      setEnhancedDistribution(enhancedDist);
+      
+      // Recalculate results with the enhanced distribution
+      if (enhancedDist) {
+        const calculationResults = calculateROI(
+          vehicleParameters,
+          stationConfig,
+          fuelPrices,
+          timeHorizon,
+          deploymentStrategy,
+          enhancedDist
+        );
+        setResults(calculationResults);
+      }
+    }
+  };
+
   // Method to calculate ROI and other metrics
   const calculateResults = () => {
     // First, distribute vehicles based on strategy
@@ -633,6 +684,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     updateDeploymentStrategy,
     setDistributionStrategy,
     updateManualDistribution,
+    setManualDistributionBulk,
     calculateResults,
     toggleSidebar,
     toggleHideNegativeValues
