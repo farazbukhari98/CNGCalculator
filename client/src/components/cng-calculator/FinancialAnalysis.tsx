@@ -39,10 +39,10 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
 
   // For non-turnkey option, we need to calculate station cost separately since it's not included in totalInvestment
   // This ensures we have the correct station cost to calculate LDC investment tariff
-  const { vehicleParameters, vehicleDistribution } = useCalculator();
+  const { vehicleParameters, enhancedDistribution } = useCalculator();
   
-  // Calculate appropriate station cost based on the current fleet configuration
-  const calculatedStationCost = calculateStationCost(stationConfig, vehicleParameters, vehicleDistribution, fuelPrices);
+  // Calculate appropriate station cost based on the current fleet configuration - use enhanced distribution for accurate active vehicle counts
+  const calculatedStationCost = calculateStationCost(stationConfig, vehicleParameters, enhancedDistribution, fuelPrices);
   
   // For turnkey, station cost is included in total investment (the difference between total and vehicle investments)
   // For non-turnkey, use the calculated station cost directly

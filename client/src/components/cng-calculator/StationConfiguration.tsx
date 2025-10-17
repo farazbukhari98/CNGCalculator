@@ -12,44 +12,19 @@ export default function StationConfiguration() {
     updateStationConfig,
     vehicleParameters,
     vehicleDistribution,
+    enhancedDistribution,
     fuelPrices
   } = useCalculator();
 
-  // Always determine vehicle counts based on peak year usage (maximum vehicles in any single year)
-  let vehicleCounts: { lightDutyCount: number, mediumDutyCount: number, heavyDutyCount: number };
+  // Enhanced distribution already includes total active vehicle counts
+  // No need to manually calculate peak year counts
+
+  // Get station size information - use enhanced distribution for accurate active vehicle counts
+  const stationSizeInfo = getStationSizeInfo(stationConfig, vehicleParameters, enhancedDistribution, fuelPrices);
   
-  if (vehicleDistribution) {
-    // Use peak year vehicle counts from deployment strategy
-    let maxLight = 0;
-    let maxMedium = 0;
-    let maxHeavy = 0;
-
-    vehicleDistribution.forEach(year => {
-      maxLight = Math.max(maxLight, year.light || 0);
-      maxMedium = Math.max(maxMedium, year.medium || 0);
-      maxHeavy = Math.max(maxHeavy, year.heavy || 0);
-    });
-
-    vehicleCounts = {
-      lightDutyCount: maxLight,
-      mediumDutyCount: maxMedium,
-      heavyDutyCount: maxHeavy
-    };
-  } else {
-    // Fallback to total vehicle counts if no distribution available yet
-    vehicleCounts = {
-      lightDutyCount: vehicleParameters.lightDutyCount,
-      mediumDutyCount: vehicleParameters.mediumDutyCount,
-      heavyDutyCount: vehicleParameters.heavyDutyCount
-    };
-  }
-
-  // Get station size information
-  const stationSizeInfo = getStationSizeInfo(stationConfig, vehicleParameters, vehicleDistribution, fuelPrices);
-  
-  // Use centralized station cost calculation
+  // Use centralized station cost calculation - use enhanced distribution for accurate active vehicle counts
   const getStationCost = () => {
-    return calculateStationCost(stationConfig, vehicleParameters, vehicleDistribution, fuelPrices);
+    return calculateStationCost(stationConfig, vehicleParameters, enhancedDistribution, fuelPrices);
   };
   
   // Calculate capacity utilization for progress bar
@@ -134,7 +109,15 @@ export default function StationConfiguration() {
         </div>
         <Progress value={capacityPercentage} className="h-2 mt-2" />
         <p className="text-xs text-gray-500 mt-1">
-          Peak year vehicles: {vehicleCounts.lightDutyCount} Light, {vehicleCounts.mediumDutyCount} Medium, {vehicleCounts.heavyDutyCount} Heavy (w/ CNG efficiency: 95%/92.5%/90%)
+          {enhancedDistribution && enhancedDistribution.length > 0 ? (
+            <>
+              Peak year vehicles: {Math.max(...enhancedDistribution.map(y => y.totalActiveLight || 0))} Light, {Math.max(...enhancedDistribution.map(y => y.totalActiveMedium || 0))} Medium, {Math.max(...enhancedDistribution.map(y => y.totalActiveHeavy || 0))} Heavy (w/ CNG efficiency: 95%/92.5%/90%)
+            </>
+          ) : (
+            <>
+              Peak year vehicles: {vehicleParameters.lightDutyCount} Light, {vehicleParameters.mediumDutyCount} Medium, {vehicleParameters.heavyDutyCount} Heavy (w/ CNG efficiency: 95%/92.5%/90%)
+            </>
+          )}
         </p>
       </div>
       

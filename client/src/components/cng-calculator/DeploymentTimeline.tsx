@@ -61,8 +61,8 @@ export default function DeploymentTimeline() {
                 
                 // For year 1, also show station cost separately
                 const isFirstYear = year === 1;
-                // Calculate station cost properly using the calculator function
-                const calculatedStationCost = calculateStationCost(stationConfig, vehicleParameters, vehicleDistribution, fuelPrices);
+                // Calculate station cost properly using the calculator function - use enhanced distribution for accurate active vehicle counts
+                const calculatedStationCost = calculateStationCost(stationConfig, vehicleParameters, enhancedDistribution, fuelPrices);
                 // Station cost logic for INVESTMENT calculation (not operational costs):
                 // - Turnkey: Include full station cost in Year 1 only (actual investment)
                 // - Non-turnkey: Show annual tariff fee for each year

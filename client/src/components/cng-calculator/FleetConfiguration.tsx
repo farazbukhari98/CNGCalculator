@@ -16,6 +16,7 @@ export default function FleetConfiguration({ showCashflow }: FleetConfigurationP
     timeHorizon,
     deploymentStrategy,
     vehicleDistribution,
+    enhancedDistribution,
     fuelPrices
   } = useCalculator();
 
@@ -88,9 +89,9 @@ export default function FleetConfiguration({ showCashflow }: FleetConfigurationP
     (actualCounts.medium * mediumAnnualGGE) + 
     (actualCounts.heavy * heavyAnnualGGE);
   
-  // Use centralized station cost calculation
+  // Use centralized station cost calculation - use enhanced distribution for accurate active vehicle counts
   const getStationCost = () => {
-    return calculateStationCost(stationConfig, vehicleParameters, vehicleDistribution, fuelPrices);
+    return calculateStationCost(stationConfig, vehicleParameters, enhancedDistribution, fuelPrices);
   };
 
   const stationCost = getStationCost();
