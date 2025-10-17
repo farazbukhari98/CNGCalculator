@@ -176,12 +176,12 @@ export function calculateStationCost(config: StationConfig, vehicleParams?: Vehi
       { size: 5, capacity: 576001, cost: 3080351 }
     ],
     time: [
-      { size: 6, capacity: 100, cost: 491333 },
-      { size: 1, capacity: 12961, cost: 1831219 },
-      { size: 2, capacity: 108001, cost: 2218147 },
-      { size: 3, capacity: 288001, cost: 2907603 },
-      { size: 4, capacity: 576001, cost: 3200857 },
-      { size: 5, capacity: 864001, cost: 3506651 }
+      { size: 1, capacity: 100, cost: 491333 },
+      { size: 2, capacity: 12961, cost: 1831219 },
+      { size: 3, capacity: 108001, cost: 2218147 },
+      { size: 4, capacity: 288001, cost: 2907603 },
+      { size: 5, capacity: 576001, cost: 3200857 },
+      { size: 6, capacity: 864001, cost: 3506651 }
     ]
   };
   
@@ -378,12 +378,12 @@ export function getStationSizeInfo(config: StationConfig, vehicleParams?: Vehicl
       { size: 5, capacity: 576001, cost: 3080351 }
     ],
     time: [
-      { size: 6, capacity: 100, cost: 491333 },
-      { size: 1, capacity: 12961, cost: 1831219 },
-      { size: 2, capacity: 108001, cost: 2218147 },
-      { size: 3, capacity: 288001, cost: 2907603 },
-      { size: 4, capacity: 576001, cost: 3200857 },
-      { size: 5, capacity: 864001, cost: 3506651 }
+      { size: 1, capacity: 100, cost: 491333 },
+      { size: 2, capacity: 12961, cost: 1831219 },
+      { size: 3, capacity: 108001, cost: 2218147 },
+      { size: 4, capacity: 288001, cost: 2907603 },
+      { size: 5, capacity: 576001, cost: 3200857 },
+      { size: 6, capacity: 864001, cost: 3506651 }
     ]
   };
   
