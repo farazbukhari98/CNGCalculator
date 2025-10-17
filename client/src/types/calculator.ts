@@ -29,6 +29,7 @@ export interface StationConfig {
   businessType: "aglc" | "cgc" | "vng";
   turnkey: boolean; // Yes = upfront cost, No = financed cost
   sizingMethod: "total" | "peak"; // Total vehicles vs peak year usage
+  stationMarkup: number; // Markup percentage applied to station cost (0-100)
 }
 
 // Fuel prices

@@ -106,9 +106,10 @@ export function calculateStationCost(config: StationConfig, vehicleParams?: Vehi
   // If no vehicle params provided, return default costs
   if (!vehicleParams) {
     const defaultCost = config.stationType === 'fast' ? 2200000 : 1200000; // Default to medium size
-    // Apply turnkey markup if applicable
-    const turnkeyMultiplier = config.turnkey ? 1.2 : 1.0; // 20% markup for turnkey
-    return Math.round(defaultCost * turnkeyMultiplier);
+    // Apply station markup if turnkey
+    const markupMultiplier = 1 + (config.stationMarkup / 100); // Convert percentage to multiplier
+    const finalMultiplier = config.turnkey ? markupMultiplier : 1.0;
+    return Math.round(defaultCost * finalMultiplier);
   }
   
   // Always determine vehicle counts based on peak year usage (maximum vehicles in any single year)
@@ -209,10 +210,13 @@ export function calculateStationCost(config: StationConfig, vehicleParams?: Vehi
   // Apply business type adjustment
   const businessMultiplier = config.businessType === 'cgc' ? 0.95 : 1.0; // CGC is 0.95, AGLC and VNG are 1.0
   
-  // Apply turnkey markup
-  const turnkeyMultiplier = config.turnkey ? 1.2 : 1.0; // 20% markup for turnkey
+  // Apply station markup (user-configurable percentage)
+  const markupMultiplier = 1 + (config.stationMarkup / 100); // Convert percentage to multiplier
   
-  return Math.round(baseCost * businessMultiplier * turnkeyMultiplier);
+  // Apply turnkey option - if turnkey, apply markup; if not, no additional markup
+  const finalMultiplier = config.turnkey ? markupMultiplier : 1.0;
+  
+  return Math.round(baseCost * businessMultiplier * finalMultiplier);
 }
 
 // Apply vehicle lifecycle management to deployment distribution
@@ -401,8 +405,9 @@ export function getStationSizeInfo(config: StationConfig, vehicleParams?: Vehicl
   
   // Calculate final cost with business adjustments and markup
   const businessMultiplier = config.businessType === 'cgc' ? 0.95 : 1.0;
-  const turnkeyMultiplier = config.turnkey ? 1.2 : 1.0;
-  const finalCost = Math.round(selectedStation.cost * businessMultiplier * turnkeyMultiplier);
+  const markupMultiplier = 1 + (config.stationMarkup / 100); // Convert percentage to multiplier
+  const finalMultiplier = config.turnkey ? markupMultiplier : 1.0;
+  const finalCost = Math.round(selectedStation.cost * businessMultiplier * finalMultiplier);
   
   return {
     size: selectedStation.size,
