@@ -41,6 +41,7 @@ Number formatting: Currency values should display 2 decimal places, percentages 
   - Multi-vehicle type support (Light, Medium, Heavy duty)
   - Dynamic annual miles parameters per vehicle type (configurable by user)
   - Station sizing and cost calculations based on fleet requirements
+  - Configurable station markup percentage (0-100% in 5% increments, default 20%)
   - Fuel efficiency loss calculations for CNG conversion
   - Maintenance cost differentials between fuel types with diesel deduction factor (5¢/mile)
   - Emission reduction calculations with industry-standard factors
