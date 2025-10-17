@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useCalculator } from "@/contexts/CalculatorContext";
 import { useComparison } from "@/contexts/ComparisonContext";
-import { Info, BarChart3, Plus, Truck, Eye, EyeOff, Edit3, Check, FolderOpen } from "lucide-react";
+import { Info, BarChart3, Plus, Truck, Eye, EyeOff, Edit3, Check, FolderOpen, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -59,6 +59,11 @@ export default function GlobalSettings() {
   const [savedStrategies, setSavedStrategies] = useState<any[]>([]);
   const [selectedStrategy, setSelectedStrategy] = useState<string>("");
   const [isLoadingStrategies, setIsLoadingStrategies] = useState(false);
+  const [editingStrategy, setEditingStrategy] = useState<{ id: string; name: string } | null>(null);
+  const [deletingStrategy, setDeletingStrategy] = useState<string | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [editName, setEditName] = useState("");
 
   // Strategy descriptions
   const strategyDescriptions = {
@@ -159,6 +164,75 @@ export default function GlobalSettings() {
       toast({
         title: "Error",
         description: "Failed to load strategy",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle edit strategy name
+  const handleEditStrategy = async () => {
+    if (!editingStrategy || !editName.trim()) return;
+    
+    try {
+      const response = await fetch(`/api/strategies/${editingStrategy.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editName.trim() })
+      });
+      
+      if (response.ok) {
+        const updated = await response.json();
+        setSavedStrategies(prev => 
+          prev.map(s => s.id === updated.id ? updated : s)
+        );
+        toast({
+          title: "Strategy Updated",
+          description: `Successfully renamed to "${editName.trim()}"`
+        });
+        setShowEditDialog(false);
+        setEditingStrategy(null);
+        setEditName("");
+      } else {
+        throw new Error('Failed to update strategy');
+      }
+    } catch (error) {
+      console.error('Error updating strategy:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update strategy name",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle delete strategy
+  const handleDeleteStrategy = async () => {
+    if (!deletingStrategy) return;
+    
+    try {
+      const response = await fetch(`/api/strategies/${deletingStrategy}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        setSavedStrategies(prev => prev.filter(s => s.id !== deletingStrategy));
+        if (selectedStrategy === deletingStrategy) {
+          setSelectedStrategy("");
+        }
+        toast({
+          title: "Strategy Deleted",
+          description: "Successfully deleted the saved strategy"
+        });
+        setShowDeleteDialog(false);
+        setDeletingStrategy(null);
+      } else {
+        throw new Error('Failed to delete strategy');
+      }
+    } catch (error) {
+      console.error('Error deleting strategy:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete strategy",
         variant: "destructive"
       });
     }
@@ -509,17 +583,48 @@ export default function GlobalSettings() {
               </SelectItem>
             ) : (
               savedStrategies.map((strategy) => (
-                <SelectItem key={strategy.id} value={strategy.id}>
-                  <div className="flex items-center gap-2">
-                    <FolderOpen className="h-3 w-3" />
-                    <span>{strategy.name}</span>
-                    {strategy.deploymentStrategy && (
-                      <Badge variant="outline" className="ml-2 text-xs">
-                        {strategy.deploymentStrategy}
-                      </Badge>
-                    )}
+                <div key={strategy.id} className="flex items-center justify-between px-2 py-1 hover:bg-gray-50">
+                  <SelectItem value={strategy.id} className="flex-1 border-0 p-0">
+                    <div className="flex items-center gap-2">
+                      <FolderOpen className="h-3 w-3" />
+                      <span>{strategy.name}</span>
+                      {strategy.deploymentStrategy && (
+                        <Badge variant="outline" className="ml-2 text-xs">
+                          {strategy.deploymentStrategy}
+                        </Badge>
+                      )}
+                    </div>
+                  </SelectItem>
+                  <div className="flex gap-1 ml-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-0"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setEditingStrategy({ id: strategy.id, name: strategy.name });
+                        setEditName(strategy.name);
+                        setShowEditDialog(true);
+                      }}
+                    >
+                      <Edit2 className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setDeletingStrategy(strategy.id);
+                        setShowDeleteDialog(true);
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
                   </div>
-                </SelectItem>
+                </div>
               ))
             )}
           </SelectContent>
@@ -577,6 +682,87 @@ export default function GlobalSettings() {
           </p>
         </div>
       )}
+
+      {/* Edit Strategy Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Strategy Name</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Strategy Name
+              </label>
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Enter new strategy name"
+                className="w-full"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && editName.trim()) {
+                    handleEditStrategy();
+                  }
+                }}
+              />
+            </div>
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowEditDialog(false);
+                  setEditingStrategy(null);
+                  setEditName("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleEditStrategy}
+                disabled={!editName.trim()}
+              >
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Strategy Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Strategy</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Are you sure you want to delete this saved strategy? This action cannot be undone.
+            </p>
+            <div className="bg-gray-50 p-3 rounded-md">
+              <p className="text-sm font-medium">
+                {savedStrategies.find(s => s.id === deletingStrategy)?.name}
+              </p>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowDeleteDialog(false);
+                  setDeletingStrategy(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteStrategy}
+              >
+                Delete Strategy
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
