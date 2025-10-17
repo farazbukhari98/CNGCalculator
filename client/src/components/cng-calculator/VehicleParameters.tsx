@@ -486,10 +486,10 @@ export default function VehicleParameters() {
                         max="30"
                         step="0.1"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
-                        value={(vehicleParameters.lightDutyCngEfficiencyLoss * 100).toFixed(1)}
+                        value={(vehicleParameters.lightDutyCngEfficiencyLoss / 10).toFixed(1)}
                         onChange={(e) => updateVehicleParameters({ 
                           ...vehicleParameters, 
-                          lightDutyCngEfficiencyLoss: parseNumber(e.target.value) / 100
+                          lightDutyCngEfficiencyLoss: Math.round(parseNumber(e.target.value) * 10)
                         })}
                       />
                     </div>
@@ -522,10 +522,10 @@ export default function VehicleParameters() {
                         max="30"
                         step="0.1"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
-                        value={(vehicleParameters.mediumDutyCngEfficiencyLoss * 100).toFixed(1)}
+                        value={(vehicleParameters.mediumDutyCngEfficiencyLoss / 10).toFixed(1)}
                         onChange={(e) => updateVehicleParameters({ 
                           ...vehicleParameters, 
-                          mediumDutyCngEfficiencyLoss: parseNumber(e.target.value) / 100
+                          mediumDutyCngEfficiencyLoss: Math.round(parseNumber(e.target.value) * 10)
                         })}
                       />
                     </div>
@@ -558,10 +558,10 @@ export default function VehicleParameters() {
                         max="30"
                         step="0.1"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
-                        value={(vehicleParameters.heavyDutyCngEfficiencyLoss * 100).toFixed(1)}
+                        value={(vehicleParameters.heavyDutyCngEfficiencyLoss / 10).toFixed(1)}
                         onChange={(e) => updateVehicleParameters({ 
                           ...vehicleParameters, 
-                          heavyDutyCngEfficiencyLoss: parseNumber(e.target.value) / 100
+                          heavyDutyCngEfficiencyLoss: Math.round(parseNumber(e.target.value) * 10)
                         })}
                       />
                     </div>

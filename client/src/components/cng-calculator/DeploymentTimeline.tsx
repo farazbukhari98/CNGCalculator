@@ -86,9 +86,9 @@ export default function DeploymentTimeline() {
                 
                 // Calculate annual GGE for this year based on active vehicles
                 const cngEfficiencyFactors = {
-                  light: 1 - vehicleParameters.lightDutyCngEfficiencyLoss,
-                  medium: 1 - vehicleParameters.mediumDutyCngEfficiencyLoss,
-                  heavy: 1 - vehicleParameters.heavyDutyCngEfficiencyLoss
+                  light: 1 - (vehicleParameters.lightDutyCngEfficiencyLoss / 1000),
+                  medium: 1 - (vehicleParameters.mediumDutyCngEfficiencyLoss / 1000),
+                  heavy: 1 - (vehicleParameters.heavyDutyCngEfficiencyLoss / 1000)
                 };
                 
                 const lightConversionFactor = vehicleParameters.lightDutyFuelType === 'gasoline' 

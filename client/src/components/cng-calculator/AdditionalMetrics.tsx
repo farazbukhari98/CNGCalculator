@@ -67,13 +67,13 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
     
     // Calculate cost per mile for each vehicle type using configurable CNG efficiency loss
     const lightGasCostPerMile = adjustedGasolinePrice / vehicleParameters.lightDutyMPG;
-    const lightCngCostPerMile = adjustedCngPrice / (vehicleParameters.lightDutyMPG * (1 - vehicleParameters.lightDutyCngEfficiencyLoss));
+    const lightCngCostPerMile = adjustedCngPrice / (vehicleParameters.lightDutyMPG * (1 - vehicleParameters.lightDutyCngEfficiencyLoss / 1000));
     
     const mediumDieselCostPerMile = adjustedDieselPrice / vehicleParameters.mediumDutyMPG;
-    const mediumCngCostPerMile = adjustedCngPrice / (vehicleParameters.mediumDutyMPG * (1 - vehicleParameters.mediumDutyCngEfficiencyLoss));
+    const mediumCngCostPerMile = adjustedCngPrice / (vehicleParameters.mediumDutyMPG * (1 - vehicleParameters.mediumDutyCngEfficiencyLoss / 1000));
     
     const heavyDieselCostPerMile = adjustedDieselPrice / vehicleParameters.heavyDutyMPG;
-    const heavyCngCostPerMile = adjustedCngPrice / (vehicleParameters.heavyDutyMPG * (1 - vehicleParameters.heavyDutyCngEfficiencyLoss));
+    const heavyCngCostPerMile = adjustedCngPrice / (vehicleParameters.heavyDutyMPG * (1 - vehicleParameters.heavyDutyCngEfficiencyLoss / 1000));
     
     // Maintenance costs
     const MAINTENANCE_COST = { gasoline: 0.47, diesel: 0.52, cng: 0.47 };
