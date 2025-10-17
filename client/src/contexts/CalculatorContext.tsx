@@ -64,10 +64,10 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     lightDutyFuelType: 'gasoline',
     mediumDutyFuelType: 'diesel',
     heavyDutyFuelType: 'diesel',
-    // Default CNG efficiency loss percentages
-    lightDutyCngEfficiencyLoss: 0.05,   // 5% loss
-    mediumDutyCngEfficiencyLoss: 0.075, // 7.5% loss
-    heavyDutyCngEfficiencyLoss: 0.10    // 10% loss
+    // Default CNG efficiency loss as integer percentages (multiplied by 10 for precision)
+    lightDutyCngEfficiencyLoss: 50,   // 5.0% loss (stored as 50)
+    mediumDutyCngEfficiencyLoss: 75,  // 7.5% loss (stored as 75)
+    heavyDutyCngEfficiencyLoss: 100   // 10.0% loss (stored as 100)
   });
 
   const [stationConfig, setStationConfig] = useState<StationConfig>({

@@ -18,9 +18,9 @@ export interface VehicleParameters {
   lightDutyFuelType: 'gasoline' | 'diesel';   // Fuel type for light duty vehicles
   mediumDutyFuelType: 'gasoline' | 'diesel';  // Fuel type for medium duty vehicles
   heavyDutyFuelType: 'gasoline' | 'diesel';   // Fuel type for heavy duty vehicles
-  lightDutyCngEfficiencyLoss: number;  // CNG efficiency loss percentage for light duty (e.g., 0.05 for 5%)
-  mediumDutyCngEfficiencyLoss: number; // CNG efficiency loss percentage for medium duty (e.g., 0.075 for 7.5%)
-  heavyDutyCngEfficiencyLoss: number;  // CNG efficiency loss percentage for heavy duty (e.g., 0.10 for 10%)
+  lightDutyCngEfficiencyLoss: number;  // CNG efficiency loss as integer percentage (e.g., 50 for 5.0%)
+  mediumDutyCngEfficiencyLoss: number; // CNG efficiency loss as integer percentage (e.g., 75 for 7.5%)
+  heavyDutyCngEfficiencyLoss: number;  // CNG efficiency loss as integer percentage (e.g., 100 for 10.0%)
 }
 
 // Station configuration
