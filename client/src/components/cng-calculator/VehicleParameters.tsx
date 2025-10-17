@@ -26,9 +26,20 @@ export default function VehicleParameters() {
     return parseInt(value.replace(/[^0-9]/g, "")) || 0;
   };
 
-  // Parse number input (for MPG and Lifespan)
-  const parseNumber = (value: string): number => {
-    return parseFloat(value) || 0;
+  // Parse whole number input (for Annual Miles, Lifespan)
+  const parseWholeNumber = (value: string): number => {
+    return parseInt(value) || 0;
+  };
+  
+  // Parse decimal number with 1 decimal precision (for MPG) - store as integer * 10
+  const parseMPG = (value: string): number => {
+    const floatValue = parseFloat(value) || 0;
+    return Math.round(floatValue * 10); // Store as integer (125 = 12.5 MPG)
+  };
+  
+  // Display MPG value (convert from integer storage)
+  const displayMPG = (value: number): string => {
+    return (value / 10).toFixed(1);
   };
 
   return (
@@ -174,7 +185,7 @@ export default function VehicleParameters() {
                         value={vehicleParameters.lightDutyLifespan}
                         onChange={(e) => updateVehicleParameters({ 
                           ...vehicleParameters, 
-                          lightDutyLifespan: parseNumber(e.target.value)
+                          lightDutyLifespan: parseWholeNumber(e.target.value)
                         })}
                       />
                     </div>
@@ -197,7 +208,7 @@ export default function VehicleParameters() {
                         value={vehicleParameters.mediumDutyLifespan}
                         onChange={(e) => updateVehicleParameters({ 
                           ...vehicleParameters, 
-                          mediumDutyLifespan: parseNumber(e.target.value)
+                          mediumDutyLifespan: parseWholeNumber(e.target.value)
                         })}
                       />
                     </div>
@@ -220,7 +231,7 @@ export default function VehicleParameters() {
                         value={vehicleParameters.heavyDutyLifespan}
                         onChange={(e) => updateVehicleParameters({ 
                           ...vehicleParameters, 
-                          heavyDutyLifespan: parseNumber(e.target.value)
+                          heavyDutyLifespan: parseWholeNumber(e.target.value)
                         })}
                       />
                     </div>
@@ -255,7 +266,7 @@ export default function VehicleParameters() {
                         value={vehicleParameters.lightDutyMPG}
                         onChange={(e) => updateVehicleParameters({ 
                           ...vehicleParameters, 
-                          lightDutyMPG: parseNumber(e.target.value)
+                          lightDutyMPG: parseFloat(e.target.value) || 0
                         })}
                       />
                     </div>
@@ -279,7 +290,7 @@ export default function VehicleParameters() {
                         value={vehicleParameters.mediumDutyMPG}
                         onChange={(e) => updateVehicleParameters({ 
                           ...vehicleParameters, 
-                          mediumDutyMPG: parseNumber(e.target.value)
+                          mediumDutyMPG: parseFloat(e.target.value) || 0
                         })}
                       />
                     </div>
@@ -303,7 +314,7 @@ export default function VehicleParameters() {
                         value={vehicleParameters.heavyDutyMPG}
                         onChange={(e) => updateVehicleParameters({ 
                           ...vehicleParameters, 
-                          heavyDutyMPG: parseNumber(e.target.value)
+                          heavyDutyMPG: parseFloat(e.target.value) || 0
                         })}
                       />
                     </div>
@@ -337,7 +348,7 @@ export default function VehicleParameters() {
                         value={vehicleParameters.lightDutyAnnualMiles}
                         onChange={(e) => updateVehicleParameters({ 
                           ...vehicleParameters, 
-                          lightDutyAnnualMiles: parseNumber(e.target.value)
+                          lightDutyAnnualMiles: parseWholeNumber(e.target.value)
                         })}
                       />
                     </div>
@@ -360,7 +371,7 @@ export default function VehicleParameters() {
                         value={vehicleParameters.mediumDutyAnnualMiles}
                         onChange={(e) => updateVehicleParameters({ 
                           ...vehicleParameters, 
-                          mediumDutyAnnualMiles: parseNumber(e.target.value)
+                          mediumDutyAnnualMiles: parseWholeNumber(e.target.value)
                         })}
                       />
                     </div>
@@ -383,7 +394,7 @@ export default function VehicleParameters() {
                         value={vehicleParameters.heavyDutyAnnualMiles}
                         onChange={(e) => updateVehicleParameters({ 
                           ...vehicleParameters, 
-                          heavyDutyAnnualMiles: parseNumber(e.target.value)
+                          heavyDutyAnnualMiles: parseWholeNumber(e.target.value)
                         })}
                       />
                     </div>
@@ -489,7 +500,7 @@ export default function VehicleParameters() {
                         value={(vehicleParameters.lightDutyCngEfficiencyLoss / 10).toFixed(1)}
                         onChange={(e) => updateVehicleParameters({ 
                           ...vehicleParameters, 
-                          lightDutyCngEfficiencyLoss: Math.round(parseNumber(e.target.value) * 10)
+                          lightDutyCngEfficiencyLoss: Math.round(parseFloat(e.target.value) * 10)
                         })}
                       />
                     </div>
@@ -525,7 +536,7 @@ export default function VehicleParameters() {
                         value={(vehicleParameters.mediumDutyCngEfficiencyLoss / 10).toFixed(1)}
                         onChange={(e) => updateVehicleParameters({ 
                           ...vehicleParameters, 
-                          mediumDutyCngEfficiencyLoss: Math.round(parseNumber(e.target.value) * 10)
+                          mediumDutyCngEfficiencyLoss: Math.round(parseFloat(e.target.value) * 10)
                         })}
                       />
                     </div>
@@ -561,7 +572,7 @@ export default function VehicleParameters() {
                         value={(vehicleParameters.heavyDutyCngEfficiencyLoss / 10).toFixed(1)}
                         onChange={(e) => updateVehicleParameters({ 
                           ...vehicleParameters, 
-                          heavyDutyCngEfficiencyLoss: Math.round(parseNumber(e.target.value) * 10)
+                          heavyDutyCngEfficiencyLoss: Math.round(parseFloat(e.target.value) * 10)
                         })}
                       />
                     </div>
