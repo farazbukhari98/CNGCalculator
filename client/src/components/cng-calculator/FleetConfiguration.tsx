@@ -1,6 +1,6 @@
 import { useCalculator } from "@/contexts/CalculatorContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatPaybackPeriod } from "@/lib/utils";
+import { formatPaybackPeriod, formatNumberWithCommas } from "@/lib/utils";
 import { MetricInfoTooltip } from "./MetricInfoTooltip";
 import { calculateStationCost } from "@/lib/calculator";
 
@@ -114,7 +114,7 @@ export default function FleetConfiguration({ showCashflow }: FleetConfigurationP
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
                 <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Light Duty ({actualCounts.light})
+                  Light Duty ({formatNumberWithCommas(actualCounts.light)})
                 </span>
               </div>
               <span className="text-sm font-medium dark:text-gray-200">{lightDutyPercentage}%</span>
@@ -130,7 +130,7 @@ export default function FleetConfiguration({ showCashflow }: FleetConfigurationP
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
                 <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Medium Duty ({actualCounts.medium})
+                  Medium Duty ({formatNumberWithCommas(actualCounts.medium)})
                 </span>
               </div>
               <span className="text-sm font-medium dark:text-gray-200">{mediumDutyPercentage}%</span>
@@ -146,7 +146,7 @@ export default function FleetConfiguration({ showCashflow }: FleetConfigurationP
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
                 <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Heavy Duty ({actualCounts.heavy})
+                  Heavy Duty ({formatNumberWithCommas(actualCounts.heavy)})
                 </span>
               </div>
               <span className="text-sm font-medium dark:text-gray-200">{heavyDutyPercentage}%</span>

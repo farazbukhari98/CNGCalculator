@@ -38,3 +38,19 @@ function formatPaybackYearsMonths(years: number, months: number, isProjection: b
   // Add projection indicator if beyond typical analysis period
   return isProjection ? `${formattedPeriod} (projected)` : formattedPeriod;
 }
+
+/**
+ * Formats a number with comma separators for thousands
+ * @param num The number to format
+ * @returns Formatted string with commas (e.g., "1,234,567")
+ */
+export function formatNumberWithCommas(num: number | string): string {
+  // Convert to number if it's a string
+  const numValue = typeof num === 'string' ? parseFloat(num) : num;
+  
+  // Handle invalid numbers
+  if (isNaN(numValue)) return '0';
+  
+  // Convert to string and add commas
+  return numValue.toLocaleString('en-US', { maximumFractionDigits: 0 });
+}
