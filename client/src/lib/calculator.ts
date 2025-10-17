@@ -131,9 +131,9 @@ export function calculateStationCost(config: StationConfig, vehicleParams?: Vehi
   
   // CNG efficiency factors (fuel economy reduction) - use configurable values from vehicle parameters
   const cngEfficiencyFactors = {
-    light: 1 - vehicleParams.lightDutyCngEfficiencyLoss,    // Apply configurable efficiency loss
-    medium: 1 - vehicleParams.mediumDutyCngEfficiencyLoss,  // Apply configurable efficiency loss  
-    heavy: 1 - vehicleParams.heavyDutyCngEfficiencyLoss     // Apply configurable efficiency loss
+    light: 1 - (vehicleParams.lightDutyCngEfficiencyLoss / 1000),    // Convert from integer percentage (50 = 5.0%) to decimal
+    medium: 1 - (vehicleParams.mediumDutyCngEfficiencyLoss / 1000),  // Convert from integer percentage (75 = 7.5%) to decimal
+    heavy: 1 - (vehicleParams.heavyDutyCngEfficiencyLoss / 1000)     // Convert from integer percentage (100 = 10.0%) to decimal
   };
   
   // Default conversion factors if not provided
@@ -334,9 +334,9 @@ export function getStationSizeInfo(config: StationConfig, vehicleParams?: Vehicl
 
   // Calculate annual GGE (same logic as calculateStationCost) - use configurable values
   const cngEfficiencyFactors = {
-    light: 1 - vehicleParams.lightDutyCngEfficiencyLoss,
-    medium: 1 - vehicleParams.mediumDutyCngEfficiencyLoss,
-    heavy: 1 - vehicleParams.heavyDutyCngEfficiencyLoss
+    light: 1 - (vehicleParams.lightDutyCngEfficiencyLoss / 1000),    // Convert from integer percentage to decimal
+    medium: 1 - (vehicleParams.mediumDutyCngEfficiencyLoss / 1000),  // Convert from integer percentage to decimal
+    heavy: 1 - (vehicleParams.heavyDutyCngEfficiencyLoss / 1000)     // Convert from integer percentage to decimal
   };
   
   // Default conversion factors if not provided
@@ -651,17 +651,17 @@ export function calculateROI(
     light: { 
       gasoline: vehicleParams.lightDutyMPG,
       diesel: vehicleParams.lightDutyMPG,
-      cng: vehicleParams.lightDutyMPG * (1 - vehicleParams.lightDutyCngEfficiencyLoss)  // Apply configurable efficiency loss
+      cng: vehicleParams.lightDutyMPG * (1 - vehicleParams.lightDutyCngEfficiencyLoss / 1000)  // Convert from integer percentage to decimal
     },
     medium: { 
       gasoline: vehicleParams.mediumDutyMPG,
       diesel: vehicleParams.mediumDutyMPG, 
-      cng: vehicleParams.mediumDutyMPG * (1 - vehicleParams.mediumDutyCngEfficiencyLoss)  // Apply configurable efficiency loss
+      cng: vehicleParams.mediumDutyMPG * (1 - vehicleParams.mediumDutyCngEfficiencyLoss / 1000)  // Convert from integer percentage to decimal
     },
     heavy: { 
       gasoline: vehicleParams.heavyDutyMPG,
       diesel: vehicleParams.heavyDutyMPG, 
-      cng: vehicleParams.heavyDutyMPG * (1 - vehicleParams.heavyDutyCngEfficiencyLoss)  // Apply configurable efficiency loss
+      cng: vehicleParams.heavyDutyMPG * (1 - vehicleParams.heavyDutyCngEfficiencyLoss / 1000)  // Convert from integer percentage to decimal
     }
   };
   // Calculate total vehicle investment including replacements
