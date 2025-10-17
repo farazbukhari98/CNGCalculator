@@ -16,9 +16,9 @@ export default function DeploymentTimeline() {
     fuelPrices
   } = useCalculator();
 
-  // Format currency
+  // Format currency without decimal places
   const formatCurrency = (value: number) => {
-    return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `$${value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
 
   // Only show years up to the selected time horizon
