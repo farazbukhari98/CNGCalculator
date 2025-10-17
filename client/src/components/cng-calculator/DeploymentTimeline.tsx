@@ -65,7 +65,7 @@ export default function DeploymentTimeline() {
                 const calculatedStationCost = calculateStationCost(stationConfig, vehicleParameters, vehicleDistribution, fuelPrices);
                 // Station cost logic for INVESTMENT calculation (not operational costs):
                 // - Turnkey: Include full station cost in Year 1 only (actual investment)
-                // - Non-turnkey: No station investment (tariff fees are operational, already in yearlySavings)
+                // - Non-turnkey: Show annual tariff fee for each year
                 let stationCostInvestment = 0;
                 let stationCostDisplay = 0;
                 
@@ -73,8 +73,8 @@ export default function DeploymentTimeline() {
                   stationCostInvestment = isFirstYear ? calculatedStationCost : 0;
                   stationCostDisplay = stationCostInvestment;
                 } else {
-                  // For non-turnkey, show $0 for station investment (tariff fees are operational, not investment)
-                  stationCostDisplay = 0;
+                  // For non-turnkey, show the annual tariff fee
+                  stationCostDisplay = results.yearlyTariffFees[year - 1] || 0;
                   stationCostInvestment = 0; // Not an investment, it's operational cost
                 }
                 const totalYearInvestment = vehicleInvestment + stationCostInvestment;
@@ -226,7 +226,9 @@ export default function DeploymentTimeline() {
                             <span className="text-xs font-medium" data-testid={`vehicle-investment-year-${year}`}>{formatCurrency(vehicleInvestment)}</span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-600 dark:text-gray-400">Station</span>
+                            <span className="text-xs text-gray-600 dark:text-gray-400">
+                              {stationConfig.turnkey ? 'Station' : 'Station (Annual)'}
+                            </span>
                             <span className="text-xs font-medium" data-testid={`station-investment-year-${year}`}>{formatCurrency(stationCostDisplay)}</span>
                           </div>
                         </div>
