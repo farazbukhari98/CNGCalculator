@@ -84,6 +84,35 @@ export default function DeploymentTimeline() {
                 const totalReplacements = (yearData.lightReplacements || 0) + (yearData.mediumReplacements || 0) + (yearData.heavyReplacements || 0);
                 const totalVehiclesInOperation = (yearData.totalActiveLight || 0) + (yearData.totalActiveMedium || 0) + (yearData.totalActiveHeavy || 0);
                 
+                // Calculate annual GGE for this year based on active vehicles
+                const cngEfficiencyFactors = {
+                  light: 1 - vehicleParameters.lightDutyCngEfficiencyLoss,
+                  medium: 1 - vehicleParameters.mediumDutyCngEfficiencyLoss,
+                  heavy: 1 - vehicleParameters.heavyDutyCngEfficiencyLoss
+                };
+                
+                const lightConversionFactor = vehicleParameters.lightDutyFuelType === 'gasoline' 
+                  ? (fuelPrices?.gasolineToCngConversionFactor || 1.0)
+                  : (fuelPrices?.dieselToCngConversionFactor || 1.136);
+                const mediumConversionFactor = vehicleParameters.mediumDutyFuelType === 'gasoline'
+                  ? (fuelPrices?.gasolineToCngConversionFactor || 1.0)
+                  : (fuelPrices?.dieselToCngConversionFactor || 1.136);
+                const heavyConversionFactor = vehicleParameters.heavyDutyFuelType === 'gasoline'
+                  ? (fuelPrices?.gasolineToCngConversionFactor || 1.0)
+                  : (fuelPrices?.dieselToCngConversionFactor || 1.136);
+                
+                const lightAnnualGGE = (vehicleParameters.lightDutyAnnualMiles / vehicleParameters.lightDutyMPG) * 
+                  lightConversionFactor / cngEfficiencyFactors.light;
+                const mediumAnnualGGE = (vehicleParameters.mediumDutyAnnualMiles / vehicleParameters.mediumDutyMPG) * 
+                  mediumConversionFactor / cngEfficiencyFactors.medium;
+                const heavyAnnualGGE = (vehicleParameters.heavyDutyAnnualMiles / vehicleParameters.heavyDutyMPG) * 
+                  heavyConversionFactor / cngEfficiencyFactors.heavy;
+                
+                const totalLightGGE = totalActiveLight * lightAnnualGGE;
+                const totalMediumGGE = totalActiveMedium * mediumAnnualGGE;
+                const totalHeavyGGE = totalActiveHeavy * heavyAnnualGGE;
+                const totalAnnualGGE = totalLightGGE + totalMediumGGE + totalHeavyGGE;
+                
                 // Get annual savings for this year (not cumulative)
                 const annualFuelSavings = results.yearlyFuelSavings[year - 1] || 0;
                 const annualMaintenanceSavings = results.yearlyMaintenanceSavings[year - 1] || 0;
@@ -147,6 +176,43 @@ export default function DeploymentTimeline() {
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-gray-600 dark:text-gray-400"># total vehicles in operation</span>
                         <span className="text-xs font-medium" data-testid={`total-vehicles-operation-year-${year}`}>{totalVehiclesInOperation}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Annual GGE Requirements Section */}
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
+                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Annual GGE Requirements</div>
+                      <div className="ml-4 space-y-1">
+                        {totalActiveLight > 0 && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-600 dark:text-gray-400">Light Duty</span>
+                            <span className="text-xs font-medium" data-testid={`light-gge-year-${year}`}>
+                              {totalLightGGE.toLocaleString(undefined, { maximumFractionDigits: 0 })} GGE
+                            </span>
+                          </div>
+                        )}
+                        {totalActiveMedium > 0 && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-600 dark:text-gray-400">Medium Duty</span>
+                            <span className="text-xs font-medium" data-testid={`medium-gge-year-${year}`}>
+                              {totalMediumGGE.toLocaleString(undefined, { maximumFractionDigits: 0 })} GGE
+                            </span>
+                          </div>
+                        )}
+                        {totalActiveHeavy > 0 && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-600 dark:text-gray-400">Heavy Duty</span>
+                            <span className="text-xs font-medium" data-testid={`heavy-gge-year-${year}`}>
+                              {totalHeavyGGE.toLocaleString(undefined, { maximumFractionDigits: 0 })} GGE
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-1">
+                          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Total Annual</span>
+                          <span className="text-xs font-bold text-blue-600 dark:text-blue-400" data-testid={`total-gge-year-${year}`}>
+                            {totalAnnualGGE.toLocaleString(undefined, { maximumFractionDigits: 0 })} GGE
+                          </span>
+                        </div>
                       </div>
                     </div>
                     
