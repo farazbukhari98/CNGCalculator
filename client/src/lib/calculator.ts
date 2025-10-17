@@ -16,8 +16,12 @@ export const getVehicleCosts = (vehicleParams: VehicleParameters) => {
   };
 };
 
-// Diesel deduction factor (5 cents per mile)
-const DIESEL_DEDUCTION_PER_MILE = 0.05;
+// Maintenance differential for CNG vehicles (savings per mile by vehicle class)
+const CNG_MAINTENANCE_DIFFERENTIAL = {
+  light: 0.02,   // $0.02/mile savings for light duty
+  medium: 0.03,  // $0.03/mile savings for medium duty
+  heavy: 0.05    // $0.05/mile savings for heavy duty
+};
 
 // CNG efficiency loss percentage
 const CNG_LOSS = {
@@ -751,10 +755,10 @@ export function calculateROI(
     const mediumMilesDriven = mediumInOperation * vehicleParams.mediumDutyAnnualMiles;
     const heavyMilesDriven = heavyInOperation * vehicleParams.heavyDutyAnnualMiles;
     
-    // Maintenance savings: $0.05 per mile for diesel vehicles only
-    const lightMaintenanceSavings = vehicleParams.lightDutyFuelType === 'diesel' ? lightMilesDriven * DIESEL_DEDUCTION_PER_MILE : 0;
-    const mediumMaintenanceSavings = vehicleParams.mediumDutyFuelType === 'diesel' ? mediumMilesDriven * DIESEL_DEDUCTION_PER_MILE : 0;
-    const heavyMaintenanceSavings = vehicleParams.heavyDutyFuelType === 'diesel' ? heavyMilesDriven * DIESEL_DEDUCTION_PER_MILE : 0;
+    // Maintenance savings: Apply to all CNG vehicles based on vehicle class
+    const lightMaintenanceSavings = lightMilesDriven * CNG_MAINTENANCE_DIFFERENTIAL.light;
+    const mediumMaintenanceSavings = mediumMilesDriven * CNG_MAINTENANCE_DIFFERENTIAL.medium;
+    const heavyMaintenanceSavings = heavyMilesDriven * CNG_MAINTENANCE_DIFFERENTIAL.heavy;
     
     const maintenanceSavings = lightMaintenanceSavings + mediumMaintenanceSavings + heavyMaintenanceSavings;
     
