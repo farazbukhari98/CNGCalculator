@@ -10,6 +10,7 @@ import FinancialAnalysis from "./FinancialAnalysis";
 import AdditionalMetrics from "./AdditionalMetrics";
 import StrategyComparison from "./StrategyComparison";
 import SensitivityAnalysis from "./SensitivityAnalysis";
+import { NaturalLanguageQuery } from "./NaturalLanguageQuery";
 import { TooltipToggle } from "./TooltipToggle";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -40,6 +41,7 @@ export default function MainContent() {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [strategyName, setStrategyName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState("comparison");
   const contentRef = useRef<HTMLDivElement>(null);
   
   // Function to handle PDF export
@@ -505,10 +507,11 @@ export default function MainContent() {
           
           {/* Advanced Analysis Tabs */}
           <div className="mb-6">
-            <Tabs defaultValue="comparison" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="w-full bg-gray-100 dark:bg-gray-800 p-1 mb-4">
                 <TabsTrigger value="comparison" className="flex-1 py-2 dark:data-[state=active]:bg-blue-600 dark:data-[state=active]:text-white">Strategy Comparison</TabsTrigger>
                 <TabsTrigger value="sensitivity" className="flex-1 py-2 dark:data-[state=active]:bg-blue-600 dark:data-[state=active]:text-white">Sensitivity Analysis</TabsTrigger>
+                <TabsTrigger value="assistant" className="flex-1 py-2 dark:data-[state=active]:bg-blue-600 dark:data-[state=active]:text-white">AI Assistant</TabsTrigger>
               </TabsList>
               
               <TabsContent value="comparison" className="mt-0">
@@ -517,6 +520,19 @@ export default function MainContent() {
               
               <TabsContent value="sensitivity" className="mt-0">
                 <SensitivityAnalysis hideNegativeValues={hideNegativeValues} />
+              </TabsContent>
+              
+              <TabsContent value="assistant" className="mt-0">
+                <NaturalLanguageQuery onViewChange={(view) => {
+                  if (view === 'dashboard') {
+                    // Scroll to top to show main dashboard
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  } else if (view === 'sensitivity') {
+                    setActiveTab('sensitivity');
+                  } else if (view === 'comparison') {
+                    setActiveTab('comparison');
+                  }
+                }} />
               </TabsContent>
             </Tabs>
           </div>
