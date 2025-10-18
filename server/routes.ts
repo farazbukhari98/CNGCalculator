@@ -156,12 +156,172 @@ Response: {"parameterUpdates": {"deploymentStrategy": "immediate"}, "insights": 
       }
 
       try {
+        // Try to extract JSON from the response (handle markdown code blocks)
+        let jsonString = responseText;
+        
+        // Remove markdown code blocks if present
+        const jsonMatch = responseText.match(/```json\s*([\s\S]*?)\s*```/) || 
+                         responseText.match(/```\s*([\s\S]*?)\s*```/);
+        if (jsonMatch) {
+          jsonString = jsonMatch[1];
+        }
+        
         // Parse the JSON response from OpenAI
-        const parsedResponse = JSON.parse(responseText);
+        const parsedResponse = JSON.parse(jsonString);
+        
+        // Validate and sanitize parameter updates
+        if (parsedResponse.parameterUpdates) {
+          const sanitized: any = {};
+          const updates = parsedResponse.parameterUpdates;
+          
+          // Vehicle counts validation (0-100)
+          ['lightDutyCount', 'mediumDutyCount', 'heavyDutyCount'].forEach(field => {
+            if (field in updates) {
+              const val = Number(updates[field]);
+              if (!isNaN(val)) {
+                sanitized[field] = Math.max(0, Math.min(100, Math.round(val)));
+              }
+            }
+          });
+          
+          // Vehicle costs validation (positive numbers)
+          ['lightDutyCost', 'mediumDutyCost', 'heavyDutyCost'].forEach(field => {
+            if (field in updates) {
+              const val = Number(updates[field]);
+              if (!isNaN(val) && val > 0) {
+                sanitized[field] = val;
+              }
+            }
+          });
+          
+          // Lifespans validation (1-20 years)
+          ['lightDutyLifespan', 'mediumDutyLifespan', 'heavyDutyLifespan'].forEach(field => {
+            if (field in updates) {
+              const val = Number(updates[field]);
+              if (!isNaN(val)) {
+                sanitized[field] = Math.max(1, Math.min(20, Math.round(val)));
+              }
+            }
+          });
+          
+          // MPG validation (positive numbers)
+          ['lightDutyMPG', 'mediumDutyMPG', 'heavyDutyMPG'].forEach(field => {
+            if (field in updates) {
+              const val = Number(updates[field]);
+              if (!isNaN(val) && val > 0) {
+                sanitized[field] = val;
+              }
+            }
+          });
+          
+          // Annual miles validation (positive numbers)
+          ['lightDutyAnnualMiles', 'mediumDutyAnnualMiles', 'heavyDutyAnnualMiles'].forEach(field => {
+            if (field in updates) {
+              const val = Number(updates[field]);
+              if (!isNaN(val) && val > 0) {
+                sanitized[field] = Math.round(val);
+              }
+            }
+          });
+          
+          // Fuel type validation
+          ['lightDutyFuelType', 'mediumDutyFuelType', 'heavyDutyFuelType'].forEach(field => {
+            if (field in updates) {
+              if (updates[field] === 'gasoline' || updates[field] === 'diesel') {
+                sanitized[field] = updates[field];
+              }
+            }
+          });
+          
+          // CNG efficiency loss validation (0-1000 = 0-100%)
+          ['lightDutyCngEfficiencyLoss', 'mediumDutyCngEfficiencyLoss', 'heavyDutyCngEfficiencyLoss'].forEach(field => {
+            if (field in updates) {
+              const val = Number(updates[field]);
+              if (!isNaN(val)) {
+                sanitized[field] = Math.max(0, Math.min(1000, Math.round(val)));
+              }
+            }
+          });
+          
+          // Fuel prices validation (positive numbers)
+          ['gasolinePrice', 'dieselPrice', 'cngPrice', 'cngTaxCredit'].forEach(field => {
+            if (field in updates) {
+              const val = Number(updates[field]);
+              if (!isNaN(val) && val >= 0) {
+                sanitized[field] = val;
+              }
+            }
+          });
+          
+          // Annual increase validation (0-100%)
+          if ('annualIncrease' in updates) {
+            const val = Number(updates.annualIncrease);
+            if (!isNaN(val)) {
+              sanitized.annualIncrease = Math.max(0, Math.min(100, val));
+            }
+          }
+          
+          // Conversion factors validation (positive numbers)
+          ['gasolineToCngConversionFactor', 'dieselToCngConversionFactor'].forEach(field => {
+            if (field in updates) {
+              const val = Number(updates[field]);
+              if (!isNaN(val) && val > 0) {
+                sanitized[field] = val;
+              }
+            }
+          });
+          
+          // Station config validation
+          if ('stationType' in updates) {
+            if (updates.stationType === 'fast' || updates.stationType === 'time') {
+              sanitized.stationType = updates.stationType;
+            }
+          }
+          
+          if ('businessType' in updates) {
+            if (['aglc', 'cgc', 'vng'].includes(updates.businessType)) {
+              sanitized.businessType = updates.businessType;
+            }
+          }
+          
+          if ('turnkey' in updates) {
+            sanitized.turnkey = Boolean(updates.turnkey);
+          }
+          
+          if ('stationMarkup' in updates) {
+            const val = Number(updates.stationMarkup);
+            if (!isNaN(val)) {
+              sanitized.stationMarkup = Math.max(0, Math.min(100, Math.round(val / 5) * 5));
+            }
+          }
+          
+          // Deployment strategy validation
+          if ('deploymentStrategy' in updates) {
+            if (['immediate', 'phased', 'aggressive', 'deferred', 'manual'].includes(updates.deploymentStrategy)) {
+              sanitized.deploymentStrategy = updates.deploymentStrategy;
+            }
+          }
+          
+          // Time horizon validation (1-15 years)
+          if ('timeHorizon' in updates) {
+            const val = Number(updates.timeHorizon);
+            if (!isNaN(val)) {
+              sanitized.timeHorizon = Math.max(1, Math.min(15, Math.round(val)));
+            }
+          }
+          
+          parsedResponse.parameterUpdates = sanitized;
+        }
+        
         res.json(parsedResponse);
       } catch (parseError) {
         console.error("Error parsing OpenAI response:", responseText);
-        res.status(500).json({ error: "Failed to parse AI response" });
+        // Try to provide a helpful fallback response
+        res.json({
+          parameterUpdates: {},
+          insights: "I understood your request but couldn't process the specific changes. Please try rephrasing your question or use more specific parameter names.",
+          suggestedView: "dashboard"
+        });
       }
     } catch (error) {
       console.error("Error processing natural language query:", error);
