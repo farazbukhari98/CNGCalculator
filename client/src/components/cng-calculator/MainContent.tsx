@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Download, PanelLeft, PanelRight, Moon, Sun, Save } from "lucide-react";
+import { Download, PanelLeft, PanelRight, Moon, Sun, Save, GitCompareArrows, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -473,60 +473,26 @@ export default function MainContent() {
           <AdditionalMetrics showCashflow={showCashflow} />
           
           {/* Advanced Analysis Options */}
-          <div className="mb-6">
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-4">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Additional Analysis Tools</h3>
-              <div className="flex flex-wrap gap-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="showComparison"
-                    checked={showComparison}
-                    onCheckedChange={(checked) => setShowComparison(checked as boolean)}
-                  />
-                  <Label
-                    htmlFor="showComparison"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Strategy Comparison
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="showAskShaun"
-                    checked={showAskShaun}
-                    onCheckedChange={(checked) => setShowAskShaun(checked as boolean)}
-                  />
-                  <Label
-                    htmlFor="showAskShaun"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Ask Shaun
-                  </Label>
-                </div>
-              </div>
+          {/* Show Strategy Comparison if enabled */}
+          {showComparison && (
+            <div className="mb-6">
+              <StrategyComparison />
             </div>
+          )}
 
-            {/* Show Strategy Comparison if checked */}
-            {showComparison && (
-              <div className="mb-6">
-                <StrategyComparison />
-              </div>
-            )}
-
-            {/* Show Ask Shaun if checked */}
-            {showAskShaun && (
-              <div className="mb-6">
-                <NaturalLanguageQuery onViewChange={(view) => {
-                  if (view === 'dashboard') {
-                    // Scroll to top to show main dashboard
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  } else if (view === 'comparison') {
-                    setShowComparison(true);
-                  }
-                }} />
-              </div>
-            )}
-          </div>
+          {/* Show Ask Shaun if enabled */}
+          {showAskShaun && (
+            <div className="mb-6">
+              <NaturalLanguageQuery onViewChange={(view) => {
+                if (view === 'dashboard') {
+                  // Scroll to top to show main dashboard
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else if (view === 'comparison') {
+                  setShowComparison(true);
+                }
+              }} />
+            </div>
+          )}
           
           {/* Export/Save Actions */}
           <div className="flex flex-wrap justify-end gap-3 mt-6">
@@ -621,6 +587,41 @@ export default function MainContent() {
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Floating Action Buttons */}
+      <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
+        {/* Strategy Comparison Button */}
+        <button
+          onClick={() => setShowComparison(!showComparison)}
+          className={`group relative flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all hover:shadow-xl ${
+            showComparison 
+              ? 'bg-blue-600 text-white hover:bg-blue-700' 
+              : 'bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
+          }`}
+          aria-label="Toggle Strategy Comparison"
+        >
+          <GitCompareArrows className="h-6 w-6" />
+          <span className="absolute right-full mr-3 hidden rounded-md bg-gray-900 px-2 py-1 text-xs text-white group-hover:block whitespace-nowrap dark:bg-gray-700">
+            {showComparison ? 'Hide' : 'Show'} Strategy Comparison
+          </span>
+        </button>
+        
+        {/* Ask Shaun Button */}
+        <button
+          onClick={() => setShowAskShaun(!showAskShaun)}
+          className={`group relative flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all hover:shadow-xl ${
+            showAskShaun 
+              ? 'bg-green-600 text-white hover:bg-green-700' 
+              : 'bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
+          }`}
+          aria-label="Toggle Ask Shaun"
+        >
+          <MessageCircle className="h-6 w-6" />
+          <span className="absolute right-full mr-3 hidden rounded-md bg-gray-900 px-2 py-1 text-xs text-white group-hover:block whitespace-nowrap dark:bg-gray-700">
+            {showAskShaun ? 'Hide' : 'Show'} Ask Shaun
+          </span>
+        </button>
+      </div>
     </div>
   );
 }
