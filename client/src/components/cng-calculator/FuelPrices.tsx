@@ -234,15 +234,20 @@ export default function FuelPrices() {
           <input
             type="number"
             className="block w-full rounded-md border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+            style={getFieldStyles(isFieldModified('gasolineToCngConversionFactor'))}
             min="0"
             step="0.01"
             value={fuelPrices.gasolineToCngConversionFactor}
-            onChange={(e) => 
+            onChange={(e) => {
+              const newValue = parseFloat(e.target.value) || 0;
+              if (newValue !== DEFAULT_VALUES.gasolineToCngConversionFactor) {
+                markFieldAsModified('gasolineToCngConversionFactor');
+              }
               updateFuelPrices({ 
                 ...fuelPrices, 
-                gasolineToCngConversionFactor: parseFloat(e.target.value) || 0 
-              })
-            }
+                gasolineToCngConversionFactor: newValue
+              });
+            }}
             data-testid="input-gasoline-cng-conversion"
           />
           <TooltipProvider>
@@ -269,15 +274,20 @@ export default function FuelPrices() {
           <input
             type="number"
             className="block w-full rounded-md border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+            style={getFieldStyles(isFieldModified('dieselToCngConversionFactor'))}
             min="0"
             step="0.01"
             value={fuelPrices.dieselToCngConversionFactor}
-            onChange={(e) => 
+            onChange={(e) => {
+              const newValue = parseFloat(e.target.value) || 0;
+              if (newValue !== DEFAULT_VALUES.dieselToCngConversionFactor) {
+                markFieldAsModified('dieselToCngConversionFactor');
+              }
               updateFuelPrices({ 
                 ...fuelPrices, 
-                dieselToCngConversionFactor: parseFloat(e.target.value) || 0 
-              })
-            }
+                dieselToCngConversionFactor: newValue
+              });
+            }}
             data-testid="input-diesel-cng-conversion"
           />
           <TooltipProvider>

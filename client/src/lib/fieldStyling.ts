@@ -70,6 +70,8 @@ export const DEFAULT_VALUES = {
   cngPrice: 0.82,
   cngTaxCredit: 0.00,
   annualIncrease: 0,
+  gasolineToCngConversionFactor: 1,
+  dieselToCngConversionFactor: 1,
   
   // Global Settings
   timeHorizon: 15,

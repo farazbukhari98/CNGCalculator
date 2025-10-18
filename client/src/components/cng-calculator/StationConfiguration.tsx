@@ -40,50 +40,50 @@ export default function StationConfiguration() {
       {/* Station Type */}
       <div>
         <Label className="block text-sm font-medium text-gray-700 mb-2">Station Type</Label>
-        <RadioGroup 
-          className="grid grid-cols-2 gap-3"
-          value={stationConfig.stationType}
-          onValueChange={(value) => {
-            const newValue = value as 'fast' | 'time';
-            if (newValue !== DEFAULT_VALUES.stationType) {
-              markFieldAsModified('stationType');
-            }
-            updateStationConfig({...stationConfig, stationType: newValue});
-          }}
-        >
-          <div className="relative">
-            <RadioGroupItem value="fast" id="stationTypeFast" className="absolute opacity-0" />
-            <Label 
-              htmlFor="stationTypeFast" 
-              className="flex flex-col items-center p-3 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-green-50 data-[state=checked]:border-green-500 data-[state=checked]:border-2"
-              style={getFieldStyles(isFieldModified('stationType'))}
-            >
-              {stationConfig.stationType === 'fast' && (
-                <div className="absolute top-2 left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                  <Check className="w-3 h-3 text-white" />
-                </div>
-              )}
-              <span className="text-sm font-medium">Fast-Fill</span>
-              <span className="text-xs text-gray-500 mt-1">Quick refueling, higher cost</span>
-            </Label>
-          </div>
-          <div className="relative">
-            <RadioGroupItem value="time" id="stationTypeTime" className="absolute opacity-0" />
-            <Label 
-              htmlFor="stationTypeTime" 
-              className="flex flex-col items-center p-3 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-green-50 data-[state=checked]:border-green-500 data-[state=checked]:border-2"
-              style={getFieldStyles(isFieldModified('stationType'))}
-            >
-              {stationConfig.stationType === 'time' && (
-                <div className="absolute top-2 left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                  <Check className="w-3 h-3 text-white" />
-                </div>
-              )}
-              <span className="text-sm font-medium">Time-Fill</span>
-              <span className="text-xs text-gray-500 mt-1">Overnight refueling, lower cost</span>
-            </Label>
-          </div>
-        </RadioGroup>
+        <div className="p-2 rounded-md" style={getFieldStyles(isFieldModified('stationType'))}>
+          <RadioGroup 
+            className="grid grid-cols-2 gap-3"
+            value={stationConfig.stationType}
+            onValueChange={(value) => {
+              const newValue = value as 'fast' | 'time';
+              if (newValue !== DEFAULT_VALUES.stationType) {
+                markFieldAsModified('stationType');
+              }
+              updateStationConfig({...stationConfig, stationType: newValue});
+            }}
+          >
+            <div className="relative">
+              <RadioGroupItem value="fast" id="stationTypeFast" className="absolute opacity-0" />
+              <Label 
+                htmlFor="stationTypeFast" 
+                className="flex flex-col items-center p-3 bg-white border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-green-50 data-[state=checked]:border-green-500 data-[state=checked]:border-2"
+              >
+                {stationConfig.stationType === 'fast' && (
+                  <div className="absolute top-2 left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-white" />
+                  </div>
+                )}
+                <span className="text-sm font-medium">Fast-Fill</span>
+                <span className="text-xs text-gray-500 mt-1">Quick refueling, higher cost</span>
+              </Label>
+            </div>
+            <div className="relative">
+              <RadioGroupItem value="time" id="stationTypeTime" className="absolute opacity-0" />
+              <Label 
+                htmlFor="stationTypeTime" 
+                className="flex flex-col items-center p-3 bg-white border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-green-50 data-[state=checked]:border-green-500 data-[state=checked]:border-2"
+              >
+                {stationConfig.stationType === 'time' && (
+                  <div className="absolute top-2 left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-white" />
+                  </div>
+                )}
+                <span className="text-sm font-medium">Time-Fill</span>
+                <span className="text-xs text-gray-500 mt-1">Overnight refueling, lower cost</span>
+              </Label>
+            </div>
+          </RadioGroup>
+        </div>
       </div>
       
       {/* Business Type */}
