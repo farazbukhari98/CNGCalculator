@@ -511,7 +511,7 @@ export default function MainContent() {
               <TabsList className="w-full bg-gray-100 dark:bg-gray-800 p-1 mb-4">
                 <TabsTrigger value="comparison" className="flex-1 py-2 dark:data-[state=active]:bg-blue-600 dark:data-[state=active]:text-white">Strategy Comparison</TabsTrigger>
                 <TabsTrigger value="sensitivity" className="flex-1 py-2 dark:data-[state=active]:bg-blue-600 dark:data-[state=active]:text-white">Sensitivity Analysis</TabsTrigger>
-                <TabsTrigger value="assistant" className="flex-1 py-2 dark:data-[state=active]:bg-blue-600 dark:data-[state=active]:text-white">AI Assistant</TabsTrigger>
+                <TabsTrigger value="assistant" className="flex-1 py-2 dark:data-[state=active]:bg-blue-600 dark:data-[state=active]:text-white">Ask Shaun</TabsTrigger>
               </TabsList>
               
               <TabsContent value="comparison" className="mt-0">

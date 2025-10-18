@@ -199,7 +199,7 @@ export function NaturalLanguageQuery({ onViewChange }: NaturalLanguageQueryProps
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-blue-500" />
-          Natural Language Assistant
+          Ask Shaun
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -207,7 +207,7 @@ export function NaturalLanguageQuery({ onViewChange }: NaturalLanguageQueryProps
           <Textarea
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ask a question about your CNG conversion analysis..."
+            placeholder="Ask Shaun a question about your CNG conversion analysis..."
             className="min-h-[80px] resize-none"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
