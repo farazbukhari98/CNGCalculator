@@ -9,15 +9,14 @@ import DeploymentTimeline from "./DeploymentTimeline";
 import FinancialAnalysis from "./FinancialAnalysis";
 import AdditionalMetrics from "./AdditionalMetrics";
 import StrategyComparison from "./StrategyComparison";
-import SensitivityAnalysis from "./SensitivityAnalysis";
 import { NaturalLanguageQuery } from "./NaturalLanguageQuery";
 import { TooltipToggle } from "./TooltipToggle";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Download, PanelLeft, PanelRight, Moon, Sun, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
@@ -41,7 +40,8 @@ export default function MainContent() {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [strategyName, setStrategyName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState("comparison");
+  const [showComparison, setShowComparison] = useState(true);
+  const [showAskShaun, setShowAskShaun] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   
   // Function to handle PDF export
@@ -298,39 +298,6 @@ export default function MainContent() {
         pdf.addImage(canvas.toDataURL('image/png'), 'PNG', margin, 40, imgWidth, imgHeight);
       }
       
-      // ==================== SENSITIVITY ANALYSIS PAGE ====================
-      
-      // Get the sensitivity analysis element if it exists
-      const sensitivityEl = document.querySelector('.sensitivity-analysis');
-      if (sensitivityEl) {
-        pdf.addPage();
-        
-        // Add page background
-        pdf.setFillColor(darkMode ? 35 : 240, darkMode ? 41 : 245, darkMode ? 47 : 250);
-        pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-        
-        // Draw header bar
-        pdf.setFillColor(darkMode ? 50 : 220, darkMode ? 55 : 225, darkMode ? 60 : 230);
-        pdf.rect(0, 0, pageWidth, 30, 'F');
-        
-        // Page header
-        pdf.setFontSize(16);
-        pdf.setTextColor(darkMode ? 255 : 0, darkMode ? 255 : 0, darkMode ? 255 : 0);
-        pdf.text('Sensitivity Analysis', margin, margin + 5);
-        
-        const canvas = await html2canvas(sensitivityEl as HTMLElement, {
-          scale: 1.5,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: darkMode ? '#1f2937' : '#ffffff'
-        });
-        
-        const imgWidth = contentWidth;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
-        // Add the sensitivity analysis
-        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', margin, 40, imgWidth, imgHeight);
-      }
       
       // Save the PDF with a descriptive filename
       pdf.save(`CNG_Analysis_${deploymentStrategy}_${date.replace(/[\s,]+/g, '_')}.pdf`);
@@ -505,36 +472,60 @@ export default function MainContent() {
           
           <AdditionalMetrics showCashflow={showCashflow} />
           
-          {/* Advanced Analysis Tabs */}
+          {/* Advanced Analysis Options */}
           <div className="mb-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="w-full bg-gray-100 dark:bg-gray-800 p-1 mb-4">
-                <TabsTrigger value="comparison" className="flex-1 py-2 dark:data-[state=active]:bg-blue-600 dark:data-[state=active]:text-white">Strategy Comparison</TabsTrigger>
-                <TabsTrigger value="sensitivity" className="flex-1 py-2 dark:data-[state=active]:bg-blue-600 dark:data-[state=active]:text-white">Sensitivity Analysis</TabsTrigger>
-                <TabsTrigger value="assistant" className="flex-1 py-2 dark:data-[state=active]:bg-blue-600 dark:data-[state=active]:text-white">Ask Shaun</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="comparison" className="mt-0">
+            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-4">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Additional Analysis Tools</h3>
+              <div className="flex flex-wrap gap-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="showComparison"
+                    checked={showComparison}
+                    onCheckedChange={(checked) => setShowComparison(checked as boolean)}
+                  />
+                  <Label
+                    htmlFor="showComparison"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Strategy Comparison
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="showAskShaun"
+                    checked={showAskShaun}
+                    onCheckedChange={(checked) => setShowAskShaun(checked as boolean)}
+                  />
+                  <Label
+                    htmlFor="showAskShaun"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Ask Shaun
+                  </Label>
+                </div>
+              </div>
+            </div>
+
+            {/* Show Strategy Comparison if checked */}
+            {showComparison && (
+              <div className="mb-6">
                 <StrategyComparison />
-              </TabsContent>
-              
-              <TabsContent value="sensitivity" className="mt-0">
-                <SensitivityAnalysis hideNegativeValues={hideNegativeValues} />
-              </TabsContent>
-              
-              <TabsContent value="assistant" className="mt-0">
+              </div>
+            )}
+
+            {/* Show Ask Shaun if checked */}
+            {showAskShaun && (
+              <div className="mb-6">
                 <NaturalLanguageQuery onViewChange={(view) => {
                   if (view === 'dashboard') {
                     // Scroll to top to show main dashboard
                     window.scrollTo({ top: 0, behavior: 'smooth' });
-                  } else if (view === 'sensitivity') {
-                    setActiveTab('sensitivity');
                   } else if (view === 'comparison') {
-                    setActiveTab('comparison');
+                    setShowComparison(true);
                   }
                 }} />
-              </TabsContent>
-            </Tabs>
+              </div>
+            )}
           </div>
           
           {/* Export/Save Actions */}
