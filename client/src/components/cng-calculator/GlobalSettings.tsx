@@ -139,8 +139,17 @@ export default function GlobalSettings() {
         
         // Load all the strategy parameters first
         updateVehicleParameters(strategy.vehicleParameters);
-        updateStationConfig(strategy.stationConfig);
-        updateFuelPrices(strategy.fuelPrices);
+        // Add default value for stationMarkup if it's missing from saved strategy
+        updateStationConfig({
+          ...strategy.stationConfig,
+          stationMarkup: strategy.stationConfig.stationMarkup ?? DEFAULT_VALUES.stationMarkup
+        });
+        // Add default values for conversion factors if missing from saved strategy
+        updateFuelPrices({
+          ...strategy.fuelPrices,
+          gasolineToCngConversionFactor: strategy.fuelPrices.gasolineToCngConversionFactor ?? DEFAULT_VALUES.gasolineToCngConversionFactor,
+          dieselToCngConversionFactor: strategy.fuelPrices.dieselToCngConversionFactor ?? DEFAULT_VALUES.dieselToCngConversionFactor
+        });
         updateTimeHorizon(strategy.timeHorizon);
         
         // Handle deployment strategy and vehicle distribution

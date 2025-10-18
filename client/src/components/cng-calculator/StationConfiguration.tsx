@@ -197,7 +197,7 @@ export default function StationConfiguration() {
       <div className="border-t pt-3 mt-3">
         <Label className="block text-sm font-medium text-gray-700 mb-2">Station Markup</Label>
         <Select 
-          value={stationConfig.stationMarkup.toString()} 
+          value={(stationConfig.stationMarkup ?? DEFAULT_VALUES.stationMarkup).toString()} 
           onValueChange={(value) => {
             const newValue = parseInt(value);
             if (newValue !== DEFAULT_VALUES.stationMarkup) {
