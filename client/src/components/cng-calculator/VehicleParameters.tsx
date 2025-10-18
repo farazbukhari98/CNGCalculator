@@ -169,11 +169,18 @@ export default function VehicleParameters() {
                   <input
                     type="text"
                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-8"
+                    style={getFieldStyles(isFieldModified('heavyDutyCost'))}
                     value={formatCost(vehicleParameters.heavyDutyCost)}
-                    onChange={(e) => updateVehicleParameters({ 
-                      ...vehicleParameters, 
-                      heavyDutyCost: parseCost(e.target.value) 
-                    })}
+                    onChange={(e) => {
+                      const newValue = parseCost(e.target.value);
+                      if (newValue !== DEFAULT_VALUES.heavyDutyCost) {
+                        markFieldAsModified('heavyDutyCost');
+                      }
+                      updateVehicleParameters({ 
+                        ...vehicleParameters, 
+                        heavyDutyCost: newValue
+                      });
+                    }}
                   />
                 </div>
                 <TooltipProvider>
@@ -212,11 +219,18 @@ export default function VehicleParameters() {
                         min="1"
                         max="30"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
+                        style={getFieldStyles(isFieldModified('lightDutyLifespan'))}
                         value={vehicleParameters.lightDutyLifespan}
-                        onChange={(e) => updateVehicleParameters({ 
-                          ...vehicleParameters, 
-                          lightDutyLifespan: parseWholeNumber(e.target.value)
-                        })}
+                        onChange={(e) => {
+                          const newValue = parseWholeNumber(e.target.value);
+                          if (newValue !== DEFAULT_VALUES.lightDutyLifespan) {
+                            markFieldAsModified('lightDutyLifespan');
+                          }
+                          updateVehicleParameters({ 
+                            ...vehicleParameters, 
+                            lightDutyLifespan: newValue
+                          });
+                        }}
                       />
                     </div>
                   </div>
@@ -235,11 +249,18 @@ export default function VehicleParameters() {
                         min="1"
                         max="30" 
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
+                        style={getFieldStyles(isFieldModified('mediumDutyLifespan'))}
                         value={vehicleParameters.mediumDutyLifespan}
-                        onChange={(e) => updateVehicleParameters({ 
-                          ...vehicleParameters, 
-                          mediumDutyLifespan: parseWholeNumber(e.target.value)
-                        })}
+                        onChange={(e) => {
+                          const newValue = parseWholeNumber(e.target.value);
+                          if (newValue !== DEFAULT_VALUES.mediumDutyLifespan) {
+                            markFieldAsModified('mediumDutyLifespan');
+                          }
+                          updateVehicleParameters({ 
+                            ...vehicleParameters, 
+                            mediumDutyLifespan: newValue
+                          });
+                        }}
                       />
                     </div>
                   </div>
@@ -258,11 +279,18 @@ export default function VehicleParameters() {
                         min="1"
                         max="30"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
+                        style={getFieldStyles(isFieldModified('heavyDutyLifespan'))}
                         value={vehicleParameters.heavyDutyLifespan}
-                        onChange={(e) => updateVehicleParameters({ 
-                          ...vehicleParameters, 
-                          heavyDutyLifespan: parseWholeNumber(e.target.value)
-                        })}
+                        onChange={(e) => {
+                          const newValue = parseWholeNumber(e.target.value);
+                          if (newValue !== DEFAULT_VALUES.heavyDutyLifespan) {
+                            markFieldAsModified('heavyDutyLifespan');
+                          }
+                          updateVehicleParameters({ 
+                            ...vehicleParameters, 
+                            heavyDutyLifespan: newValue
+                          });
+                        }}
                       />
                     </div>
                   </div>
@@ -293,11 +321,18 @@ export default function VehicleParameters() {
                         max="50"
                         step="0.1"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
+                        style={getFieldStyles(isFieldModified('lightDutyMPG'))}
                         value={vehicleParameters.lightDutyMPG}
-                        onChange={(e) => updateVehicleParameters({ 
-                          ...vehicleParameters, 
-                          lightDutyMPG: parseFloat(e.target.value) || 0
-                        })}
+                        onChange={(e) => {
+                          const newValue = parseFloat(e.target.value) || 0;
+                          if (newValue !== DEFAULT_VALUES.lightDutyMPG) {
+                            markFieldAsModified('lightDutyMPG');
+                          }
+                          updateVehicleParameters({ 
+                            ...vehicleParameters, 
+                            lightDutyMPG: newValue
+                          });
+                        }}
                       />
                     </div>
                   </div>
@@ -317,11 +352,18 @@ export default function VehicleParameters() {
                         max="30"
                         step="0.1"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
+                        style={getFieldStyles(isFieldModified('mediumDutyMPG'))}
                         value={vehicleParameters.mediumDutyMPG}
-                        onChange={(e) => updateVehicleParameters({ 
-                          ...vehicleParameters, 
-                          mediumDutyMPG: parseFloat(e.target.value) || 0
-                        })}
+                        onChange={(e) => {
+                          const newValue = parseFloat(e.target.value) || 0;
+                          if (newValue !== DEFAULT_VALUES.mediumDutyMPG) {
+                            markFieldAsModified('mediumDutyMPG');
+                          }
+                          updateVehicleParameters({ 
+                            ...vehicleParameters, 
+                            mediumDutyMPG: newValue
+                          });
+                        }}
                       />
                     </div>
                   </div>
@@ -341,11 +383,18 @@ export default function VehicleParameters() {
                         max="20"
                         step="0.1"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
+                        style={getFieldStyles(isFieldModified('heavyDutyMPG'))}
                         value={vehicleParameters.heavyDutyMPG}
-                        onChange={(e) => updateVehicleParameters({ 
-                          ...vehicleParameters, 
-                          heavyDutyMPG: parseFloat(e.target.value) || 0
-                        })}
+                        onChange={(e) => {
+                          const newValue = parseFloat(e.target.value) || 0;
+                          if (newValue !== DEFAULT_VALUES.heavyDutyMPG) {
+                            markFieldAsModified('heavyDutyMPG');
+                          }
+                          updateVehicleParameters({ 
+                            ...vehicleParameters, 
+                            heavyDutyMPG: newValue
+                          });
+                        }}
                       />
                     </div>
                   </div>
@@ -373,11 +422,18 @@ export default function VehicleParameters() {
                       <input
                         type="text"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
+                        style={getFieldStyles(isFieldModified('lightDutyAnnualMiles'))}
                         value={formatWithCommas(vehicleParameters.lightDutyAnnualMiles)}
-                        onChange={(e) => updateVehicleParameters({ 
-                          ...vehicleParameters, 
-                          lightDutyAnnualMiles: parseCommaNumber(e.target.value)
-                        })}
+                        onChange={(e) => {
+                          const newValue = parseCommaNumber(e.target.value);
+                          if (newValue !== DEFAULT_VALUES.lightDutyAnnualMiles) {
+                            markFieldAsModified('lightDutyAnnualMiles');
+                          }
+                          updateVehicleParameters({ 
+                            ...vehicleParameters, 
+                            lightDutyAnnualMiles: newValue
+                          });
+                        }}
                       />
                     </div>
                   </div>
@@ -394,11 +450,18 @@ export default function VehicleParameters() {
                       <input
                         type="text"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
+                        style={getFieldStyles(isFieldModified('mediumDutyAnnualMiles'))}
                         value={formatWithCommas(vehicleParameters.mediumDutyAnnualMiles)}
-                        onChange={(e) => updateVehicleParameters({ 
-                          ...vehicleParameters, 
-                          mediumDutyAnnualMiles: parseCommaNumber(e.target.value)
-                        })}
+                        onChange={(e) => {
+                          const newValue = parseCommaNumber(e.target.value);
+                          if (newValue !== DEFAULT_VALUES.mediumDutyAnnualMiles) {
+                            markFieldAsModified('mediumDutyAnnualMiles');
+                          }
+                          updateVehicleParameters({ 
+                            ...vehicleParameters, 
+                            mediumDutyAnnualMiles: newValue
+                          });
+                        }}
                       />
                     </div>
                   </div>
@@ -415,11 +478,18 @@ export default function VehicleParameters() {
                       <input
                         type="text"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
+                        style={getFieldStyles(isFieldModified('heavyDutyAnnualMiles'))}
                         value={formatWithCommas(vehicleParameters.heavyDutyAnnualMiles)}
-                        onChange={(e) => updateVehicleParameters({ 
-                          ...vehicleParameters, 
-                          heavyDutyAnnualMiles: parseCommaNumber(e.target.value)
-                        })}
+                        onChange={(e) => {
+                          const newValue = parseCommaNumber(e.target.value);
+                          if (newValue !== DEFAULT_VALUES.heavyDutyAnnualMiles) {
+                            markFieldAsModified('heavyDutyAnnualMiles');
+                          }
+                          updateVehicleParameters({ 
+                            ...vehicleParameters, 
+                            heavyDutyAnnualMiles: newValue
+                          });
+                        }}
                       />
                     </div>
                   </div>
@@ -441,12 +511,17 @@ export default function VehicleParameters() {
                   </label>
                   <Select
                     value={vehicleParameters.lightDutyFuelType}
-                    onValueChange={(value: 'gasoline' | 'diesel') => updateVehicleParameters({
-                      ...vehicleParameters,
-                      lightDutyFuelType: value
-                    })}
+                    onValueChange={(value: 'gasoline' | 'diesel') => {
+                      if (value !== DEFAULT_VALUES.lightDutyFuelType) {
+                        markFieldAsModified('lightDutyFuelType');
+                      }
+                      updateVehicleParameters({
+                        ...vehicleParameters,
+                        lightDutyFuelType: value
+                      });
+                    }}
                   >
-                    <SelectTrigger className="h-8 text-sm">
+                    <SelectTrigger className="h-8 text-sm" style={getFieldStyles(isFieldModified('lightDutyFuelType'))}>
                       <SelectValue placeholder="Select fuel type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -461,12 +536,17 @@ export default function VehicleParameters() {
                   </label>
                   <Select
                     value={vehicleParameters.mediumDutyFuelType}
-                    onValueChange={(value: 'gasoline' | 'diesel') => updateVehicleParameters({
-                      ...vehicleParameters,
-                      mediumDutyFuelType: value
-                    })}
+                    onValueChange={(value: 'gasoline' | 'diesel') => {
+                      if (value !== DEFAULT_VALUES.mediumDutyFuelType) {
+                        markFieldAsModified('mediumDutyFuelType');
+                      }
+                      updateVehicleParameters({
+                        ...vehicleParameters,
+                        mediumDutyFuelType: value
+                      });
+                    }}
                   >
-                    <SelectTrigger className="h-8 text-sm">
+                    <SelectTrigger className="h-8 text-sm" style={getFieldStyles(isFieldModified('mediumDutyFuelType'))}>
                       <SelectValue placeholder="Select fuel type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -481,12 +561,17 @@ export default function VehicleParameters() {
                   </label>
                   <Select
                     value={vehicleParameters.heavyDutyFuelType}
-                    onValueChange={(value: 'gasoline' | 'diesel') => updateVehicleParameters({
-                      ...vehicleParameters,
-                      heavyDutyFuelType: value
-                    })}
+                    onValueChange={(value: 'gasoline' | 'diesel') => {
+                      if (value !== DEFAULT_VALUES.heavyDutyFuelType) {
+                        markFieldAsModified('heavyDutyFuelType');
+                      }
+                      updateVehicleParameters({
+                        ...vehicleParameters,
+                        heavyDutyFuelType: value
+                      });
+                    }}
                   >
-                    <SelectTrigger className="h-8 text-sm">
+                    <SelectTrigger className="h-8 text-sm" style={getFieldStyles(isFieldModified('heavyDutyFuelType'))}>
                       <SelectValue placeholder="Select fuel type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -521,11 +606,18 @@ export default function VehicleParameters() {
                         max="30"
                         step="0.1"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
+                        style={getFieldStyles(isFieldModified('lightDutyCngEfficiencyLoss'))}
                         value={(vehicleParameters.lightDutyCngEfficiencyLoss / 10).toFixed(1)}
-                        onChange={(e) => updateVehicleParameters({ 
-                          ...vehicleParameters, 
-                          lightDutyCngEfficiencyLoss: Math.round(parseFloat(e.target.value) * 10)
-                        })}
+                        onChange={(e) => {
+                          const newValue = Math.round(parseFloat(e.target.value) * 10);
+                          if (newValue !== DEFAULT_VALUES.lightDutyCngEfficiencyLoss) {
+                            markFieldAsModified('lightDutyCngEfficiencyLoss');
+                          }
+                          updateVehicleParameters({ 
+                            ...vehicleParameters, 
+                            lightDutyCngEfficiencyLoss: newValue
+                          });
+                        }}
                       />
                     </div>
                     <TooltipProvider>
@@ -557,11 +649,18 @@ export default function VehicleParameters() {
                         max="30"
                         step="0.1"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
+                        style={getFieldStyles(isFieldModified('mediumDutyCngEfficiencyLoss'))}
                         value={(vehicleParameters.mediumDutyCngEfficiencyLoss / 10).toFixed(1)}
-                        onChange={(e) => updateVehicleParameters({ 
-                          ...vehicleParameters, 
-                          mediumDutyCngEfficiencyLoss: Math.round(parseFloat(e.target.value) * 10)
-                        })}
+                        onChange={(e) => {
+                          const newValue = Math.round(parseFloat(e.target.value) * 10);
+                          if (newValue !== DEFAULT_VALUES.mediumDutyCngEfficiencyLoss) {
+                            markFieldAsModified('mediumDutyCngEfficiencyLoss');
+                          }
+                          updateVehicleParameters({ 
+                            ...vehicleParameters, 
+                            mediumDutyCngEfficiencyLoss: newValue
+                          });
+                        }}
                       />
                     </div>
                     <TooltipProvider>
@@ -593,11 +692,18 @@ export default function VehicleParameters() {
                         max="30"
                         step="0.1"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
+                        style={getFieldStyles(isFieldModified('heavyDutyCngEfficiencyLoss'))}
                         value={(vehicleParameters.heavyDutyCngEfficiencyLoss / 10).toFixed(1)}
-                        onChange={(e) => updateVehicleParameters({ 
-                          ...vehicleParameters, 
-                          heavyDutyCngEfficiencyLoss: Math.round(parseFloat(e.target.value) * 10)
-                        })}
+                        onChange={(e) => {
+                          const newValue = Math.round(parseFloat(e.target.value) * 10);
+                          if (newValue !== DEFAULT_VALUES.heavyDutyCngEfficiencyLoss) {
+                            markFieldAsModified('heavyDutyCngEfficiencyLoss');
+                          }
+                          updateVehicleParameters({ 
+                            ...vehicleParameters, 
+                            heavyDutyCngEfficiencyLoss: newValue
+                          });
+                        }}
                       />
                     </div>
                     <TooltipProvider>

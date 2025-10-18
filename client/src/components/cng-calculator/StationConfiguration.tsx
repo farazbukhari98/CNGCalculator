@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { calculateStationCost, getStationSizeInfo } from "@/lib/calculator";
 import { Check } from "lucide-react";
+import { getFieldStyles, DEFAULT_VALUES } from "@/lib/fieldStyling";
 
 export default function StationConfiguration() {
   const { 
@@ -13,7 +14,9 @@ export default function StationConfiguration() {
     vehicleParameters,
     vehicleDistribution,
     enhancedDistribution,
-    fuelPrices
+    fuelPrices,
+    markFieldAsModified,
+    isFieldModified
   } = useCalculator();
 
   // Enhanced distribution already includes total active vehicle counts
@@ -40,13 +43,20 @@ export default function StationConfiguration() {
         <RadioGroup 
           className="grid grid-cols-2 gap-3"
           value={stationConfig.stationType}
-          onValueChange={(value) => updateStationConfig({...stationConfig, stationType: value as 'fast' | 'time'})}
+          onValueChange={(value) => {
+            const newValue = value as 'fast' | 'time';
+            if (newValue !== DEFAULT_VALUES.stationType) {
+              markFieldAsModified('stationType');
+            }
+            updateStationConfig({...stationConfig, stationType: newValue});
+          }}
         >
           <div className="relative">
             <RadioGroupItem value="fast" id="stationTypeFast" className="absolute opacity-0" />
             <Label 
               htmlFor="stationTypeFast" 
-              className="flex flex-col items-center p-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-green-50 data-[state=checked]:border-green-500 data-[state=checked]:border-2"
+              className="flex flex-col items-center p-3 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-green-50 data-[state=checked]:border-green-500 data-[state=checked]:border-2"
+              style={getFieldStyles(isFieldModified('stationType'))}
             >
               {stationConfig.stationType === 'fast' && (
                 <div className="absolute top-2 left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
@@ -61,7 +71,8 @@ export default function StationConfiguration() {
             <RadioGroupItem value="time" id="stationTypeTime" className="absolute opacity-0" />
             <Label 
               htmlFor="stationTypeTime" 
-              className="flex flex-col items-center p-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-green-50 data-[state=checked]:border-green-500 data-[state=checked]:border-2"
+              className="flex flex-col items-center p-3 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-green-50 data-[state=checked]:border-green-500 data-[state=checked]:border-2"
+              style={getFieldStyles(isFieldModified('stationType'))}
             >
               {stationConfig.stationType === 'time' && (
                 <div className="absolute top-2 left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
@@ -80,9 +91,15 @@ export default function StationConfiguration() {
         <Label className="block text-sm font-medium text-gray-700 mb-2">GAS LDC</Label>
         <Select 
           value={stationConfig.businessType} 
-          onValueChange={(value) => updateStationConfig({...stationConfig, businessType: value as 'aglc' | 'cgc' | 'vng'})}
+          onValueChange={(value) => {
+            const newValue = value as 'aglc' | 'cgc' | 'vng';
+            if (newValue !== DEFAULT_VALUES.businessType) {
+              markFieldAsModified('businessType');
+            }
+            updateStationConfig({...stationConfig, businessType: newValue});
+          }}
         >
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full" style={getFieldStyles(isFieldModified('businessType'))}>
             <SelectValue placeholder="Select GAS LDC" />
           </SelectTrigger>
           <SelectContent>
@@ -128,13 +145,20 @@ export default function StationConfiguration() {
         <RadioGroup 
           className="grid grid-cols-2 gap-3"
           value={stationConfig.turnkey ? "yes" : "no"}
-          onValueChange={(value) => updateStationConfig({...stationConfig, turnkey: value === "yes"})}
+          onValueChange={(value) => {
+            const newValue = value === "yes";
+            if (newValue !== DEFAULT_VALUES.turnkey) {
+              markFieldAsModified('turnkey');
+            }
+            updateStationConfig({...stationConfig, turnkey: newValue});
+          }}
         >
           <div className="relative">
             <RadioGroupItem value="yes" id="turnkeyYes" className="absolute opacity-0" />
             <Label 
               htmlFor="turnkeyYes" 
               className="flex flex-col items-center p-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-green-50 data-[state=checked]:border-green-500 data-[state=checked]:border-2"
+              style={getFieldStyles(isFieldModified('turnkey') && stationConfig.turnkey)}
             >
               {stationConfig.turnkey === true && (
                 <div className="absolute top-2 left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
@@ -150,6 +174,7 @@ export default function StationConfiguration() {
             <Label 
               htmlFor="turnkeyNo" 
               className="flex flex-col items-center p-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-green-50 data-[state=checked]:border-green-500 data-[state=checked]:border-2"
+              style={getFieldStyles(isFieldModified('turnkey') && !stationConfig.turnkey)}
             >
               {stationConfig.turnkey === false && (
                 <div className="absolute top-2 left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
@@ -173,9 +198,15 @@ export default function StationConfiguration() {
         <Label className="block text-sm font-medium text-gray-700 mb-2">Station Markup</Label>
         <Select 
           value={stationConfig.stationMarkup.toString()} 
-          onValueChange={(value) => updateStationConfig({...stationConfig, stationMarkup: parseInt(value)})}
+          onValueChange={(value) => {
+            const newValue = parseInt(value);
+            if (newValue !== DEFAULT_VALUES.stationMarkup) {
+              markFieldAsModified('stationMarkup');
+            }
+            updateStationConfig({...stationConfig, stationMarkup: newValue});
+          }}
         >
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full" style={getFieldStyles(isFieldModified('stationMarkup'))}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

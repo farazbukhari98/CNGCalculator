@@ -6,9 +6,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { getFieldStyles, DEFAULT_VALUES } from "@/lib/fieldStyling";
 
 export default function FuelPrices() {
-  const { fuelPrices, updateFuelPrices } = useCalculator();
+  const { 
+    fuelPrices, 
+    updateFuelPrices,
+    markFieldAsModified,
+    isFieldModified
+  } = useCalculator();
 
   // Calculate effective CNG price (after tax credit)
   const effectiveCngPrice = Math.max(0, fuelPrices.cngPrice - fuelPrices.cngTaxCredit);
@@ -28,15 +34,20 @@ export default function FuelPrices() {
           <input
             type="number"
             className="block w-full rounded-md border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+            style={getFieldStyles(isFieldModified('gasolinePrice'))}
             min="0"
             step="0.01"
             value={fuelPrices.gasolinePrice}
-            onChange={(e) => 
+            onChange={(e) => {
+              const newValue = parseFloat(e.target.value) || 0;
+              if (newValue !== DEFAULT_VALUES.gasolinePrice) {
+                markFieldAsModified('gasolinePrice');
+              }
               updateFuelPrices({ 
                 ...fuelPrices, 
-                gasolinePrice: parseFloat(e.target.value) || 0 
-              })
-            }
+                gasolinePrice: newValue
+              });
+            }}
           />
           <TooltipProvider>
             <Tooltip>
@@ -62,15 +73,20 @@ export default function FuelPrices() {
           <input
             type="number"
             className="block w-full rounded-md border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+            style={getFieldStyles(isFieldModified('dieselPrice'))}
             min="0"
             step="0.01"
             value={fuelPrices.dieselPrice}
-            onChange={(e) => 
+            onChange={(e) => {
+              const newValue = parseFloat(e.target.value) || 0;
+              if (newValue !== DEFAULT_VALUES.dieselPrice) {
+                markFieldAsModified('dieselPrice');
+              }
               updateFuelPrices({ 
                 ...fuelPrices, 
-                dieselPrice: parseFloat(e.target.value) || 0 
-              })
-            }
+                dieselPrice: newValue
+              });
+            }}
           />
           <TooltipProvider>
             <Tooltip>
@@ -96,15 +112,20 @@ export default function FuelPrices() {
           <input
             type="number"
             className="block w-full rounded-md border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+            style={getFieldStyles(isFieldModified('cngPrice'))}
             min="0"
             step="0.01"
             value={fuelPrices.cngPrice}
-            onChange={(e) => 
+            onChange={(e) => {
+              const newValue = parseFloat(e.target.value) || 0;
+              if (newValue !== DEFAULT_VALUES.cngPrice) {
+                markFieldAsModified('cngPrice');
+              }
               updateFuelPrices({ 
                 ...fuelPrices, 
-                cngPrice: parseFloat(e.target.value) || 0 
-              })
-            }
+                cngPrice: newValue
+              });
+            }}
             data-testid="input-cng-price"
           />
           <TooltipProvider>
@@ -132,15 +153,20 @@ export default function FuelPrices() {
           <input
             type="number"
             className="block w-full rounded-md border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+            style={getFieldStyles(isFieldModified('cngTaxCredit'))}
             min="0"
             step="0.01"
             value={fuelPrices.cngTaxCredit}
-            onChange={(e) => 
+            onChange={(e) => {
+              const newValue = parseFloat(e.target.value) || 0;
+              if (newValue !== DEFAULT_VALUES.cngTaxCredit) {
+                markFieldAsModified('cngTaxCredit');
+              }
               updateFuelPrices({ 
                 ...fuelPrices, 
-                cngTaxCredit: parseFloat(e.target.value) || 0 
-              })
-            }
+                cngTaxCredit: newValue
+              });
+            }}
             data-testid="input-cng-tax-credit"
           />
           <TooltipProvider>
@@ -168,16 +194,21 @@ export default function FuelPrices() {
           <input
             type="number"
             className="block w-full rounded-md border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+            style={getFieldStyles(isFieldModified('annualIncrease'))}
             min="0"
             max="20"
             step="0.1"
             value={fuelPrices.annualIncrease}
-            onChange={(e) => 
+            onChange={(e) => {
+              const newValue = parseFloat(e.target.value) || 0;
+              if (newValue !== DEFAULT_VALUES.annualIncrease) {
+                markFieldAsModified('annualIncrease');
+              }
               updateFuelPrices({ 
                 ...fuelPrices, 
-                annualIncrease: parseFloat(e.target.value) || 0 
-              })
-            }
+                annualIncrease: newValue
+              });
+            }}
           />
           <TooltipProvider>
             <Tooltip>

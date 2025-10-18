@@ -26,6 +26,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { getFieldStyles, DEFAULT_VALUES } from "@/lib/fieldStyling";
 
 export default function GlobalSettings() {
   const { 
@@ -43,7 +44,9 @@ export default function GlobalSettings() {
     hideNegativeValues,
     toggleHideNegativeValues,
     setDistributionStrategy,
-    calculateResults
+    calculateResults,
+    markFieldAsModified,
+    isFieldModified
   } = useCalculator();
 
   const { 
@@ -539,7 +542,13 @@ export default function GlobalSettings() {
                     ? "bg-green-50 border-green-500 border-2 dark:bg-green-900/20 dark:border-green-500" 
                     : "border-gray-200 dark:border-gray-600"
                 }`}
-                onClick={() => updateTimeHorizon(years)}
+                style={getFieldStyles(isFieldModified('timeHorizon') && timeHorizon === years)}
+                onClick={() => {
+                  if (years !== DEFAULT_VALUES.timeHorizon) {
+                    markFieldAsModified('timeHorizon');
+                  }
+                  updateTimeHorizon(years);
+                }}
               >
                 {timeHorizon === years && (
                   <div className="absolute top-2 left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
