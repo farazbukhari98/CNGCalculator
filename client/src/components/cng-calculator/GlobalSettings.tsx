@@ -43,10 +43,10 @@ export default function GlobalSettings() {
     results,
     hideNegativeValues,
     toggleHideNegativeValues,
-    setDistributionStrategy,
-    calculateResults,
     markFieldAsModified,
-    isFieldModified
+    isFieldModified,
+    setDistributionStrategy,
+    calculateResults
   } = useCalculator();
 
   const { 
@@ -362,12 +362,19 @@ export default function GlobalSettings() {
                 <input
                   type="number"
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                  style={getFieldStyles(isFieldModified('lightDutyCount'))}
                   min="0"
                   value={vehicleParameters.lightDutyCount}
-                  onChange={(e) => updateVehicleParameters({ 
-                    ...vehicleParameters, 
-                    lightDutyCount: parseInt(e.target.value) || 0 
-                  })}
+                  onChange={(e) => {
+                    const newValue = parseInt(e.target.value) || 0;
+                    if (newValue !== DEFAULT_VALUES.lightDutyCount) {
+                      markFieldAsModified('lightDutyCount');
+                    }
+                    updateVehicleParameters({ 
+                      ...vehicleParameters, 
+                      lightDutyCount: newValue
+                    });
+                  }}
                   data-testid="input-light-duty-count"
                 />
               </div>
@@ -381,12 +388,19 @@ export default function GlobalSettings() {
                 <input
                   type="number"
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                  style={getFieldStyles(isFieldModified('mediumDutyCount'))}
                   min="0"
                   value={vehicleParameters.mediumDutyCount}
-                  onChange={(e) => updateVehicleParameters({ 
-                    ...vehicleParameters, 
-                    mediumDutyCount: parseInt(e.target.value) || 0 
-                  })}
+                  onChange={(e) => {
+                    const newValue = parseInt(e.target.value) || 0;
+                    if (newValue !== DEFAULT_VALUES.mediumDutyCount) {
+                      markFieldAsModified('mediumDutyCount');
+                    }
+                    updateVehicleParameters({ 
+                      ...vehicleParameters, 
+                      mediumDutyCount: newValue
+                    });
+                  }}
                   data-testid="input-medium-duty-count"
                 />
               </div>
@@ -400,12 +414,19 @@ export default function GlobalSettings() {
                 <input
                   type="number"
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                  style={getFieldStyles(isFieldModified('heavyDutyCount'))}
                   min="0"
                   value={vehicleParameters.heavyDutyCount}
-                  onChange={(e) => updateVehicleParameters({ 
-                    ...vehicleParameters, 
-                    heavyDutyCount: parseInt(e.target.value) || 0 
-                  })}
+                  onChange={(e) => {
+                    const newValue = parseInt(e.target.value) || 0;
+                    if (newValue !== DEFAULT_VALUES.heavyDutyCount) {
+                      markFieldAsModified('heavyDutyCount');
+                    }
+                    updateVehicleParameters({ 
+                      ...vehicleParameters, 
+                      heavyDutyCount: newValue
+                    });
+                  }}
                   data-testid="input-heavy-duty-count"
                 />
               </div>
