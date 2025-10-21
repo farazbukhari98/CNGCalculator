@@ -38,9 +38,9 @@ export function hasValueChanged(currentValue: any, defaultValue: any): boolean {
 // Default values for comparison
 export const DEFAULT_VALUES = {
   // Vehicle Parameters
-  lightDutyCount: 10,
-  mediumDutyCount: 5,
-  heavyDutyCount: 2,
+  lightDutyCount: 0,
+  mediumDutyCount: 0,
+  heavyDutyCount: 0,
   lightDutyCost: 15000,
   mediumDutyCost: 15000,
   heavyDutyCost: 50000,

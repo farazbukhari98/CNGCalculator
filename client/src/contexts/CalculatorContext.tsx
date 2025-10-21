@@ -51,9 +51,9 @@ const CalculatorContext = createContext<CalculatorContextType | null>(null);
 export function CalculatorProvider({ children }: { children: ReactNode }) {
   // Initial state values
   const [vehicleParameters, setVehicleParameters] = useState<VehicleParameters>({
-    lightDutyCount: 10,
-    mediumDutyCount: 5,
-    heavyDutyCount: 2,
+    lightDutyCount: 0,
+    mediumDutyCount: 0,
+    heavyDutyCount: 0,
     lightDutyCost: 15000,
     mediumDutyCost: 15000,
     heavyDutyCost: 50000,
