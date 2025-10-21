@@ -1,11 +1,13 @@
 // Get the background color for an input field based on whether it's been modified
 export function getFieldBackground(isModified: boolean): string {
-  if (isModified) {
-    // Green background for modified fields
-    return '#26c45f';
-  } else {
+  // Only show light blue background for default fields
+  // No special highlighting for modified fields
+  if (!isModified) {
     // Light blue background for default fields
     return '#f0f5ff';
+  } else {
+    // No background for modified fields (transparent)
+    return 'transparent';
   }
 }
 
@@ -74,6 +76,6 @@ export const DEFAULT_VALUES = {
   dieselToCngConversionFactor: 1,
   
   // Global Settings
-  timeHorizon: 15,
+  timeHorizon: 10,
   deploymentStrategy: 'manual'
 };
