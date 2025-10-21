@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useCalculator } from "@/contexts/CalculatorContext";
 import { useComparison } from "@/contexts/ComparisonContext";
-import { Info, BarChart3, Plus, Truck, Eye, EyeOff, Edit3, Check, FolderOpen, Edit2, Trash2 } from "lucide-react";
+import { Info, BarChart3, Plus, Truck, Eye, EyeOff, Edit3, Check, FolderOpen, Edit2, Trash2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -24,7 +24,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { getFieldStyles, DEFAULT_VALUES } from "@/lib/fieldStyling";
 
@@ -33,6 +35,9 @@ export default function GlobalSettings() {
     timeHorizon,
     deploymentStrategy, 
     vehicleParameters,
+    stationConfig,
+    fuelPrices,
+    vehicleDistribution,
     updateTimeHorizon,
     updateDeploymentStrategy,
     updateVehicleParameters,
@@ -67,6 +72,9 @@ export default function GlobalSettings() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [editName, setEditName] = useState("");
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [strategyName, setStrategyName] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   // Strategy descriptions
   const strategyDescriptions = {
@@ -113,6 +121,69 @@ export default function GlobalSettings() {
       window.removeEventListener('strategySaved', handleStrategySaved);
     };
   }, []);
+
+  // Function to handle saving strategy
+  const handleSaveStrategy = async () => {
+    if (!results || !strategyName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a name for your strategy",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setIsSaving(true);
+      
+      const strategyData = {
+        name: strategyName.trim(),
+        deploymentStrategy,
+        vehicleParameters,
+        stationConfig,
+        fuelPrices,
+        timeHorizon,
+        vehicleDistribution: vehicleDistribution || [],
+        calculatedResults: results
+      };
+      
+      const response = await fetch('/api/strategies', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(strategyData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to save strategy');
+      }
+      
+      const savedStrategy = await response.json();
+      
+      toast({
+        title: "Strategy Saved",
+        description: `Your strategy "${strategyName}" has been saved successfully.`,
+      });
+      
+      // Clear form and close dialog
+      setStrategyName("");
+      setShowSaveDialog(false);
+      
+      // Trigger global event to refresh strategies list
+      window.dispatchEvent(new Event('strategySaved'));
+      
+    } catch (error) {
+      console.error('Error saving strategy:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save strategy. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const fetchSavedStrategies = async () => {
     try {
@@ -592,6 +663,39 @@ export default function GlobalSettings() {
         </div>
       </div>
 
+      {/* Save Strategy */}
+      <div className="pt-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Save Strategy
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="ml-2 inline-block text-gray-500 dark:text-gray-400 cursor-help">
+                  <Info size={16} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="w-60">
+                <p className="text-xs">Save your current calculator settings and results as a named strategy for future reference and comparison.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </label>
+        <Button
+          variant="outline"
+          className="w-full flex items-center justify-center gap-2"
+          onClick={() => setShowSaveDialog(true)}
+          disabled={!results}
+        >
+          <Save className="h-4 w-4" />
+          Save Current Strategy
+        </Button>
+        {!results && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Calculate results first to save strategy
+          </p>
+        )}
+      </div>
+
       {/* Load Saved Strategy */}
       <div className="pt-2">
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -799,6 +903,64 @@ export default function GlobalSettings() {
                 Delete Strategy
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Save Strategy Dialog */}
+      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Save Strategy</DialogTitle>
+            <DialogDescription>
+              Save your current strategy configuration for future reference
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div>
+              <Label htmlFor="strategyName" className="text-sm font-medium">
+                Strategy Name
+              </Label>
+              <Input
+                id="strategyName"
+                value={strategyName}
+                onChange={(e) => setStrategyName(e.target.value)}
+                placeholder="Enter a descriptive name..."
+                className="mt-2"
+                maxLength={100}
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                This name will help you identify this strategy configuration later
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowSaveDialog(false);
+                setStrategyName("");
+              }}
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveStrategy}
+              disabled={isSaving || !strategyName.trim()}
+            >
+              {isSaving ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Saving...
+                </>
+              ) : (
+                "Save Strategy"
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
