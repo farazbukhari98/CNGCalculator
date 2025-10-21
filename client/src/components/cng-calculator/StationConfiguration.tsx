@@ -117,7 +117,7 @@ export default function StationConfiguration() {
           <span className="text-sm font-medium text-blue-600">
             {stationSizeInfo ? (
               <>
-                Station Size {stationSizeInfo.size} - {stationSizeInfo.annualGGE.toLocaleString()} / {stationSizeInfo.capacity.toLocaleString()} GGE/year
+                Station Size {stationSizeInfo.size} - {stationSizeInfo.capacity.toLocaleString()} GGE/year
               </>
             ) : (
               'Calculating station size...'
