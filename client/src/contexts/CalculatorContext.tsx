@@ -97,7 +97,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     dieselToCngConversionFactor: 1
   });
 
-  const [timeHorizon, setTimeHorizon] = useState<number>(15); // Default to 15 years
+  const [timeHorizon, setTimeHorizon] = useState<number>(10); // Default to 10 years
   const [deploymentStrategy, setDeploymentStrategy] = useState<DeploymentStrategy>("manual"); // Default to manual distribution
   const [vehicleDistribution, setVehicleDistribution] = useState<VehicleDistribution[] | null>(null);
   const [enhancedDistribution, setEnhancedDistribution] = useState<VehicleDistribution[] | null>(null);
