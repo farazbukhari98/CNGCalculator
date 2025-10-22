@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Send, Sparkles, AlertCircle, X, Lightbulb } from 'lucide-react';
+import { Send, AlertCircle, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCalculator } from '@/contexts/CalculatorContext';
 import { useToast } from '@/hooks/use-toast';
@@ -195,14 +194,7 @@ export function NaturalLanguageQuery({ onViewChange }: NaturalLanguageQueryProps
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-blue-500" />
-          Ask Shaun
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="w-full space-y-4">
         <div className="space-y-2">
           <Textarea
             value={query}
@@ -291,7 +283,6 @@ export function NaturalLanguageQuery({ onViewChange }: NaturalLanguageQueryProps
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+    </div>
   );
 }
