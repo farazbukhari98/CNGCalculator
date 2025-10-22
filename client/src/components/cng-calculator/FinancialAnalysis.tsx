@@ -151,8 +151,8 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
     const heavyInvestment = (yearData.heavy || 0) * vehicleParameters.heavyDutyCost + 
                            (yearData.heavyReplacements || 0) * vehicleParameters.heavyDutyCost;
     
-    // For Year 1 with Turnkey=Yes, add station cost
-    const stationInvestment = (index === 0 && stationConfig.turnkey) ? totalStationCost : 0;
+    // For Year 1, add station cost (regardless of turnkey status, it's still a capital investment)
+    const stationInvestment = (index === 0) ? totalStationCost : 0;
     
     return {
       year: `Year ${index + 1}`,
@@ -245,21 +245,15 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
               Capital Investment Timeline
               <MetricInfoTooltip
                 title="Capital Investment Timeline" 
-                description={stationConfig.turnkey ? 
-                  "This single-axis stacked chart shows your complete capital investment distribution across all years in the time horizon. Each year displays investment components stacked by type: station infrastructure (Year 1 only) and vehicle investments broken down by duty class." :
-                  "This single-axis stacked chart shows your vehicle capital investment distribution across all years in the time horizon. Each year displays vehicle investments stacked by duty class (heavy, medium, light). Station costs are financed through LDC tariff."}
-                calculation={stationConfig.turnkey ? 
-                  "Stacked investment bars from bottom to top: Station investment (Year 1 only), Heavy-duty vehicles, Medium-duty vehicles, Light-duty vehicles. Shows all years including those with zero investment." :
-                  "Stacked vehicle investment bars from bottom to top: Heavy-duty vehicles, Medium-duty vehicles, Light-duty vehicles. Shows all years including those with zero investment."}
+                description="This single-axis stacked chart shows your complete capital investment distribution across all years in the time horizon. Each year displays investment components stacked by type: station infrastructure (Year 1 only) and vehicle investments broken down by duty class."
+                calculation="Stacked investment bars from bottom to top: Station investment (Year 1 only), Heavy-duty vehicles, Medium-duty vehicles, Light-duty vehicles. Shows all years including those with zero investment."
                 affectingVariables={[
                   "Deployment strategy selection",
                   "Vehicle costs by type",
-                  "Station configuration and payment method (TurnKey/Non-TurnKey)",
+                  "Station configuration and payment method",
                   "Fleet composition (light/medium/heavy duty mix)"
                 ]}
-                simpleDescription={stationConfig.turnkey ? 
-                  "Complete timeline showing capital investments across all years, with detailed breakdown by vehicle type and station infrastructure." :
-                  "Complete timeline showing vehicle investments across all years, with detailed breakdown by vehicle type (station costs financed separately)."}
+                simpleDescription="Complete timeline showing capital investments across all years, with detailed breakdown by vehicle type and station infrastructure."
               />
             </h2>
             <div className="h-64">
