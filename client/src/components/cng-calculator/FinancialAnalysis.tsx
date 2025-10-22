@@ -151,8 +151,18 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
     const heavyInvestment = (yearData.heavy || 0) * vehicleParameters.heavyDutyCost + 
                            (yearData.heavyReplacements || 0) * vehicleParameters.heavyDutyCost;
     
-    // For Year 1, add station cost (regardless of turnkey status, it's still a capital investment)
-    const stationInvestment = (index === 0) ? totalStationCost : 0;
+    // Station investment calculation
+    // For turnkey: Full station cost in Year 1 only
+    // For non-turnkey: Annual LDC tariff payments throughout all years
+    let stationInvestment = 0;
+    if (stationConfig.turnkey) {
+      // Turnkey: Pay full station cost upfront in Year 1
+      stationInvestment = (index === 0) ? totalStationCost : 0;
+    } else {
+      // Non-turnkey: Annual LDC investment tariff
+      const monthlyTariffRate = (stationConfig.businessType === 'aglc' || stationConfig.businessType === 'vng') ? 0.015 : 0.016;
+      stationInvestment = totalStationCost * monthlyTariffRate * 12;  // Annual tariff payment
+    }
     
     return {
       year: `Year ${index + 1}`,
@@ -245,15 +255,21 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
               Capital Investment Timeline
               <MetricInfoTooltip
                 title="Capital Investment Timeline" 
-                description="This single-axis stacked chart shows your complete capital investment distribution across all years in the time horizon. Each year displays investment components stacked by type: station infrastructure (Year 1 only) and vehicle investments broken down by duty class."
-                calculation="Stacked investment bars from bottom to top: Station investment (Year 1 only), Heavy-duty vehicles, Medium-duty vehicles, Light-duty vehicles. Shows all years including those with zero investment."
+                description={stationConfig.turnkey ? 
+                  "This single-axis stacked chart shows your complete capital investment distribution across all years in the time horizon. Station cost is paid upfront in Year 1, with vehicle investments distributed according to your deployment strategy." :
+                  "This single-axis stacked chart shows your capital investments including annual LDC tariff payments for station financing. Station costs are spread across all years as annual payments (18-19.2% of station cost per year)."}
+                calculation={stationConfig.turnkey ?
+                  "Stacked investment bars from bottom to top: Station investment (Year 1 only), Heavy-duty vehicles, Medium-duty vehicles, Light-duty vehicles." :
+                  "Stacked investment bars from bottom to top: Annual station tariff payments (all years), Heavy-duty vehicles, Medium-duty vehicles, Light-duty vehicles."}
                 affectingVariables={[
                   "Deployment strategy selection",
                   "Vehicle costs by type",
                   "Station configuration and payment method",
                   "Fleet composition (light/medium/heavy duty mix)"
                 ]}
-                simpleDescription="Complete timeline showing capital investments across all years, with detailed breakdown by vehicle type and station infrastructure."
+                simpleDescription={stationConfig.turnkey ?
+                  "Complete timeline showing capital investments with upfront station payment and vehicle deployments." :
+                  "Complete timeline showing capital investments with annual station financing and vehicle deployments."}
               />
             </h2>
             <div className="h-64">
