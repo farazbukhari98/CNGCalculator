@@ -838,7 +838,7 @@ export function calculateROI(
   
   // Calculate ROI at the end of the analysis period
   const finalSavings = cumulativeSavings[timeHorizon - 1];
-  const roi = (finalSavings / totalInvestment) * 100;
+  const roi = ((finalSavings - totalInvestment) / totalInvestment) * 100;
   
   // Annual rate of return
   const annualRateOfReturn = (Math.pow((finalSavings / totalInvestment) + 1, 1 / timeHorizon) - 1) * 100;
