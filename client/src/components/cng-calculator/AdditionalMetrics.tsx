@@ -542,38 +542,6 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
               </div>
             </div>
             
-            {/* Additional Metrics */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700">
-                <div className="text-xs text-gray-500 mb-1 dark:text-gray-300">Fleet Size</div>
-                <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                  {(() => {
-                    // Use same logic as FleetConfiguration to get actual vehicle counts
-                    if (deploymentStrategy === 'manual' && vehicleDistribution) {
-                      // Sum up totals from manual distribution
-                      const totals = vehicleDistribution.reduce(
-                        (acc, year) => ({
-                          light: acc.light + (year.light || 0),
-                          medium: acc.medium + (year.medium || 0),
-                          heavy: acc.heavy + (year.heavy || 0)
-                        }),
-                        { light: 0, medium: 0, heavy: 0 }
-                      );
-                      return totals.light + totals.medium + totals.heavy;
-                    }
-                    // For non-manual strategies, use original parameters
-                    return vehicleParameters.lightDutyCount + vehicleParameters.mediumDutyCount + vehicleParameters.heavyDutyCount;
-                  })()} vehicles
-                </div>
-              </div>
-              <div className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700">
-                <div className="text-xs text-gray-500 mb-1 dark:text-gray-300">Annual Savings</div>
-                <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                  {formatCurrency(results.yearlySavings[results.yearlySavings.length - 1] || 0)}
-                </div>
-              </div>
-            </div>
-
             {/* Deployment Strategy Summary */}
             <div className="bg-blue-50 p-3 rounded-lg dark:bg-blue-900/20">
               <div className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">
