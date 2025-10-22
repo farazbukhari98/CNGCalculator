@@ -480,19 +480,6 @@ export default function MainContent() {
             </div>
           )}
 
-          {/* Show Ask Shaun if enabled */}
-          {showAskShaun && (
-            <div className="mb-6">
-              <NaturalLanguageQuery onViewChange={(view) => {
-                if (view === 'dashboard') {
-                  // Scroll to top to show main dashboard
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                } else if (view === 'comparison') {
-                  setShowComparison(true);
-                }
-              }} />
-            </div>
-          )}
           
           {/* Export/Save Actions */}
           <div className="flex flex-wrap justify-end gap-3 mt-6">
@@ -588,6 +575,33 @@ export default function MainContent() {
         </DialogContent>
       </Dialog>
       
+      {/* Ask Shaun Modal */}
+      <Dialog open={showAskShaun} onOpenChange={setShowAskShaun}>
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageCircle className="w-5 h-5 text-green-500" />
+              Ask Shaun - Natural Language Assistant
+            </DialogTitle>
+            <DialogDescription>
+              Ask questions or make changes to your CNG conversion analysis using natural language
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            <NaturalLanguageQuery onViewChange={(view) => {
+              if (view === 'dashboard') {
+                // Close modal and scroll to top
+                setShowAskShaun(false);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              } else if (view === 'comparison') {
+                setShowComparison(true);
+                setShowAskShaun(false);
+              }
+            }} />
+          </div>
+        </DialogContent>
+      </Dialog>
+      
       {/* Floating Action Buttons */}
       <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
         {/* Strategy Comparison Button */}
@@ -608,17 +622,13 @@ export default function MainContent() {
         
         {/* Ask Shaun Button */}
         <button
-          onClick={() => setShowAskShaun(!showAskShaun)}
-          className={`group relative flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all hover:shadow-xl ${
-            showAskShaun 
-              ? 'bg-green-600 text-white hover:bg-green-700' 
-              : 'bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
-          }`}
-          aria-label="Toggle Ask Shaun"
+          onClick={() => setShowAskShaun(true)}
+          className="group relative flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all hover:shadow-xl bg-green-600 text-white hover:bg-green-700"
+          aria-label="Open Ask Shaun Assistant"
         >
           <MessageCircle className="h-6 w-6" />
           <span className="absolute right-full mr-3 hidden rounded-md bg-gray-900 px-2 py-1 text-xs text-white group-hover:block whitespace-nowrap dark:bg-gray-700">
-            {showAskShaun ? 'Hide' : 'Show'} Ask Shaun
+            Ask Shaun
           </span>
         </button>
       </div>
