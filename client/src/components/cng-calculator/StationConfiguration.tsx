@@ -244,7 +244,7 @@ export default function StationConfiguration() {
           </SelectContent>
         </Select>
         <p className="text-xs text-gray-500 mt-1">
-          Markup percentage applied to the base station cost
+          Markup percentage applied to the base station cost (negative values apply a discount)
         </p>
       </div>
 
