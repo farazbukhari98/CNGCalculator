@@ -274,14 +274,12 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
                   />
                   <Legend />
                   {/* Stacked Investment Bars - Order: Station (bottom), Heavy, Medium, Light (top) */}
-                  {stationConfig.turnkey && (
-                    <Bar 
-                      dataKey="stationInvestment" 
-                      name="Station Investment" 
-                      fill="rgba(59, 130, 246, 0.8)" 
-                      stackId="investment" 
-                    />
-                  )}
+                  <Bar 
+                    dataKey="stationInvestment" 
+                    name="Station Investment" 
+                    fill="rgba(59, 130, 246, 0.8)" 
+                    stackId="investment" 
+                  />
                   <Bar 
                     dataKey="heavyInvestment" 
                     name="Heavy-Duty Vehicles" 
