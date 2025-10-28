@@ -388,15 +388,43 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
               <div className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700">
                 <div className="text-xs text-gray-500 mb-1 dark:text-gray-300">Total Annual Savings</div>
                 <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                  ${operationalChartData.reduce((sum, item) => sum + item.annualSavings, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {(() => {
+                    // Check if there are any vehicles in the fleet
+                    const totalVehicles = vehicleParameters.lightDutyCount + vehicleParameters.mediumDutyCount + vehicleParameters.heavyDutyCount;
+                    if (totalVehicles === 0) {
+                      return "$0.00";
+                    }
+                    return `$${operationalChartData.reduce((sum, item) => sum + item.annualSavings, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                  })()}
                 </div>
               </div>
               <div className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700">
                 <div className="text-xs text-gray-500 mb-1 dark:text-gray-300">Best Performing Type</div>
                 <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                  {operationalChartData.reduce((best, current) => 
-                    current.fuelSavings > best.fuelSavings ? current : best
-                  ).vehicleType}
+                  {(() => {
+                    // Check if there are any vehicles in the fleet
+                    const totalVehicles = vehicleParameters.lightDutyCount + vehicleParameters.mediumDutyCount + vehicleParameters.heavyDutyCount;
+                    if (totalVehicles === 0) {
+                      return "N/A";
+                    }
+                    
+                    // Find the best performing vehicle type that actually exists in the fleet
+                    const vehicleTypesWithCounts = [
+                      { type: 'Light Duty', count: vehicleParameters.lightDutyCount, data: operationalChartData[0] },
+                      { type: 'Medium Duty', count: vehicleParameters.mediumDutyCount, data: operationalChartData[1] },
+                      { type: 'Heavy Duty', count: vehicleParameters.heavyDutyCount, data: operationalChartData[2] }
+                    ];
+                    
+                    // Filter for vehicle types that exist in the fleet, then find best savings
+                    const existingTypes = vehicleTypesWithCounts.filter(v => v.count > 0);
+                    if (existingTypes.length === 0) return "N/A";
+                    
+                    const best = existingTypes.reduce((best, current) => 
+                      current.data.fuelSavings > best.data.fuelSavings ? current : best
+                    );
+                    
+                    return best.type;
+                  })()}
                 </div>
               </div>
             </div>
@@ -427,13 +455,27 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
               <div className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700">
                 <div className="text-xs text-gray-500 mb-1 dark:text-gray-300">Payback Period</div>
                 <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                  {formatPaybackPeriod(results.paybackPeriod)}
+                  {(() => {
+                    // Check if there are any vehicles in the fleet
+                    const totalVehicles = vehicleParameters.lightDutyCount + vehicleParameters.mediumDutyCount + vehicleParameters.heavyDutyCount;
+                    if (totalVehicles === 0) {
+                      return "N/A";
+                    }
+                    return formatPaybackPeriod(results.paybackPeriod);
+                  })()}
                 </div>
               </div>
               <div className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700">
                 <div className="text-xs text-gray-500 mb-1 dark:text-gray-300">ROI</div>
                 <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                  {results.roi.toFixed(1)}%
+                  {(() => {
+                    // Check if there are any vehicles in the fleet
+                    const totalVehicles = vehicleParameters.lightDutyCount + vehicleParameters.mediumDutyCount + vehicleParameters.heavyDutyCount;
+                    if (totalVehicles === 0) {
+                      return "0.0%";
+                    }
+                    return `${results.roi.toFixed(1)}%`;
+                  })()}
                 </div>
               </div>
             </div>
