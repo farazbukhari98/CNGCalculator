@@ -103,13 +103,9 @@ function getPeakYearVehicleCount(vehicleDistribution: VehicleDistribution[] | nu
 
 // Station cost calculation
 export function calculateStationCost(config: StationConfig, vehicleParams?: VehicleParameters, vehicleDistribution?: VehicleDistribution[] | null, fuelPrices?: FuelPrices): number {
-  // If no vehicle params provided, return default costs
+  // If no vehicle params provided, return 0 (no station needed without vehicles)
   if (!vehicleParams) {
-    const defaultCost = config.stationType === 'fast' ? 2200000 : 1200000; // Default to medium size
-    // Apply station markup if turnkey
-    const markupMultiplier = 1 + (config.stationMarkup / 100); // Convert percentage to multiplier
-    const finalMultiplier = config.turnkey ? markupMultiplier : 1.0;
-    return Math.round(defaultCost * finalMultiplier);
+    return 0;
   }
   
   // Always determine vehicle counts based on peak year usage (maximum vehicles in any single year)
@@ -125,6 +121,12 @@ export function calculateStationCost(config: StationConfig, vehicleParams?: Vehi
       mediumDutyCount: vehicleParams.mediumDutyCount,
       heavyDutyCount: vehicleParams.heavyDutyCount
     };
+  }
+  
+  // Check if there are any vehicles - if not, no station is needed
+  const totalVehicles = vehicleCounts.lightDutyCount + vehicleCounts.mediumDutyCount + vehicleCounts.heavyDutyCount;
+  if (totalVehicles === 0) {
+    return 0;
   }
 
   // Calculate annual GGE (Gasoline Gallon Equivalent) consumption
@@ -334,6 +336,12 @@ export function getStationSizeInfo(config: StationConfig, vehicleParams?: Vehicl
       mediumDutyCount: vehicleParams.mediumDutyCount,
       heavyDutyCount: vehicleParams.heavyDutyCount
     };
+  }
+  
+  // Check if there are any vehicles - if not, no station info is needed
+  const totalVehicles = vehicleCounts.lightDutyCount + vehicleCounts.mediumDutyCount + vehicleCounts.heavyDutyCount;
+  if (totalVehicles === 0) {
+    return null;
   }
 
   // Calculate annual GGE (same logic as calculateStationCost) - use configurable values
