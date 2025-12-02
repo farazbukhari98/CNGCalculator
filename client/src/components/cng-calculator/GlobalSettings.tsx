@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useCalculator } from "@/contexts/CalculatorContext";
 import { useComparison } from "@/contexts/ComparisonContext";
-import { Info, BarChart3, Plus, Truck, Eye, EyeOff, Edit3, Check, FolderOpen, Edit2, Trash2, Save } from "lucide-react";
+import { Info, BarChart3, Plus, Truck, Edit3, Check, FolderOpen, Edit2, Trash2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -46,8 +46,6 @@ export default function GlobalSettings() {
     updateManualDistribution,
     setManualDistributionBulk,
     results,
-    hideNegativeValues,
-    toggleHideNegativeValues,
     markFieldAsModified,
     isFieldModified,
     setDistributionStrategy,
@@ -783,44 +781,6 @@ export default function GlobalSettings() {
             {savedStrategies.length} saved {savedStrategies.length === 1 ? 'strategy' : 'strategies'} available
           </p>
         )}
-      </div>
-
-      {/* Chart Display Options */}
-      <div className="pt-2">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Chart Display Options
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="ml-2 inline-block text-gray-500 dark:text-gray-400 cursor-help">
-                  <Info size={16} />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent className="w-60">
-                <p className="text-xs">Toggle to hide negative values from all charts. This adjusts the Y-axis scale to focus only on positive ROI periods.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </label>
-        <Button
-          variant={hideNegativeValues ? "default" : "outline"}
-          size="sm"
-          onClick={toggleHideNegativeValues}
-          className={`w-full flex items-center justify-center gap-2 text-sm ${
-            hideNegativeValues 
-              ? "bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500" 
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-2 focus:ring-blue-500"
-          }`}
-        >
-          {hideNegativeValues ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          {hideNegativeValues ? "Show All Values" : "Hide Negative Values"}
-        </Button>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          {hideNegativeValues 
-            ? "Charts show only positive values with adjusted scale"
-            : "Charts show complete data including negative values"
-          }
-        </p>
       </div>
 
       {/* Tip for comparison */}
