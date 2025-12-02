@@ -32,7 +32,8 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
     vehicleParameters, 
     stationConfig,
     fuelPrices,
-    vehicleDistribution
+    vehicleDistribution,
+    enhancedDistribution
   } = useCalculator();
 
   // If no results yet, don't render anything
@@ -500,10 +501,10 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
                 </div>
                 {(() => {
                   const totalVehicleInvestment = results.vehicleDistribution.reduce((sum, dist) => sum + dist.investment, 0);
-                  const stationCost = calculateStationCost(stationConfig, vehicleParameters);
-                  const isTimeFillAgl = stationConfig.stationType === 'time' && (stationConfig.businessType === 'aglc' || stationConfig.businessType === 'vng');
-                  const monthlyTariffRate = 1.5 / 100; // 1.5% monthly for AGL Time-fill
-                  const annualTariffCost = isTimeFillAgl ? stationCost * monthlyTariffRate * 12 : 0;
+                  // Use enhancedDistribution for accurate station cost calculation
+                  const stationCost = calculateStationCost(stationConfig, vehicleParameters, enhancedDistribution, fuelPrices);
+                  // Total investment always includes vehicles + station regardless of turnkey option
+                  const displayTotalInvestment = totalVehicleInvestment + stationCost;
                   
                   return (
                     <div className="space-y-2">
@@ -512,23 +513,16 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
                         <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">{formatCurrency(totalVehicleInvestment)}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-blue-600 dark:text-blue-400">
-                          Station{isTimeFillAgl ? ' + Tariff' : ''}
-                          {isTimeFillAgl && (
-                            <div className="text-xs text-blue-500 dark:text-blue-300 mt-1">
-                              ({formatCurrency(annualTariffCost)}/year tariff)
-                            </div>
-                          )}
-                        </span>
+                        <span className="text-sm text-blue-600 dark:text-blue-400">Station</span>
                         <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">
-                          {formatCurrency(stationConfig.turnkey ? stationCost : (isTimeFillAgl ? annualTariffCost : stationCost))}
+                          {formatCurrency(stationCost)}
                         </span>
                       </div>
                       <div className="border-t pt-2 border-blue-200 dark:border-blue-700">
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Total Investment</span>
                           <span className="text-lg font-bold text-blue-800 dark:text-blue-200">
-                            {formatCurrency(results.totalInvestment)}
+                            {formatCurrency(displayTotalInvestment)}
                           </span>
                         </div>
                       </div>
@@ -558,7 +552,11 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
                 </div>
                 {(() => {
                   const totalSavingsOverHorizon = results.cumulativeSavings[results.cumulativeSavings.length - 1];
-                  const netSavings = totalSavingsOverHorizon - results.totalInvestment;
+                  // Calculate consistent total investment (vehicles + station) regardless of turnkey option
+                  const totalVehicleInvestment = results.vehicleDistribution.reduce((sum, dist) => sum + dist.investment, 0);
+                  const stationCost = calculateStationCost(stationConfig, vehicleParameters, enhancedDistribution, fuelPrices);
+                  const displayTotalInvestment = totalVehicleInvestment + stationCost;
+                  const netSavings = totalSavingsOverHorizon - displayTotalInvestment;
                   
                   return (
                     <div className="space-y-2">
@@ -568,7 +566,7 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-green-600 dark:text-green-400">Less: Total Investment</span>
-                        <span className="text-sm font-semibold text-red-600 dark:text-red-400">({formatCurrency(results.totalInvestment)})</span>
+                        <span className="text-sm font-semibold text-red-600 dark:text-red-400">({formatCurrency(displayTotalInvestment)})</span>
                       </div>
                       <div className="border-t pt-2 border-green-200 dark:border-green-700">
                         <div className="flex justify-between items-center">
