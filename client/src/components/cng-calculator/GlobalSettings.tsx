@@ -208,8 +208,14 @@ export default function GlobalSettings() {
       if (response.ok) {
         const strategy = await response.json();
         
-        // Load all the strategy parameters first
-        updateVehicleParameters(strategy.vehicleParameters);
+        // Load all the strategy parameters with backward compatibility for missing fields
+        updateVehicleParameters({
+          ...strategy.vehicleParameters,
+          // Add default values for maintenance savings if missing from saved strategy
+          lightDutyMaintenanceSavings: strategy.vehicleParameters.lightDutyMaintenanceSavings ?? DEFAULT_VALUES.lightDutyMaintenanceSavings,
+          mediumDutyMaintenanceSavings: strategy.vehicleParameters.mediumDutyMaintenanceSavings ?? DEFAULT_VALUES.mediumDutyMaintenanceSavings,
+          heavyDutyMaintenanceSavings: strategy.vehicleParameters.heavyDutyMaintenanceSavings ?? DEFAULT_VALUES.heavyDutyMaintenanceSavings
+        });
         // Add default value for stationMarkup if it's missing from saved strategy
         updateStationConfig({
           ...strategy.stationConfig,
