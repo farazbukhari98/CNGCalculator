@@ -213,12 +213,10 @@ export function calculateStationCost(config: StationConfig, vehicleParams?: Vehi
   const businessMultiplier = config.businessType === 'cgc' ? 0.95 : 1.0; // CGC is 0.95, AGLC and VNG are 1.0
   
   // Apply station markup (user-configurable percentage)
+  // Markup always applies to reflect actual quoted station price regardless of payment method
   const markupMultiplier = 1 + (config.stationMarkup / 100); // Convert percentage to multiplier
   
-  // Apply turnkey option - if turnkey, apply markup; if not, no additional markup
-  const finalMultiplier = config.turnkey ? markupMultiplier : 1.0;
-  
-  return Math.round(baseCost * businessMultiplier * finalMultiplier);
+  return Math.round(baseCost * businessMultiplier * markupMultiplier);
 }
 
 // Apply vehicle lifecycle management to deployment distribution
@@ -414,8 +412,8 @@ export function getStationSizeInfo(config: StationConfig, vehicleParams?: Vehicl
   // Calculate final cost with business adjustments and markup
   const businessMultiplier = config.businessType === 'cgc' ? 0.95 : 1.0;
   const markupMultiplier = 1 + (config.stationMarkup / 100); // Convert percentage to multiplier
-  const finalMultiplier = config.turnkey ? markupMultiplier : 1.0;
-  const finalCost = Math.round(selectedStation.cost * businessMultiplier * finalMultiplier);
+  // Always apply markup to the quoted price display (markup reflects actual quoted price regardless of payment method)
+  const finalCost = Math.round(selectedStation.cost * businessMultiplier * markupMultiplier);
   
   return {
     size: selectedStation.size,

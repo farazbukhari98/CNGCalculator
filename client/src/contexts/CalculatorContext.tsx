@@ -289,8 +289,6 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
 
   // Automatically recalculate when any parameter changes
   useEffect(() => {
-    console.log('useEffect triggered - stationConfig changed:', stationConfig);
-    
     if (deploymentStrategy === 'manual' && vehicleDistribution) {
       
       // Check if the total vehicle counts in the parameters have changed
