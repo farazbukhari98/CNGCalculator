@@ -199,10 +199,12 @@ export default function StationConfiguration() {
         <Select 
           value={(stationConfig.stationMarkup ?? DEFAULT_VALUES.stationMarkup).toString()} 
           onValueChange={(value) => {
+            console.log('Station markup dropdown changed:', value);
             const newValue = parseInt(value);
             if (newValue !== DEFAULT_VALUES.stationMarkup) {
               markFieldAsModified('stationMarkup');
             }
+            console.log('Calling updateStationConfig with stationMarkup:', newValue);
             updateStationConfig({...stationConfig, stationMarkup: newValue});
           }}
         >
