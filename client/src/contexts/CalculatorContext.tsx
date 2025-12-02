@@ -77,10 +77,10 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     lightDutyCngEfficiencyLoss: 50,   // 5.0% loss (stored as 50)
     mediumDutyCngEfficiencyLoss: 75,  // 7.5% loss (stored as 75)
     heavyDutyCngEfficiencyLoss: 100,  // 10.0% loss (stored as 100)
-    // Default maintenance savings per mile (stored as cents, e.g., 5 = $0.05/mile)
-    lightDutyMaintenanceSavings: 0,   // $0.00/mile for light duty
-    mediumDutyMaintenanceSavings: 5,  // $0.05/mile for medium duty
-    heavyDutyMaintenanceSavings: 5    // $0.05/mile for heavy duty
+    // Default maintenance savings per mile (stored as dollars, e.g., 0.05 = $0.05/mile)
+    lightDutyMaintenanceSavings: 0,      // $0.00/mile for light duty
+    mediumDutyMaintenanceSavings: 0.05,  // $0.05/mile for medium duty
+    heavyDutyMaintenanceSavings: 0.05    // $0.05/mile for heavy duty
   });
 
   const [stationConfig, setStationConfig] = useState<StationConfig>({

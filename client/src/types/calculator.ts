@@ -21,9 +21,9 @@ export interface VehicleParameters {
   lightDutyCngEfficiencyLoss: number;  // CNG efficiency loss as integer percentage (e.g., 50 for 5.0%)
   mediumDutyCngEfficiencyLoss: number; // CNG efficiency loss as integer percentage (e.g., 75 for 7.5%)
   heavyDutyCngEfficiencyLoss: number;  // CNG efficiency loss as integer percentage (e.g., 100 for 10.0%)
-  lightDutyMaintenanceSavings: number; // Maintenance savings per mile (e.g., 5 for $0.05/mile)
-  mediumDutyMaintenanceSavings: number; // Maintenance savings per mile (e.g., 5 for $0.05/mile)
-  heavyDutyMaintenanceSavings: number; // Maintenance savings per mile (e.g., 5 for $0.05/mile)
+  lightDutyMaintenanceSavings: number; // Maintenance savings per mile in dollars (e.g., 0.05 for $0.05/mile)
+  mediumDutyMaintenanceSavings: number; // Maintenance savings per mile in dollars (e.g., 0.05 for $0.05/mile)
+  heavyDutyMaintenanceSavings: number; // Maintenance savings per mile in dollars (e.g., 0.05 for $0.05/mile)
 }
 
 // Station configuration

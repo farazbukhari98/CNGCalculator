@@ -59,9 +59,9 @@ export const DEFAULT_VALUES = {
   lightDutyCngEfficiencyLoss: 50,
   mediumDutyCngEfficiencyLoss: 75,
   heavyDutyCngEfficiencyLoss: 100,
-  lightDutyMaintenanceSavings: 0,    // $0.00/mile for light duty
-  mediumDutyMaintenanceSavings: 5,   // $0.05/mile for medium duty
-  heavyDutyMaintenanceSavings: 5,    // $0.05/mile for heavy duty
+  lightDutyMaintenanceSavings: 0,      // $0.00/mile for light duty
+  mediumDutyMaintenanceSavings: 0.05,  // $0.05/mile for medium duty
+  heavyDutyMaintenanceSavings: 0.05,   // $0.05/mile for heavy duty
   
   // Station Configuration
   stationType: 'fast',

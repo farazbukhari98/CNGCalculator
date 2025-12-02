@@ -729,7 +729,7 @@ export default function VehicleParameters() {
             <Separator />
             
             <div>
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Maintenance Savings (¢/mile)</h3>
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Maintenance Savings ($/mile)</h3>
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -743,13 +743,13 @@ export default function VehicleParameters() {
                       <input
                         type="number"
                         min="0"
-                        max="50"
-                        step="1"
+                        max="1"
+                        step="0.01"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
                         style={getFieldStyles(isFieldModified('lightDutyMaintenanceSavings'))}
                         value={vehicleParameters.lightDutyMaintenanceSavings}
                         onChange={(e) => {
-                          const newValue = parseInt(e.target.value) || 0;
+                          const newValue = parseFloat(e.target.value) || 0;
                           if (newValue !== DEFAULT_VALUES.lightDutyMaintenanceSavings) {
                             markFieldAsModified('lightDutyMaintenanceSavings');
                           }
@@ -768,7 +768,7 @@ export default function VehicleParameters() {
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Per-mile maintenance savings for CNG light duty vehicles (in cents)</p>
+                          <p>Per-mile maintenance savings for CNG light duty vehicles (e.g., $0.05)</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -786,13 +786,13 @@ export default function VehicleParameters() {
                       <input
                         type="number"
                         min="0"
-                        max="50"
-                        step="1"
+                        max="1"
+                        step="0.01"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
                         style={getFieldStyles(isFieldModified('mediumDutyMaintenanceSavings'))}
                         value={vehicleParameters.mediumDutyMaintenanceSavings}
                         onChange={(e) => {
-                          const newValue = parseInt(e.target.value) || 0;
+                          const newValue = parseFloat(e.target.value) || 0;
                           if (newValue !== DEFAULT_VALUES.mediumDutyMaintenanceSavings) {
                             markFieldAsModified('mediumDutyMaintenanceSavings');
                           }
@@ -811,7 +811,7 @@ export default function VehicleParameters() {
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Per-mile maintenance savings for CNG medium duty vehicles (in cents)</p>
+                          <p>Per-mile maintenance savings for CNG medium duty vehicles (e.g., $0.05)</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -829,13 +829,13 @@ export default function VehicleParameters() {
                       <input
                         type="number"
                         min="0"
-                        max="50"
-                        step="1"
+                        max="1"
+                        step="0.01"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
                         style={getFieldStyles(isFieldModified('heavyDutyMaintenanceSavings'))}
                         value={vehicleParameters.heavyDutyMaintenanceSavings}
                         onChange={(e) => {
-                          const newValue = parseInt(e.target.value) || 0;
+                          const newValue = parseFloat(e.target.value) || 0;
                           if (newValue !== DEFAULT_VALUES.heavyDutyMaintenanceSavings) {
                             markFieldAsModified('heavyDutyMaintenanceSavings');
                           }
@@ -854,7 +854,7 @@ export default function VehicleParameters() {
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Per-mile maintenance savings for CNG heavy duty vehicles (in cents)</p>
+                          <p>Per-mile maintenance savings for CNG heavy duty vehicles (e.g., $0.05)</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>

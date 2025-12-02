@@ -768,10 +768,10 @@ export function calculateROI(
     const heavyMilesDriven = heavyInOperation * vehicleParams.heavyDutyAnnualMiles;
     
     // Maintenance savings based on user-configurable per-mile savings
-    // Values are stored as cents (e.g., 5 = $0.05/mile), convert to dollars
-    const lightMaintenanceSavings = lightMilesDriven * (vehicleParams.lightDutyMaintenanceSavings / 100);
-    const mediumMaintenanceSavings = mediumMilesDriven * (vehicleParams.mediumDutyMaintenanceSavings / 100);
-    const heavyMaintenanceSavings = heavyMilesDriven * (vehicleParams.heavyDutyMaintenanceSavings / 100);
+    // Values are stored as dollars (e.g., 0.05 = $0.05/mile)
+    const lightMaintenanceSavings = lightMilesDriven * vehicleParams.lightDutyMaintenanceSavings;
+    const mediumMaintenanceSavings = mediumMilesDriven * vehicleParams.mediumDutyMaintenanceSavings;
+    const heavyMaintenanceSavings = heavyMilesDriven * vehicleParams.heavyDutyMaintenanceSavings;
     
     const maintenanceSavings = lightMaintenanceSavings + mediumMaintenanceSavings + heavyMaintenanceSavings;
     
