@@ -109,7 +109,9 @@ export default function FleetConfiguration({ showCashflow }: FleetConfigurationP
   };
 
   const stationCost = getStationCost();
-  const totalInvestment = totalVehicleInvestment + stationCost;
+  // Total investment - only include station cost upfront if turnkey is true
+  // When turnkey is false, station cost is financed through monthly tariffs, not paid upfront
+  const totalInvestment = totalVehicleInvestment + (stationConfig.turnkey ? stationCost : 0);
 
   // Format currency
   const formatCurrency = (value: number) => {
