@@ -743,6 +743,16 @@ export function calculateROI(
     const effectiveCngPrice = Math.max(0, fuelPrices.cngPrice - fuelPrices.cngTaxCredit);
     const adjustedCngPrice = effectiveCngPrice * yearMultiplier;
     
+    // Debug: log CNG price calculation on first year only
+    if (year === 0) {
+      console.log("CNG Price Calculation:", {
+        baseCngPrice: fuelPrices.cngPrice,
+        taxCredit: fuelPrices.cngTaxCredit,
+        effectiveCngPrice: effectiveCngPrice,
+        adjustedCngPrice: adjustedCngPrice
+      });
+    }
+    
     // Calculate fuel savings for each vehicle type using proper fuel efficiency accounting
     const lightConventionalPrice = vehicleParams.lightDutyFuelType === 'gasoline' ? adjustedGasolinePrice : adjustedDieselPrice;
     const lightConventionalEfficiency = vehicleParams.lightDutyFuelType === 'gasoline' ? FUEL_EFFICIENCY.light.gasoline : FUEL_EFFICIENCY.light.diesel;
