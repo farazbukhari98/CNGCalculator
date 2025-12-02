@@ -582,7 +582,7 @@ export default function VehicleParameters() {
                 </div>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Fuel type affects pricing calculations and maintenance savings (diesel vehicles receive additional maintenance savings)
+                Fuel type affects pricing calculations (gasoline vs diesel fuel costs)
               </p>
             </div>
             
@@ -723,6 +723,146 @@ export default function VehicleParameters() {
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 CNG vehicles have lower energy density than gasoline/diesel, requiring more fuel for the same distance
+              </p>
+            </div>
+            
+            <Separator />
+            
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Maintenance Savings (¢/mile)</h3>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Light Duty
+                  </label>
+                  <div className="flex items-center">
+                    <div className="relative flex-1">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
+                        <DollarSign className="h-3.5 w-3.5 text-gray-500" />
+                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        max="50"
+                        step="1"
+                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
+                        style={getFieldStyles(isFieldModified('lightDutyMaintenanceSavings'))}
+                        value={vehicleParameters.lightDutyMaintenanceSavings}
+                        onChange={(e) => {
+                          const newValue = parseInt(e.target.value) || 0;
+                          if (newValue !== DEFAULT_VALUES.lightDutyMaintenanceSavings) {
+                            markFieldAsModified('lightDutyMaintenanceSavings');
+                          }
+                          updateVehicleParameters({ 
+                            ...vehicleParameters, 
+                            lightDutyMaintenanceSavings: newValue
+                          });
+                        }}
+                      />
+                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="ml-2 text-gray-500 cursor-help">
+                            <Info size={16} />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Per-mile maintenance savings for CNG light duty vehicles (in cents)</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Medium Duty
+                  </label>
+                  <div className="flex items-center">
+                    <div className="relative flex-1">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
+                        <DollarSign className="h-3.5 w-3.5 text-gray-500" />
+                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        max="50"
+                        step="1"
+                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
+                        style={getFieldStyles(isFieldModified('mediumDutyMaintenanceSavings'))}
+                        value={vehicleParameters.mediumDutyMaintenanceSavings}
+                        onChange={(e) => {
+                          const newValue = parseInt(e.target.value) || 0;
+                          if (newValue !== DEFAULT_VALUES.mediumDutyMaintenanceSavings) {
+                            markFieldAsModified('mediumDutyMaintenanceSavings');
+                          }
+                          updateVehicleParameters({ 
+                            ...vehicleParameters, 
+                            mediumDutyMaintenanceSavings: newValue
+                          });
+                        }}
+                      />
+                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="ml-2 text-gray-500 cursor-help">
+                            <Info size={16} />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Per-mile maintenance savings for CNG medium duty vehicles (in cents)</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Heavy Duty
+                  </label>
+                  <div className="flex items-center">
+                    <div className="relative flex-1">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
+                        <DollarSign className="h-3.5 w-3.5 text-gray-500" />
+                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        max="50"
+                        step="1"
+                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
+                        style={getFieldStyles(isFieldModified('heavyDutyMaintenanceSavings'))}
+                        value={vehicleParameters.heavyDutyMaintenanceSavings}
+                        onChange={(e) => {
+                          const newValue = parseInt(e.target.value) || 0;
+                          if (newValue !== DEFAULT_VALUES.heavyDutyMaintenanceSavings) {
+                            markFieldAsModified('heavyDutyMaintenanceSavings');
+                          }
+                          updateVehicleParameters({ 
+                            ...vehicleParameters, 
+                            heavyDutyMaintenanceSavings: newValue
+                          });
+                        }}
+                      />
+                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="ml-2 text-gray-500 cursor-help">
+                            <Info size={16} />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Per-mile maintenance savings for CNG heavy duty vehicles (in cents)</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                CNG vehicles typically have lower maintenance costs due to cleaner combustion
               </p>
             </div>
           </div>
