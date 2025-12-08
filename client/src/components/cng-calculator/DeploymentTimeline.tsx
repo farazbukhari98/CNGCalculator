@@ -156,7 +156,7 @@ export default function DeploymentTimeline() {
                 }
 
                 return (
-                  <div key={year} className={`year-block bg-white dark:bg-gray-800 border rounded-lg shadow-sm p-3 ${borderClass}`}>
+                  <div key={year} className={`year-block bg-white dark:bg-gray-800 border dark:border-gray-600 rounded-lg shadow-sm p-3 ${borderClass}`}>
                     <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Year {year}</div>
                     
                     <div className="space-y-2">
