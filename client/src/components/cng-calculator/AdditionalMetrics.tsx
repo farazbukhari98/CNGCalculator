@@ -120,12 +120,37 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
   });
 
   // Prepare data for operational metrics chart
-  const operationalChartData = operationalMetrics.map(metric => ({
-    ...metric,
-    annualConventionalCost: metric.conventionalFuel * metric.annualMiles,
-    annualCngCost: metric.cngFuel * metric.annualMiles,
-    annualSavings: metric.fuelSavings * metric.annualMiles
-  }));
+  // Get vehicle counts for the current year (or peak active vehicles if using enhanced distribution)
+  const getActiveVehicleCount = (vehicleType: string) => {
+    if (enhancedDistribution && enhancedDistribution.length > 0) {
+      // Use the peak active vehicle count from enhanced distribution
+      let maxActive = 0;
+      for (const yearData of enhancedDistribution) {
+        let activeCount = 0;
+        if (vehicleType === 'Light Duty') activeCount = yearData.totalActiveLight || 0;
+        if (vehicleType === 'Medium Duty') activeCount = yearData.totalActiveMedium || 0;
+        if (vehicleType === 'Heavy Duty') activeCount = yearData.totalActiveHeavy || 0;
+        maxActive = Math.max(maxActive, activeCount);
+      }
+      return maxActive;
+    }
+    // Fallback to vehicle parameters
+    if (vehicleType === 'Light Duty') return vehicleParameters.lightDutyCount;
+    if (vehicleType === 'Medium Duty') return vehicleParameters.mediumDutyCount;
+    if (vehicleType === 'Heavy Duty') return vehicleParameters.heavyDutyCount;
+    return 0;
+  };
+
+  const operationalChartData = operationalMetrics.map(metric => {
+    const vehicleCount = getActiveVehicleCount(metric.vehicleType);
+    return {
+      ...metric,
+      vehicleCount,
+      annualConventionalCost: metric.conventionalFuel * metric.annualMiles * vehicleCount,
+      annualCngCost: metric.cngFuel * metric.annualMiles * vehicleCount,
+      annualSavings: metric.fuelSavings * metric.annualMiles * vehicleCount
+    };
+  });
 
   // Strategy advantages and considerations
   const strategyInsights = {
