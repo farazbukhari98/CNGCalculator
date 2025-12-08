@@ -326,7 +326,7 @@ export default function GlobalSettings() {
   };
 
   return (
-    <div className="bg-white rounded-md p-3 space-y-3">
+    <div className="bg-white dark:bg-gray-700 rounded-md p-3 space-y-3">
       <div className="flex justify-between items-center">
         <h3 className="text-sm font-medium text-gray-700">Calculation Settings</h3>
         

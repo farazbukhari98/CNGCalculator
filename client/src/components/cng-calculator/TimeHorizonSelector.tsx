@@ -19,7 +19,7 @@ export default function TimeHorizonSelector() {
   const { timeHorizon, updateTimeHorizon } = useCalculator();
   
   return (
-    <div className="bg-white rounded-md p-3">
+    <div className="bg-white dark:bg-gray-700 rounded-md p-3">
       <div className="mb-3">
         <div className="flex justify-between items-center mb-1">
           <Label className="text-sm font-medium text-gray-700">Time Horizon</Label>

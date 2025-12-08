@@ -59,7 +59,7 @@ export default function VehicleParameters() {
   };
 
   return (
-    <div className="bg-white rounded-md p-3 space-y-3">
+    <div className="bg-white dark:bg-gray-700 rounded-md p-3 space-y-3">
       <Tabs defaultValue="costs">
         <TabsList className="w-full mb-3">
           <TabsTrigger value="costs" className="flex-1">Vehicle Costs</TabsTrigger>

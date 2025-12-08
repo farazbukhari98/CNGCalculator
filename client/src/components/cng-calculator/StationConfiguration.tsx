@@ -36,7 +36,7 @@ export default function StationConfiguration() {
     : 0;
 
   return (
-    <div className="bg-white rounded-md p-3 space-y-3">
+    <div className="bg-white dark:bg-gray-700 rounded-md p-3 space-y-3">
       {/* Station Type */}
       <div>
         <Label className="block text-sm font-medium text-gray-700 mb-2">Station Type</Label>
