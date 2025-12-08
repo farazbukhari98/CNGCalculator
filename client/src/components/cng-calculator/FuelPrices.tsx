@@ -24,7 +24,7 @@ export default function FuelPrices() {
   const cngVsDieselSavings = Math.round(((fuelPrices.dieselPrice - effectiveCngPrice) / fuelPrices.dieselPrice) * 100 * 10) / 10;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-md p-3 space-y-3">
+    <div className="bg-white dark:bg-gray-700 rounded-md p-3 space-y-3">
       {/* Gasoline Price */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
