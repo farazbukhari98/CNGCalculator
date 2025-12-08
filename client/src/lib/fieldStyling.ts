@@ -1,22 +1,13 @@
 // Get the background color for an input field based on whether it's been modified
+// Feature disabled - always returns transparent
 export function getFieldBackground(isModified: boolean): string {
-  // Only show light blue background for default fields
-  // No special highlighting for modified fields
-  if (!isModified) {
-    // Light blue background for default fields
-    return '#f0f5ff';
-  } else {
-    // No background for modified fields (transparent)
-    return 'transparent';
-  }
+  return 'transparent';
 }
 
 // Get Tailwind-compatible inline styles for input fields
+// Feature disabled - no special highlighting
 export function getFieldStyles(isModified: boolean) {
-  return {
-    backgroundColor: getFieldBackground(isModified),
-    transition: 'background-color 0.2s ease'
-  };
+  return {};
 }
 
 // Check if a value differs from its default
