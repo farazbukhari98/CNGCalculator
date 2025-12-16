@@ -659,7 +659,8 @@ export function calculateROI(
   timeHorizon: number,
   strategy: DeploymentStrategy,
   vehicleDistribution: VehicleDistribution[],
-  rngFeedstockType: RngFeedstockType = 'none'
+  rngFeedstockType: RngFeedstockType = 'none',
+  customCiValue: number = 50
 ): CalculationResults {
   // Create fuel efficiency object from vehicle parameters (applying configurable CNG efficiency loss)
   const FUEL_EFFICIENCY = {
@@ -893,7 +894,7 @@ export function calculateROI(
   // For carbon-negative RNG (like dairy manure), this will result in negative emissions (carbon capture)
   let rngEmissionsFactor = 1; // Default: no RNG, use fossil CNG emissions as-is
   if (rngFeedstockType !== 'none') {
-    const rngCi = RNG_CI_VALUES[rngFeedstockType];
+    const rngCi = rngFeedstockType === 'custom' ? customCiValue : RNG_CI_VALUES[rngFeedstockType as keyof typeof RNG_CI_VALUES];
     const fossilCngCi = RNG_CI_VALUES.fossil_cng;
     rngEmissionsFactor = rngCi / fossilCngCi;
   }

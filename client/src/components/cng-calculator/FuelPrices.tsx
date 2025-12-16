@@ -16,8 +16,17 @@ export default function FuelPrices() {
     markFieldAsModified,
     isFieldModified,
     rngFeedstockType,
-    updateRngFeedstockType
+    updateRngFeedstockType,
+    customCiValue,
+    updateCustomCiValue
   } = useCalculator();
+
+  // Helper to get CI value for display (handles custom case)
+  const getCiValue = () => {
+    if (rngFeedstockType === 'custom') return customCiValue;
+    if (rngFeedstockType === 'none') return RNG_CI_VALUES.fossil_cng;
+    return RNG_CI_VALUES[rngFeedstockType as keyof typeof RNG_CI_VALUES];
+  };
 
   // Calculate effective CNG price (after tax credit)
   const effectiveCngPrice = Math.max(0, fuelPrices.cngPrice - fuelPrices.cngTaxCredit);
@@ -354,20 +363,40 @@ export default function FuelPrices() {
           ))}
         </select>
         
+        {/* Custom CI Value Input */}
+        {rngFeedstockType === 'custom' && (
+          <div className="mt-2">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Custom CI Value (g CO₂e/MJ)
+            </label>
+            <input
+              type="number"
+              className="block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-green-500 focus:ring-green-500 text-sm"
+              value={customCiValue}
+              onChange={(e) => updateCustomCiValue(parseFloat(e.target.value) || 0)}
+              step="1"
+              data-testid="input-custom-ci-value"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Fossil CNG: {RNG_CI_VALUES.fossil_cng} g. Use negative values for carbon-negative fuels.
+            </p>
+          </div>
+        )}
+        
         {/* RNG Carbon Intensity Display */}
         {rngFeedstockType !== 'none' && (
           <div className="mt-2 bg-green-50 dark:bg-green-900/20 p-2 rounded">
             <div className="flex items-center justify-between text-xs">
               <span className="text-green-700 dark:text-green-300">Carbon Intensity</span>
-              <span className={`font-medium ${RNG_CI_VALUES[rngFeedstockType] < 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>
-                {RNG_CI_VALUES[rngFeedstockType]} g CO₂e/MJ
-                {RNG_CI_VALUES[rngFeedstockType] < 0 && ' (Carbon Negative)'}
+              <span className={`font-medium ${getCiValue() < 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                {getCiValue()} g CO₂e/MJ
+                {getCiValue() < 0 && ' (Carbon Negative)'}
               </span>
             </div>
             <div className="flex items-center justify-between text-xs mt-1">
               <span className="text-green-700 dark:text-green-300">vs Fossil CNG ({RNG_CI_VALUES.fossil_cng} g)</span>
               <span className="font-medium text-green-600 dark:text-green-400">
-                {Math.round((1 - RNG_CI_VALUES[rngFeedstockType] / RNG_CI_VALUES.fossil_cng) * 100)}% reduction
+                {Math.round((1 - getCiValue() / RNG_CI_VALUES.fossil_cng) * 100)}% reduction
               </span>
             </div>
           </div>

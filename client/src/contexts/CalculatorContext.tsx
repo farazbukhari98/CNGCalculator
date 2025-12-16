@@ -29,6 +29,7 @@ interface CalculatorContextType {
   hideNegativeValues: boolean;
   modifiedFields: ModifiedFields;
   rngFeedstockType: RngFeedstockType;
+  customCiValue: number;
   
   updateVehicleParameters: (params: VehicleParameters) => void;
   updateStationConfig: (config: StationConfig) => void;
@@ -45,6 +46,7 @@ interface CalculatorContextType {
   isFieldModified: (fieldName: string) => boolean;
   resetFieldModifications: () => void;
   updateRngFeedstockType: (feedstock: RngFeedstockType) => void;
+  updateCustomCiValue: (value: number) => void;
 }
 
 // Create the context
@@ -113,6 +115,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   const [hideNegativeValues, setHideNegativeValues] = useState<boolean>(false);
   const [modifiedFields, setModifiedFields] = useState<ModifiedFields>({});
   const [rngFeedstockType, setRngFeedstockType] = useState<RngFeedstockType>("none");
+  const [customCiValue, setCustomCiValue] = useState<number>(50);
 
   // Helper function to detect if current distribution is over-allocated
   const isOverAllocated = (distribution: VehicleDistribution[] | null, params: VehicleParameters, horizon: number) => {
@@ -345,7 +348,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
             timeHorizon,
             deploymentStrategy,
             enhancedDistribution,
-            rngFeedstockType
+            rngFeedstockType,
+            customCiValue
           );
           setResults(calculationResults);
         }
@@ -377,7 +381,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
             timeHorizon,
             deploymentStrategy,
             enhancedDistribution,
-            rngFeedstockType
+            rngFeedstockType,
+            customCiValue
           );
           setResults(calculationResults);
         }
@@ -401,7 +406,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           timeHorizon,
           deploymentStrategy,
           enhancedDistribution,
-          rngFeedstockType
+          rngFeedstockType,
+          customCiValue
         );
         setResults(calculationResults);
       }
@@ -434,7 +440,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           timeHorizon,
           deploymentStrategy,
           enhancedDistribution,
-          rngFeedstockType
+          rngFeedstockType,
+          customCiValue
         );
         setResults(calculationResults);
       }
@@ -501,7 +508,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         timeHorizon,
         strategy,
         enhancedDistribution,
-        rngFeedstockType
+        rngFeedstockType,
+        customCiValue
       );
       setResults(calculationResults);
     }
@@ -538,7 +546,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           timeHorizon,
           strategy,
           enhancedDistribution,
-          rngFeedstockType
+          rngFeedstockType,
+          customCiValue
         );
         setResults(calculationResults);
       }
@@ -599,7 +608,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           timeHorizon,
           deploymentStrategy,
           enhancedDist,
-          rngFeedstockType
+          rngFeedstockType,
+          customCiValue
         );
         setResults(calculationResults);
       }
@@ -650,7 +660,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           timeHorizon,
           deploymentStrategy,
           enhancedDist,
-          rngFeedstockType
+          rngFeedstockType,
+          customCiValue
         );
         setResults(calculationResults);
       }
@@ -676,7 +687,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         timeHorizon,
         deploymentStrategy,
         distribution,
-        rngFeedstockType
+        rngFeedstockType,
+        customCiValue
       );
       setResults(calculationResults);
     }
@@ -710,6 +722,11 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     setRngFeedstockType(feedstock);
   };
 
+  // Custom CI value update function
+  const updateCustomCiValue = (value: number) => {
+    setCustomCiValue(value);
+  };
+
   // Context value
   const value = {
     vehicleParameters,
@@ -724,6 +741,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     hideNegativeValues,
     modifiedFields,
     rngFeedstockType,
+    customCiValue,
     
     updateVehicleParameters,
     updateStationConfig,
@@ -739,7 +757,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     markFieldAsModified,
     isFieldModified,
     resetFieldModifications,
-    updateRngFeedstockType
+    updateRngFeedstockType,
+    updateCustomCiValue
   };
 
   return (
