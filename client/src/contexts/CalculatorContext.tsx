@@ -446,7 +446,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         setResults(calculationResults);
       }
     }
-  }, [vehicleParameters, stationConfig, fuelPrices, timeHorizon, deploymentStrategy, rngFeedstockType]);
+  }, [vehicleParameters, stationConfig, fuelPrices, timeHorizon, deploymentStrategy, rngFeedstockType, customCiValue]);
 
   // Method to update vehicle parameters
   const updateVehicleParameters = (params: VehicleParameters) => {
