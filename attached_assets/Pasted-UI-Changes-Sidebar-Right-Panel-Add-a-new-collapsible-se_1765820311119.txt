@@ -1,0 +1,95 @@
+UI Changes – Sidebar (Right Panel)
+
+Add a new collapsible section in the existing right-hand sidebar (below “Fuel Prices” is fine) called “RNG Settings”.
+
+Inside RNG Settings, add the following controls:
+
+RNG Modeling Toggle
+
+Label: “Include RNG in CNG emissions modeling?”
+
+Control: On/Off switch.
+
+Default: Off.
+
+Behavior:
+
+When Off: the app behaves exactly as it does today. CNG is treated with a single default emission factor (no RNG blend).
+
+When On: show/enable the controls described below and use them in all emissions calculations.
+
+RNG % of Total CNG Slider
+
+Label: “RNG % of Total CNG Usage”
+
+Control: slider from 0–100 (integer).
+
+Default: 0.
+
+Helper text: “Portion of total CNG energy consumption that comes from RNG.”
+
+When RNG toggle is Off, this slider is disabled (greyed out).
+
+When On, this value is used to split total CNG energy into RNG vs fossil CNG.
+
+CI Source Mode Selector
+
+Label: “How do you want to set RNG CI?”
+
+Control: radio buttons or segmented control with two options:
+
+“Use default by feedstock type”
+
+“Enter custom CI value”
+
+Default: “Use default by feedstock type”.
+
+Feedstock Type Dropdown (shown only if “Use default by feedstock type” is selected)
+
+Label: “RNG Feedstock Type”
+
+Options (as examples – define a constant map in code that can be updated later):
+
+Landfill gas
+
+Dairy manure
+
+Swine manure
+
+Wastewater sludge
+
+Food/organic waste
+
+Each feedstock type should map to an internal default CI value in g CO₂e/MJ.
+
+Below the dropdown, show a read-only display:
+
+Label: “Default RNG CI (g CO₂e/MJ)” and the numeric value currently used.
+
+Custom CI Input (shown only if “Enter custom CI value” is selected)
+
+Label: “RNG CI (g CO₂e/MJ)”
+
+Control: numeric input.
+
+Validation: must be a valid number; allow negative values (some RNG pathways can be net negative CI).
+
+Helper text: “Use lifecycle CI value from your LCA or tools like the Biogas CAT.”
+
+Read-only Effective CI Display
+
+Always visible when RNG modeling is On, regardless of CI mode.
+
+Two small read-only fields:
+
+“Effective RNG CI (g CO₂e/MJ)” → the CI value in use (from feedstock or custom).
+
+“Blended CNG/RNG CI (g CO₂e/MJ)” → dynamically calculated based on:
+
+RNG % of total CNG
+
+Fossil CNG CI constant
+
+RNG CI value
+
+Use the existing design system: same typography, control styles, spacing, and tooltips as other sections in the sidebar.

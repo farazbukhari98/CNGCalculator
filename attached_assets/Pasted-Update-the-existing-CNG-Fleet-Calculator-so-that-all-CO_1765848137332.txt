@@ -1,0 +1,425 @@
+Update the existing CNG Fleet Calculator so that all CO₂ emissions figures for CNG usage are driven by a configurable Renewable Natural Gas (RNG) carbon intensity (CI) value, expressed in g CO₂e per MJ.
+
+The user should be able to:
+
+Specify what percentage of their total CNG usage is RNG using a slider.
+
+Either:
+
+Use a default CI value based on the RNG feedstock type, or
+
+Enter a custom RNG CI value directly.
+
+All emissions-related outputs (annual CO₂ reductions, cumulative reductions, and any “% CO₂ reduction” metrics) must use these CI-driven calculations.
+
+UI Changes – Configuration Sidebar
+
+Add a new collapsible section in the existing configuration sidebar called “RNG Settings”.
+
+Inside “RNG Settings”, add the following controls, using the same component styles, spacing, and typography as the current UI:
+
+1. RNG Modeling Toggle
+
+Label: Include RNG in CNG emissions modeling?
+
+Control: On/Off switch.
+
+Default: Off
+
+Behavior:
+
+When Off:
+
+The calculator behaves exactly as it does today.
+
+CNG uses a single default fossil CNG CI (no RNG blend).
+
+Other RNG controls are disabled or clearly inactive.
+
+When On:
+
+All RNG controls below become active.
+
+Emissions calculations use the RNG share and CI logic defined below.
+
+2. RNG % of Total CNG Slider
+
+Label: RNG % of Total CNG Usage
+
+Control: slider from 0–100 (integer).
+
+Default: 0
+
+Helper text: Portion of total CNG energy consumption that comes from RNG.
+
+Behavior:
+
+Disabled when Include RNG in CNG emissions modeling? is Off.
+
+When On, this percentage is used to split total CNG energy into RNG vs fossil CNG.
+
+3. CI Source Mode Selector
+
+Label: How do you want to set RNG CI?
+
+Control: radio buttons or segmented control with two options:
+
+Use default by feedstock type
+
+Enter custom CI value
+
+Default: Use default by feedstock type.
+
+This value determines whether the feedstock dropdown or the custom CI input is active.
+
+4. Feedstock Type Dropdown
+
+(Shown only when Use default by feedstock type is selected)
+
+Label: RNG Feedstock Type
+
+Options (use these exact labels in the UI and map them internally to keys):
+
+Landfill gas
+
+Dairy manure
+
+Swine manure
+
+Wastewater sludge
+
+Food/organic waste
+
+Each feedstock maps to a default lifecycle CI value in g CO₂e/MJ. Use these default CI constants (typical mid-range LCFS/GREET values; they can be edited later if needed):
+
+landfill → 60 g CO₂e/MJ (typical landfill/wastewater RNG pathways ~45–70 g CO₂e/MJ).
+
+dairy_manure → -300 g CO₂e/MJ (dairy manure RNG pathways are often strongly carbon-negative, typically around −200 to −400 g CO₂e/MJ).
+
+swine_manure → -190 g CO₂e/MJ (in the −146 to −232 g CO₂e/MJ range for dairy/swine manure RNG).
+
+wastewater_sludge → 35 g CO₂e/MJ (RNG from wastewater treatment plants is typically ~30–40 g CO₂e/MJ).
+
+food_waste → 40 g CO₂e/MJ (representative mid-range value for food/organic waste RNG pathways).
+
+Below the dropdown, add a read-only display:
+
+Label: Default RNG CI (g CO₂e/MJ)
+
+Value: the CI for the currently selected feedstock.
+
+5. Custom CI Input
+
+(Shown only when Enter custom CI value is selected)
+
+Label: RNG CI (g CO₂e/MJ)
+
+Control: numeric input.
+
+Allow negative values.
+
+Basic validation:
+
+Must be a number.
+
+If invalid or empty, show a brief inline error and do not use it in calculations until it is valid.
+
+Helper text: Use lifecycle CI value from your LCA or tools like the Biogas CAT.
+
+6. Read-only Effective CI Display
+
+Always visible when RNG modeling is On, regardless of mode.
+
+Two small read-only fields:
+
+Effective RNG CI (g CO₂e/MJ)
+
+Shows the CI value actually being used for RNG:
+
+If mode is Use default by feedstock type: use the selected feedstock’s default CI.
+
+If mode is Enter custom CI value: use the custom CI input (when valid).
+
+Blended CNG/RNG CI (g CO₂e/MJ)
+
+Shows the effective CI across the whole CNG pool, combining fossil CNG and RNG according to the RNG %.
+
+Both fields should update live when any RNG settings or other relevant inputs change.
+
+Data & State Model
+
+Extend the existing calculator state to include at least:
+
+rngEnabled: boolean
+
+rngSharePercent: number // 0–100
+
+rngCiMode: 'feedstock' | 'custom'
+
+rngFeedstockType: 'landfill' | 'dairy_manure' | 'swine_manure' | 'wastewater_sludge' | 'food_waste'
+
+rngCiCustom: number | null // g CO₂e/MJ
+
+Also define a CI constants object to standardize CI values (set these defaults directly in code):
+
+ciValues = {
+
+gasoline: 95, // g CO₂e/MJ, typical WTW gasoline
+
+diesel: 100, // g CO₂e/MJ, typical WTW diesel
+
+fossilCng: 83, // g CO₂e/MJ, typical WTW fossil CNG
+
+rngFeedstocks: {
+
+landfill: 60,
+
+dairy_manure: -300,
+
+swine_manure: -190,
+
+wastewater_sludge: 35,
+
+food_waste: 40
+
+}
+
+}
+
+Keep all existing state fields and behavior intact and just add these.
+
+Calculation Logic – Emissions Using CI
+
+Replace the current fixed per-gallon CNG emissions factors with CI-based calculations.
+
+1) Compute Fuel Energy Use
+
+The app already computes annual fuel consumption per vehicle type (gallons, GGE, or similar). Reuse that.
+
+For each year and each strategy:
+
+Compute baseline fuel energy (MJ) for gasoline/diesel.
+
+Compute alternative fuel energy (MJ) for CNG.
+
+Use standard, fixed energy conversion constants (define them once and reuse):
+
+MJ_PER_GGE_GASOLINE = 120
+
+MJ_PER_GGE_CNG = 120
+
+If you already convert to energy elsewhere, align with that, but these are acceptable defaults.
+
+2) Apply CI to Get Emissions
+
+For each year:
+
+Baseline scenario (diesel/gasoline):
+
+baselineEnergyMJ = total baseline fuel energy consumption.
+
+baselineCi:
+
+Use ciValues.diesel for diesel vehicles.
+
+Use ciValues.gasoline for gasoline vehicles.
+
+If you already aggregate, you can use a weighted average CI based on fuel mix.
+
+baselineEmissions_g = baselineEnergyMJ * baselineCi.
+
+baselineEmissions_tons = baselineEmissions_g / 1_000_000.
+
+CNG + RNG scenario:
+
+totalCngEnergyMJ = total CNG fuel energy consumption for the converted fleet (in MJ).
+
+If rngEnabled is false:
+
+Treat all CNG as fossil:
+
+totalAltEmissions_g = totalCngEnergyMJ * ciValues.fossilCng.
+
+If rngEnabled is true:
+
+rngShare = rngSharePercent / 100.
+
+rngEnergyMJ = totalCngEnergyMJ * rngShare.
+
+fossilCngEnergyMJ = totalCngEnergyMJ * (1 - rngShare).
+
+Determine RNG CI:
+
+If rngCiMode === 'feedstock':
+
+rngCi = ciValues.rngFeedstocks[rngFeedstockType].
+
+If rngCiMode === 'custom':
+
+rngCi = rngCiCustom (only when valid).
+
+Then compute:
+
+rngEmissions_g = rngEnergyMJ * rngCi.
+
+fossilCngEmissions_g = fossilCngEnergyMJ * ciValues.fossilCng.
+
+totalAltEmissions_g = rngEmissions_g + fossilCngEmissions_g.
+
+totalAltEmissions_tons = totalAltEmissions_g / 1_000_000.
+
+Effective blended CI (for display):
+
+If rngEnabled is false:
+
+blendedCi = ciValues.fossilCng.
+
+If rngEnabled is true and totalCngEnergyMJ > 0:
+
+blendedCi = (rngEnergyMJ * rngCi + fossilCngEnergyMJ * ciValues.fossilCng) / totalCngEnergyMJ.
+
+Expose blendedCi and rngCi to the UI for the Effective CI read-outs.
+
+3) Emissions Reductions
+
+Use the CI-based emissions for all CO₂ reduction metrics:
+
+annualReduction_tons = baselineEmissions_tons - totalAltEmissions_tons.
+
+cumulativeReduction_tons = running sum of annualReduction_tons over the user’s time horizon.
+
+reductionPercentage:
+
+Use a consistent definition (for example, cumulative reduction over the time horizon divided by cumulative baseline emissions for that horizon × 100), and wire that value into the UI where “CO₂ Reduction %” is currently shown.
+
+All emissions-related outputs and charts must now use these CI-based numbers.
+
+Updates to Main Dashboard UI
+CO₂ Emissions Reduction section
+
+Keep the existing chart design.
+
+Ensure the plotted values and “Total CO₂ Emissions Saved” number use:
+
+cumulativeReduction_tons from the CI-based calculations.
+
+Recalculate:
+
+“Equivalent Trees Planted”
+
+“Equivalent Forest Area”
+from the updated cumulative emissions savings.
+
+Add a small summary row or caption above or below the chart with:
+
+Baseline CI (diesel/gasoline): X g CO₂e/MJ
+
+Blended CNG/RNG CI: Y g CO₂e/MJ
+
+RNG share: Z% of total CNG
+
+These should update live as inputs change.
+
+Key Performance Summary
+
+Update the CO₂ Reduction % and any emissions-related metrics so they use the CI-based reductionPercentage value from the new logic.
+
+Keep all financial metrics (investment, savings, ROI, payback) as they are; do not change that logic.
+
+Operational Metrics
+
+Keep the cost charts (Conventional Fuel Cost, CNG Cost, Annual Savings) unchanged.
+
+If any emissions numbers appear here, ensure they use the CI-based emissions.
+
+Information Tips / Hover Text
+
+For every new RNG-related control, add or update info-tip hover text that clearly (and briefly) explains the logic in plain language:
+
+RNG Modeling Toggle:
+
+“Turn this on to model a blend of fossil CNG and Renewable Natural Gas (RNG) using lifecycle carbon intensity values (g CO₂e/MJ). When off, CNG uses a single default fossil CI.”
+
+RNG % Slider:
+
+“Sets what share of your total CNG energy use comes from RNG. 0% = all fossil CNG, 100% = all RNG.”
+
+CI Source Mode:
+
+“Choose whether to use default carbon intensity values based on RNG feedstock type, or enter a custom CI value from a lifecycle analysis or calculator.”
+
+Feedstock Type:
+
+“Different RNG feedstocks have different lifecycle carbon intensities. These default values are based on typical LCFS/GREET ranges and can be adjusted in future updates.”
+
+Custom CI:
+
+“Use when you have a project-specific CI value (g CO₂e/MJ) from an LCA or from tools like the Biogas CAT.”
+
+Effective RNG CI and Blended CI:
+
+“Effective RNG CI is the lifecycle carbon intensity used for the RNG portion of your fuel. Blended CNG/RNG CI is the weighted average across fossil CNG and RNG based on your RNG %.”
+
+Also update any existing CO₂-related info tips to mention:
+
+Emissions are modeled on a well-to-wheel CO₂e per unit of energy (g CO₂e/MJ) basis.
+
+Switching from diesel/gasoline to CNG/RNG reduces emissions when the alternative CI is lower than the baseline CI.
+
+Behavior Requirements
+
+Recalculate emissions automatically whenever any of these change:
+
+RNG toggle
+
+RNG % slider
+
+CI source mode
+
+Feedstock type
+
+Custom CI value
+
+Any existing fleet, deployment, or fuel price inputs.
+
+When RNG is disabled:
+
+Use only ciValues.fossilCng for CNG.
+
+Results should match the original (pre-RNG) behavior as closely as possible.
+
+When RNG is enabled but RNG % is 0%:
+
+blendedCi = ciValues.fossilCng.
+
+Emissions should match the pure CNG case.
+
+When RNG is enabled and RNG % is 100%:
+
+All CNG energy uses rngCi only (fully RNG).
+
+When saving or loading a strategy or using “Add to Comparison”, include and restore:
+
+rngEnabled
+
+rngSharePercent
+
+rngCiMode
+
+rngFeedstockType
+
+rngCiCustom
+
+and recompute emissions and all related outputs based on those values.
+
+Constraints
+
+Do not remove or degrade any existing calculation or feature.
+
+Match the existing styling and interaction patterns.
+
+Keep the RNG experience simple and intuitive for the user.
+
+Do not add external libraries unless absolutely necessary; use the current tech stack.
+
+Implement all of the above so the CO₂ story for the fleet is fully driven by lifecycle carbon intensity, with RNG blending controlled through the new RNG Settings and clearly explained through information tips.

@@ -4,7 +4,9 @@ import {
   FuelPrices, 
   DeploymentStrategy, 
   VehicleDistribution, 
-  CalculationResults 
+  CalculationResults,
+  RngFeedstockType,
+  RNG_CI_VALUES
 } from "@/types/calculator";
 
 // Get vehicle costs from vehicleParameters (for compatibility with old code we'll create a helper function)
@@ -656,7 +658,8 @@ export function calculateROI(
   fuelPrices: FuelPrices,
   timeHorizon: number,
   strategy: DeploymentStrategy,
-  vehicleDistribution: VehicleDistribution[]
+  vehicleDistribution: VehicleDistribution[],
+  rngFeedstockType: RngFeedstockType = 'none'
 ): CalculationResults {
   // Create fuel efficiency object from vehicle parameters (applying configurable CNG efficiency loss)
   const FUEL_EFFICIENCY = {
@@ -885,6 +888,16 @@ export function calculateROI(
     }
   };
 
+  // Calculate RNG reduction factor based on carbon intensity
+  // If RNG is selected, CNG emissions are reduced based on the ratio of RNG CI to fossil CNG CI
+  // For carbon-negative RNG (like dairy manure), this will result in negative emissions (carbon capture)
+  let rngEmissionsFactor = 1; // Default: no RNG, use fossil CNG emissions as-is
+  if (rngFeedstockType !== 'none') {
+    const rngCi = RNG_CI_VALUES[rngFeedstockType];
+    const fossilCngCi = RNG_CI_VALUES.fossil_cng;
+    rngEmissionsFactor = rngCi / fossilCngCi;
+  }
+
   // Calculate total emissions for conventional fuels vs CNG
   let totalConventionalEmissions = 0;
   let totalCngEmissions = 0;
@@ -912,9 +925,15 @@ export function calculateROI(
     const yearConventionalEmissions = lightGasolineEmissions + mediumDieselEmissions + heavyDieselEmissions;
     
     // Calculate CNG emissions using g/mile emission factors
-    const lightCngEmissions = lightInOperation * vehicleParams.lightDutyAnnualMiles * VEHICLE_EMISSION_FACTORS.light.cng / 1000; // convert g to kg
-    const mediumCngEmissions = mediumInOperation * vehicleParams.mediumDutyAnnualMiles * VEHICLE_EMISSION_FACTORS.medium.cng / 1000;
-    const heavyCngEmissions = heavyInOperation * vehicleParams.heavyDutyAnnualMiles * VEHICLE_EMISSION_FACTORS.heavy.cng / 1000;
+    // Apply RNG reduction factor to CNG emissions
+    const baseLightCngEmissions = lightInOperation * vehicleParams.lightDutyAnnualMiles * VEHICLE_EMISSION_FACTORS.light.cng / 1000;
+    const baseMediumCngEmissions = mediumInOperation * vehicleParams.mediumDutyAnnualMiles * VEHICLE_EMISSION_FACTORS.medium.cng / 1000;
+    const baseHeavyCngEmissions = heavyInOperation * vehicleParams.heavyDutyAnnualMiles * VEHICLE_EMISSION_FACTORS.heavy.cng / 1000;
+    
+    // Apply RNG factor (can be negative for carbon-negative RNG feedstocks)
+    const lightCngEmissions = baseLightCngEmissions * rngEmissionsFactor;
+    const mediumCngEmissions = baseMediumCngEmissions * rngEmissionsFactor;
+    const heavyCngEmissions = baseHeavyCngEmissions * rngEmissionsFactor;
     
     const yearCngEmissions = lightCngEmissions + mediumCngEmissions + heavyCngEmissions;
     

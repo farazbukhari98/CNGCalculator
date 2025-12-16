@@ -49,6 +49,29 @@ export interface FuelPrices {
 // Deployment strategies
 export type DeploymentStrategy = "immediate" | "phased" | "aggressive" | "deferred" | "manual";
 
+// RNG (Renewable Natural Gas) feedstock types
+export type RngFeedstockType = "none" | "landfill" | "dairy_manure" | "swine_manure" | "wastewater_sludge" | "food_waste";
+
+// RNG carbon intensity values (g CO2e/MJ) and reduction factors
+export const RNG_CI_VALUES = {
+  fossil_cng: 83,      // Baseline fossil CNG
+  landfill: 60,        // Landfill gas
+  dairy_manure: -300,  // Dairy manure (carbon negative)
+  swine_manure: -190,  // Swine manure (carbon negative)
+  wastewater_sludge: 35, // Wastewater sludge
+  food_waste: 40       // Food/organic waste
+} as const;
+
+// RNG feedstock display labels
+export const RNG_FEEDSTOCK_LABELS: Record<RngFeedstockType, string> = {
+  none: "N/A (Fossil CNG Only)",
+  landfill: "Landfill Gas",
+  dairy_manure: "Dairy Manure",
+  swine_manure: "Swine Manure", 
+  wastewater_sludge: "Wastewater Sludge",
+  food_waste: "Food/Organic Waste"
+};
+
 // Vehicle distribution by year with lifecycle tracking
 export interface VehicleDistribution {
   // New vehicle purchases in this year

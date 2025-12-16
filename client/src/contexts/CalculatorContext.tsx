@@ -5,7 +5,8 @@ import {
   FuelPrices,
   DeploymentStrategy,
   CalculationResults,
-  VehicleDistribution 
+  VehicleDistribution,
+  RngFeedstockType
 } from "@/types/calculator";
 import { calculateROI, distributeVehicles, applyVehicleLifecycle, getVehicleCosts } from "@/lib/calculator";
 
@@ -27,6 +28,7 @@ interface CalculatorContextType {
   sidebarCollapsed: boolean;
   hideNegativeValues: boolean;
   modifiedFields: ModifiedFields;
+  rngFeedstockType: RngFeedstockType;
   
   updateVehicleParameters: (params: VehicleParameters) => void;
   updateStationConfig: (config: StationConfig) => void;
@@ -42,6 +44,7 @@ interface CalculatorContextType {
   markFieldAsModified: (fieldName: string) => void;
   isFieldModified: (fieldName: string) => boolean;
   resetFieldModifications: () => void;
+  updateRngFeedstockType: (feedstock: RngFeedstockType) => void;
 }
 
 // Create the context
@@ -109,6 +112,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [hideNegativeValues, setHideNegativeValues] = useState<boolean>(false);
   const [modifiedFields, setModifiedFields] = useState<ModifiedFields>({});
+  const [rngFeedstockType, setRngFeedstockType] = useState<RngFeedstockType>("none");
 
   // Helper function to detect if current distribution is over-allocated
   const isOverAllocated = (distribution: VehicleDistribution[] | null, params: VehicleParameters, horizon: number) => {
@@ -340,7 +344,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
             fuelPrices,
             timeHorizon,
             deploymentStrategy,
-            enhancedDistribution
+            enhancedDistribution,
+            rngFeedstockType
           );
           setResults(calculationResults);
         }
@@ -371,7 +376,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
             fuelPrices,
             timeHorizon,
             deploymentStrategy,
-            enhancedDistribution
+            enhancedDistribution,
+            rngFeedstockType
           );
           setResults(calculationResults);
         }
@@ -394,7 +400,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           fuelPrices,
           timeHorizon,
           deploymentStrategy,
-          enhancedDistribution
+          enhancedDistribution,
+          rngFeedstockType
         );
         setResults(calculationResults);
       }
@@ -426,12 +433,13 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           fuelPrices,
           timeHorizon,
           deploymentStrategy,
-          enhancedDistribution
+          enhancedDistribution,
+          rngFeedstockType
         );
         setResults(calculationResults);
       }
     }
-  }, [vehicleParameters, stationConfig, fuelPrices, timeHorizon, deploymentStrategy]);
+  }, [vehicleParameters, stationConfig, fuelPrices, timeHorizon, deploymentStrategy, rngFeedstockType]);
 
   // Method to update vehicle parameters
   const updateVehicleParameters = (params: VehicleParameters) => {
@@ -492,7 +500,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         fuelPrices,
         timeHorizon,
         strategy,
-        enhancedDistribution
+        enhancedDistribution,
+        rngFeedstockType
       );
       setResults(calculationResults);
     }
@@ -528,7 +537,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           fuelPrices,
           timeHorizon,
           strategy,
-          enhancedDistribution
+          enhancedDistribution,
+          rngFeedstockType
         );
         setResults(calculationResults);
       }
@@ -588,7 +598,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           fuelPrices,
           timeHorizon,
           deploymentStrategy,
-          enhancedDist
+          enhancedDist,
+          rngFeedstockType
         );
         setResults(calculationResults);
       }
@@ -638,7 +649,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           fuelPrices,
           timeHorizon,
           deploymentStrategy,
-          enhancedDist
+          enhancedDist,
+          rngFeedstockType
         );
         setResults(calculationResults);
       }
@@ -663,7 +675,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         fuelPrices,
         timeHorizon,
         deploymentStrategy,
-        distribution
+        distribution,
+        rngFeedstockType
       );
       setResults(calculationResults);
     }
@@ -692,6 +705,11 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     setModifiedFields({});
   };
 
+  // RNG feedstock type update function
+  const updateRngFeedstockType = (feedstock: RngFeedstockType) => {
+    setRngFeedstockType(feedstock);
+  };
+
   // Context value
   const value = {
     vehicleParameters,
@@ -705,6 +723,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     sidebarCollapsed,
     hideNegativeValues,
     modifiedFields,
+    rngFeedstockType,
     
     updateVehicleParameters,
     updateStationConfig,
@@ -719,7 +738,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     toggleHideNegativeValues,
     markFieldAsModified,
     isFieldModified,
-    resetFieldModifications
+    resetFieldModifications,
+    updateRngFeedstockType
   };
 
   return (
