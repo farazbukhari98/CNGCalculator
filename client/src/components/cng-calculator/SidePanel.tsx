@@ -3,6 +3,7 @@ import { ChevronDown, RefreshCw } from "lucide-react";
 import VehicleParameters from "./VehicleParameters";
 import StationConfiguration from "./StationConfiguration";
 import FuelPrices from "./FuelPrices";
+import RenewableNaturalGas from "./RenewableNaturalGas";
 import GlobalSettings from "./GlobalSettings";
 import { Badge } from "@/components/ui/badge";
 import { useCalculator } from "@/contexts/CalculatorContext";
@@ -14,6 +15,7 @@ export default function SidePanel() {
     vehicleParams: false,
     stationConfig: false,
     fuelPrices: false,
+    renewableNaturalGas: false,
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -116,6 +118,26 @@ export default function SidePanel() {
           </button>
           <div className={`mt-2 ${openSections.fuelPrices ? "" : "hidden"}`}>
             <FuelPrices />
+          </div>
+        </div>
+
+        {/* Renewable Natural Gas Section */}
+        <div className="mb-4">
+          <button
+            type="button"
+            className="flex items-center justify-between w-full px-4 py-2 text-left text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark-mode-transition"
+            onClick={() => toggleSection("renewableNaturalGas")}
+            aria-expanded={openSections.renewableNaturalGas}
+          >
+            <span className="font-medium">Renewable Natural Gas</span>
+            <ChevronDown
+              className={`w-5 h-5 transition-transform duration-200 ${
+                openSections.renewableNaturalGas ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+          <div className={`mt-2 ${openSections.renewableNaturalGas ? "" : "hidden"}`}>
+            <RenewableNaturalGas />
           </div>
         </div>
 
