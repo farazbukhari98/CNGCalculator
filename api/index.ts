@@ -1,18 +1,272 @@
 import express from "express";
-import { registerRoutes } from "../server/routes";
+import OpenAI from "openai";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Register all API routes (returned server is unused in serverless)
-registerRoutes(app);
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+  ...(process.env.AI_INTEGRATIONS_OPENAI_BASE_URL && {
+    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  }),
+});
+
+app.get("/api/health", (_req, res) => {
+  res.json({ status: "ok" });
+});
+
+app.post("/api/natural-query", async (req, res) => {
+  try {
+    const { query, currentParameters } = req.body;
+
+    if (!query || typeof query !== "string") {
+      res.status(400).json({ error: "Query is required" });
+      return;
+    }
+
+    const systemPrompt = `You are an assistant for a CNG (Compressed Natural Gas) fleet conversion calculator. Your job is to parse natural language queries and return JSON instructions for updating calculator parameters.
+
+Current calculator state:
+${JSON.stringify(currentParameters, null, 2)}
+
+Available parameters to modify:
+- Vehicle counts: lightDutyCount, mediumDutyCount, heavyDutyCount (0-100 each)
+- Vehicle costs: lightDutyCost ($15,000), mediumDutyCost ($25,000), heavyDutyCost ($50,000)
+- Vehicle lifespans: lightDutyLifespan (7), mediumDutyLifespan (7), heavyDutyLifespan (7) in years
+- Vehicle MPG: lightDutyMPG (20), mediumDutyMPG (10), heavyDutyMPG (6)
+- Annual miles: lightDutyAnnualMiles (15,000), mediumDutyAnnualMiles (25,000), heavyDutyAnnualMiles (50,000)
+- Fuel types: lightDutyFuelType, mediumDutyFuelType, heavyDutyFuelType (values: "gasoline" or "diesel")
+- CNG efficiency loss: lightDutyCngEfficiencyLoss (50 = 5%), mediumDutyCngEfficiencyLoss (75 = 7.5%), heavyDutyCngEfficiencyLoss (100 = 10%)
+- Fuel prices: gasolinePrice ($3.00), dieselPrice ($3.50), cngPrice ($2.00), cngTaxCredit ($0.50)
+- Price annual increase: annualIncrease (3%)
+- Station config: stationType ("fast" or "time"), businessType ("aglc", "cgc", "vng"), turnkey (true/false), stationMarkup (0-100)
+- Deployment strategy: deploymentStrategy ("immediate", "phased", "aggressive", "deferred", "manual")
+- Time horizon: timeHorizon (1-15 years)
+- Conversion factors: gasolineToCngConversionFactor (1.0), dieselToCngConversionFactor (1.136)
+
+For optimization queries:
+- If asked to optimize for a budget, adjust vehicle counts and deployment strategy
+- If asked about break-even, suggest viewing the existing break-even chart
+- If asked about ROI, suggest viewing the ROI metrics
+
+Respond ONLY with a valid JSON object in this format:
+{
+  "parameterUpdates": {
+    // Include only the parameters that need to be changed
+  },
+  "insights": "Brief explanation of what was changed and why",
+  "suggestedView": "dashboard|sensitivity|comparison" // Optional: suggest which view to look at
+}
+
+Examples:
+Query: "What happens if diesel prices increase by 20%?"
+Response: {"parameterUpdates": {"dieselPrice": 4.20}, "insights": "Increased diesel price from $3.50 to $4.20 (20% increase)", "suggestedView": "dashboard"}
+
+Query: "Change to 10 light duty vehicles"
+Response: {"parameterUpdates": {"lightDutyCount": 10}, "insights": "Set light duty vehicle count to 10", "suggestedView": "dashboard"}`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: query },
+      ],
+      temperature: 0.1,
+      max_tokens: 500,
+    });
+
+    const responseText = completion.choices[0]?.message?.content;
+
+    if (!responseText) {
+      res.status(500).json({ error: "Failed to process query" });
+      return;
+    }
+
+    try {
+      let jsonString = responseText;
+
+      const jsonMatch =
+        responseText.match(/```json\s*([\s\S]*?)\s*```/) ||
+        responseText.match(/```\s*([\s\S]*?)\s*```/);
+      if (jsonMatch) {
+        jsonString = jsonMatch[1];
+      }
+
+      const parsedResponse = JSON.parse(jsonString);
+
+      if (parsedResponse.parameterUpdates) {
+        const sanitized: any = {};
+        const updates = parsedResponse.parameterUpdates;
+
+        ["lightDutyCount", "mediumDutyCount", "heavyDutyCount"].forEach(
+          (field) => {
+            if (field in updates) {
+              const val = Number(updates[field]);
+              if (!isNaN(val))
+                sanitized[field] = Math.max(0, Math.min(100, Math.round(val)));
+            }
+          }
+        );
+
+        ["lightDutyCost", "mediumDutyCost", "heavyDutyCost"].forEach(
+          (field) => {
+            if (field in updates) {
+              const val = Number(updates[field]);
+              if (!isNaN(val) && val > 0) sanitized[field] = val;
+            }
+          }
+        );
+
+        [
+          "lightDutyLifespan",
+          "mediumDutyLifespan",
+          "heavyDutyLifespan",
+        ].forEach((field) => {
+          if (field in updates) {
+            const val = Number(updates[field]);
+            if (!isNaN(val))
+              sanitized[field] = Math.max(1, Math.min(20, Math.round(val)));
+          }
+        });
+
+        ["lightDutyMPG", "mediumDutyMPG", "heavyDutyMPG"].forEach((field) => {
+          if (field in updates) {
+            const val = Number(updates[field]);
+            if (!isNaN(val) && val > 0) sanitized[field] = val;
+          }
+        });
+
+        [
+          "lightDutyAnnualMiles",
+          "mediumDutyAnnualMiles",
+          "heavyDutyAnnualMiles",
+        ].forEach((field) => {
+          if (field in updates) {
+            const val = Number(updates[field]);
+            if (!isNaN(val) && val > 0) sanitized[field] = Math.round(val);
+          }
+        });
+
+        [
+          "lightDutyFuelType",
+          "mediumDutyFuelType",
+          "heavyDutyFuelType",
+        ].forEach((field) => {
+          if (field in updates) {
+            if (updates[field] === "gasoline" || updates[field] === "diesel")
+              sanitized[field] = updates[field];
+          }
+        });
+
+        [
+          "lightDutyCngEfficiencyLoss",
+          "mediumDutyCngEfficiencyLoss",
+          "heavyDutyCngEfficiencyLoss",
+        ].forEach((field) => {
+          if (field in updates) {
+            const val = Number(updates[field]);
+            if (!isNaN(val))
+              sanitized[field] = Math.max(0, Math.min(1000, Math.round(val)));
+          }
+        });
+
+        ["gasolinePrice", "dieselPrice", "cngPrice", "cngTaxCredit"].forEach(
+          (field) => {
+            if (field in updates) {
+              const val = Number(updates[field]);
+              if (!isNaN(val) && val >= 0) sanitized[field] = val;
+            }
+          }
+        );
+
+        if ("annualIncrease" in updates) {
+          const val = Number(updates.annualIncrease);
+          if (!isNaN(val))
+            sanitized.annualIncrease = Math.max(0, Math.min(100, val));
+        }
+
+        [
+          "gasolineToCngConversionFactor",
+          "dieselToCngConversionFactor",
+        ].forEach((field) => {
+          if (field in updates) {
+            const val = Number(updates[field]);
+            if (!isNaN(val) && val > 0) sanitized[field] = val;
+          }
+        });
+
+        if ("stationType" in updates) {
+          if (updates.stationType === "fast" || updates.stationType === "time")
+            sanitized.stationType = updates.stationType;
+        }
+
+        if ("businessType" in updates) {
+          if (["aglc", "cgc", "vng"].includes(updates.businessType))
+            sanitized.businessType = updates.businessType;
+        }
+
+        if ("turnkey" in updates) sanitized.turnkey = Boolean(updates.turnkey);
+
+        if ("stationMarkup" in updates) {
+          const val = Number(updates.stationMarkup);
+          if (!isNaN(val))
+            sanitized.stationMarkup = Math.max(
+              0,
+              Math.min(100, Math.round(val / 5) * 5)
+            );
+        }
+
+        if ("deploymentStrategy" in updates) {
+          if (
+            [
+              "immediate",
+              "phased",
+              "aggressive",
+              "deferred",
+              "manual",
+            ].includes(updates.deploymentStrategy)
+          )
+            sanitized.deploymentStrategy = updates.deploymentStrategy;
+        }
+
+        if ("timeHorizon" in updates) {
+          const val = Number(updates.timeHorizon);
+          if (!isNaN(val))
+            sanitized.timeHorizon = Math.max(1, Math.min(15, Math.round(val)));
+        }
+
+        parsedResponse.parameterUpdates = sanitized;
+      }
+
+      res.json(parsedResponse);
+    } catch (parseError) {
+      console.error("Error parsing OpenAI response:", responseText);
+      res.json({
+        parameterUpdates: {},
+        insights:
+          "I understood your request but couldn't process the specific changes. Please try rephrasing your question or use more specific parameter names.",
+        suggestedView: "dashboard",
+      });
+    }
+  } catch (error) {
+    console.error("Error processing natural language query:", error);
+    res.status(500).json({ error: "Failed to process query" });
+  }
+});
 
 // Error handler
-app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  const status = err.status || err.statusCode || 500;
-  const message = err.message || "Internal Server Error";
-  res.status(status).json({ message });
-});
+app.use(
+  (
+    err: any,
+    _req: express.Request,
+    res: express.Response,
+    _next: express.NextFunction
+  ) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+    res.status(status).json({ message });
+  }
+);
 
 export default app;
