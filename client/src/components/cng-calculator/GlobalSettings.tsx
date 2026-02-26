@@ -29,6 +29,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { getFieldStyles, DEFAULT_VALUES } from "@/lib/fieldStyling";
+import * as strategyStorage from "@/lib/strategy-storage";
 
 export default function GlobalSettings() {
   const { 
@@ -121,7 +122,7 @@ export default function GlobalSettings() {
   }, []);
 
   // Function to handle saving strategy
-  const handleSaveStrategy = async () => {
+  const handleSaveStrategy = () => {
     if (!results || !strategyName.trim()) {
       toast({
         title: "Error",
@@ -130,11 +131,11 @@ export default function GlobalSettings() {
       });
       return;
     }
-    
+
     try {
       setIsSaving(true);
-      
-      const strategyData = {
+
+      strategyStorage.saveStrategy({
         name: strategyName.trim(),
         deploymentStrategy,
         vehicleParameters,
@@ -143,34 +144,17 @@ export default function GlobalSettings() {
         timeHorizon,
         vehicleDistribution: vehicleDistribution || [],
         calculatedResults: results
-      };
-      
-      const response = await fetch('/api/strategies', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(strategyData),
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to save strategy');
-      }
-      
-      const savedStrategy = await response.json();
-      
+
       toast({
         title: "Strategy Saved",
         description: `Your strategy "${strategyName}" has been saved successfully.`,
       });
-      
-      // Clear form and close dialog
+
       setStrategyName("");
       setShowSaveDialog(false);
-      
-      // Trigger global event to refresh strategies list
       window.dispatchEvent(new Event('strategySaved'));
-      
+
     } catch (error) {
       console.error('Error saving strategy:', error);
       toast({
@@ -183,14 +167,10 @@ export default function GlobalSettings() {
     }
   };
 
-  const fetchSavedStrategies = async () => {
+  const fetchSavedStrategies = () => {
     try {
       setIsLoadingStrategies(true);
-      const response = await fetch('/api/strategies');
-      if (response.ok) {
-        const strategies = await response.json();
-        setSavedStrategies(strategies);
-      }
+      setSavedStrategies(strategyStorage.getAllStrategies());
     } catch (error) {
       console.error('Error fetching strategies:', error);
     } finally {
@@ -198,54 +178,41 @@ export default function GlobalSettings() {
     }
   };
 
-  const handleLoadStrategy = async (strategyId: string) => {
+  const handleLoadStrategy = (strategyId: string) => {
     if (!strategyId) return;
-    
+
     try {
-      const response = await fetch(`/api/strategies/${strategyId}`);
-      if (response.ok) {
-        const strategy = await response.json();
-        
-        // Load all the strategy parameters with backward compatibility for missing fields
-        updateVehicleParameters({
-          ...strategy.vehicleParameters,
-          // Add default values for maintenance savings if missing from saved strategy
-          lightDutyMaintenanceSavings: strategy.vehicleParameters.lightDutyMaintenanceSavings ?? DEFAULT_VALUES.lightDutyMaintenanceSavings,
-          mediumDutyMaintenanceSavings: strategy.vehicleParameters.mediumDutyMaintenanceSavings ?? DEFAULT_VALUES.mediumDutyMaintenanceSavings,
-          heavyDutyMaintenanceSavings: strategy.vehicleParameters.heavyDutyMaintenanceSavings ?? DEFAULT_VALUES.heavyDutyMaintenanceSavings
-        });
-        // Add default value for stationMarkup if it's missing from saved strategy
-        updateStationConfig({
-          ...strategy.stationConfig,
-          stationMarkup: strategy.stationConfig.stationMarkup ?? DEFAULT_VALUES.stationMarkup
-        });
-        // Add default values for conversion factors if missing from saved strategy
-        updateFuelPrices({
-          ...strategy.fuelPrices,
-          gasolineToCngConversionFactor: strategy.fuelPrices.gasolineToCngConversionFactor ?? DEFAULT_VALUES.gasolineToCngConversionFactor,
-          dieselToCngConversionFactor: strategy.fuelPrices.dieselToCngConversionFactor ?? DEFAULT_VALUES.dieselToCngConversionFactor
-        });
-        updateTimeHorizon(strategy.timeHorizon);
-        
-        // Handle deployment strategy and vehicle distribution
-        if (strategy.deploymentStrategy === 'manual' && strategy.vehicleDistribution) {
-          // For manual strategies, update the deployment strategy and load distribution
-          updateDeploymentStrategy('manual');
-          
-          // Use the bulk update method to set all distributions at once
-          // This avoids race conditions and ensures all values are set atomically
-          setManualDistributionBulk(strategy.vehicleDistribution);
-        } else {
-          // For non-manual strategies, use setDistributionStrategy
-          // which properly updates both the deployment strategy and recalculates distribution
-          setDistributionStrategy(strategy.deploymentStrategy);
-        }
-        
-        toast({
-          title: "Strategy Loaded",
-          description: `Successfully loaded "${strategy.name}" strategy`
-        });
+      const strategy = strategyStorage.getStrategy(strategyId);
+      if (!strategy) return;
+
+      updateVehicleParameters({
+        ...strategy.vehicleParameters,
+        lightDutyMaintenanceSavings: strategy.vehicleParameters.lightDutyMaintenanceSavings ?? DEFAULT_VALUES.lightDutyMaintenanceSavings,
+        mediumDutyMaintenanceSavings: strategy.vehicleParameters.mediumDutyMaintenanceSavings ?? DEFAULT_VALUES.mediumDutyMaintenanceSavings,
+        heavyDutyMaintenanceSavings: strategy.vehicleParameters.heavyDutyMaintenanceSavings ?? DEFAULT_VALUES.heavyDutyMaintenanceSavings
+      });
+      updateStationConfig({
+        ...strategy.stationConfig,
+        stationMarkup: strategy.stationConfig.stationMarkup ?? DEFAULT_VALUES.stationMarkup
+      });
+      updateFuelPrices({
+        ...strategy.fuelPrices,
+        gasolineToCngConversionFactor: strategy.fuelPrices.gasolineToCngConversionFactor ?? DEFAULT_VALUES.gasolineToCngConversionFactor,
+        dieselToCngConversionFactor: strategy.fuelPrices.dieselToCngConversionFactor ?? DEFAULT_VALUES.dieselToCngConversionFactor
+      });
+      updateTimeHorizon(strategy.timeHorizon);
+
+      if (strategy.deploymentStrategy === 'manual' && strategy.vehicleDistribution) {
+        updateDeploymentStrategy('manual');
+        setManualDistributionBulk(strategy.vehicleDistribution);
+      } else {
+        setDistributionStrategy(strategy.deploymentStrategy);
       }
+
+      toast({
+        title: "Strategy Loaded",
+        description: `Successfully loaded "${strategy.name}" strategy`
+      });
     } catch (error) {
       console.error('Error loading strategy:', error);
       toast({
@@ -256,20 +223,13 @@ export default function GlobalSettings() {
     }
   };
 
-  // Handle edit strategy name
-  const handleEditStrategy = async () => {
+  const handleEditStrategy = () => {
     if (!editingStrategy || !editName.trim()) return;
-    
+
     try {
-      const response = await fetch(`/api/strategies/${editingStrategy.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editName.trim() })
-      });
-      
-      if (response.ok) {
-        const updated = await response.json();
-        setSavedStrategies(prev => 
+      const updated = strategyStorage.updateStrategyName(editingStrategy.id, editName.trim());
+      if (updated) {
+        setSavedStrategies(prev =>
           prev.map(s => s.id === updated.id ? updated : s)
         );
         toast({
@@ -279,8 +239,6 @@ export default function GlobalSettings() {
         setShowEditDialog(false);
         setEditingStrategy(null);
         setEditName("");
-      } else {
-        throw new Error('Failed to update strategy');
       }
     } catch (error) {
       console.error('Error updating strategy:', error);
@@ -292,29 +250,21 @@ export default function GlobalSettings() {
     }
   };
 
-  // Handle delete strategy
-  const handleDeleteStrategy = async () => {
+  const handleDeleteStrategy = () => {
     if (!deletingStrategy) return;
-    
+
     try {
-      const response = await fetch(`/api/strategies/${deletingStrategy}`, {
-        method: 'DELETE'
-      });
-      
-      if (response.ok) {
-        setSavedStrategies(prev => prev.filter(s => s.id !== deletingStrategy));
-        if (selectedStrategy === deletingStrategy) {
-          setSelectedStrategy("");
-        }
-        toast({
-          title: "Strategy Deleted",
-          description: "Successfully deleted the saved strategy"
-        });
-        setShowDeleteDialog(false);
-        setDeletingStrategy(null);
-      } else {
-        throw new Error('Failed to delete strategy');
+      strategyStorage.deleteStrategy(deletingStrategy);
+      setSavedStrategies(prev => prev.filter(s => s.id !== deletingStrategy));
+      if (selectedStrategy === deletingStrategy) {
+        setSelectedStrategy("");
       }
+      toast({
+        title: "Strategy Deleted",
+        description: "Successfully deleted the saved strategy"
+      });
+      setShowDeleteDialog(false);
+      setDeletingStrategy(null);
     } catch (error) {
       console.error('Error deleting strategy:', error);
       toast({

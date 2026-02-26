@@ -21,6 +21,7 @@ import { Download, PanelLeft, PanelRight, Moon, Sun, Save, GitCompareArrows, Mes
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import * as strategyStorage from "@/lib/strategy-storage";
 
 export default function MainContent() {
   const { 
@@ -335,18 +336,8 @@ export default function MainContent() {
         calculatedResults: results
       };
       
-      const response = await fetch('/api/strategies', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(strategyData),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to save strategy');
-      }
-      
+      strategyStorage.saveStrategy(strategyData);
+
       toast({
         title: "Success",
         description: "Strategy saved successfully"
