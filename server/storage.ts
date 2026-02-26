@@ -1,4 +1,4 @@
-import { users, type User, type InsertUser, savedStrategies, type SavedStrategy, type InsertSavedStrategy } from "@shared/schema";
+import { users, type User, type InsertUser, savedStrategies, type SavedStrategy, type InsertSavedStrategy } from "../shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 

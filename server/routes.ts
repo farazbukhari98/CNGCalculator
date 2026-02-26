@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertSavedStrategySchema } from "@shared/schema";
+import { insertSavedStrategySchema } from "../shared/schema";
 import { z } from "zod";
 import OpenAI from "openai";
 
