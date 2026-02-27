@@ -517,7 +517,8 @@ export default function VehicleParameters() {
                       }
                       updateVehicleParameters({
                         ...vehicleParameters,
-                        lightDutyFuelType: value
+                        lightDutyFuelType: value,
+                        lightDutyMaintenanceSavings: value === 'diesel' ? 0.05 : 0
                       });
                     }}
                   >
@@ -542,7 +543,8 @@ export default function VehicleParameters() {
                       }
                       updateVehicleParameters({
                         ...vehicleParameters,
-                        mediumDutyFuelType: value
+                        mediumDutyFuelType: value,
+                        mediumDutyMaintenanceSavings: value === 'diesel' ? 0.05 : 0
                       });
                     }}
                   >
@@ -567,7 +569,8 @@ export default function VehicleParameters() {
                       }
                       updateVehicleParameters({
                         ...vehicleParameters,
-                        heavyDutyFuelType: value
+                        heavyDutyFuelType: value,
+                        heavyDutyMaintenanceSavings: value === 'diesel' ? 0.05 : 0
                       });
                     }}
                   >
@@ -744,7 +747,7 @@ export default function VehicleParameters() {
                         type="number"
                         min="0"
                         max="1"
-                        step="0.01"
+                        step="0.05"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
                         style={getFieldStyles(isFieldModified('lightDutyMaintenanceSavings'))}
                         value={vehicleParameters.lightDutyMaintenanceSavings}
@@ -787,7 +790,7 @@ export default function VehicleParameters() {
                         type="number"
                         min="0"
                         max="1"
-                        step="0.01"
+                        step="0.05"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
                         style={getFieldStyles(isFieldModified('mediumDutyMaintenanceSavings'))}
                         value={vehicleParameters.mediumDutyMaintenanceSavings}
@@ -830,7 +833,7 @@ export default function VehicleParameters() {
                         type="number"
                         min="0"
                         max="1"
-                        step="0.01"
+                        step="0.05"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-1"
                         style={getFieldStyles(isFieldModified('heavyDutyMaintenanceSavings'))}
                         value={vehicleParameters.heavyDutyMaintenanceSavings}

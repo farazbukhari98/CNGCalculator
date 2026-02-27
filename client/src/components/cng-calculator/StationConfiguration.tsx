@@ -193,85 +193,79 @@ export default function StationConfiguration() {
         </p>
       </div>
 
-      {/* Station Markup */}
-      <div className="border-t pt-3 mt-3">
-        <Label className="block text-sm font-medium text-gray-700 mb-2">Station Markup</Label>
-        <Select 
-          value={(stationConfig.stationMarkup ?? DEFAULT_VALUES.stationMarkup).toString()} 
-          onValueChange={(value) => {
-            const newValue = parseInt(value);
-            if (newValue !== DEFAULT_VALUES.stationMarkup) {
-              markFieldAsModified('stationMarkup');
-            }
-            updateStationConfig({...stationConfig, stationMarkup: newValue});
-          }}
-        >
-          <SelectTrigger className="w-full" style={getFieldStyles(isFieldModified('stationMarkup'))}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="-50">-50%</SelectItem>
-            <SelectItem value="-45">-45%</SelectItem>
-            <SelectItem value="-40">-40%</SelectItem>
-            <SelectItem value="-35">-35%</SelectItem>
-            <SelectItem value="-30">-30%</SelectItem>
-            <SelectItem value="-25">-25%</SelectItem>
-            <SelectItem value="-20">-20%</SelectItem>
-            <SelectItem value="-15">-15%</SelectItem>
-            <SelectItem value="-10">-10%</SelectItem>
-            <SelectItem value="-5">-5%</SelectItem>
-            <SelectItem value="0">0%</SelectItem>
-            <SelectItem value="5">5%</SelectItem>
-            <SelectItem value="10">10%</SelectItem>
-            <SelectItem value="15">15%</SelectItem>
-            <SelectItem value="20">20%</SelectItem>
-            <SelectItem value="25">25%</SelectItem>
-            <SelectItem value="30">30%</SelectItem>
-            <SelectItem value="35">35%</SelectItem>
-            <SelectItem value="40">40%</SelectItem>
-            <SelectItem value="45">45%</SelectItem>
-            <SelectItem value="50">50%</SelectItem>
-            <SelectItem value="55">55%</SelectItem>
-            <SelectItem value="60">60%</SelectItem>
-            <SelectItem value="65">65%</SelectItem>
-            <SelectItem value="70">70%</SelectItem>
-            <SelectItem value="75">75%</SelectItem>
-            <SelectItem value="80">80%</SelectItem>
-            <SelectItem value="85">85%</SelectItem>
-            <SelectItem value="90">90%</SelectItem>
-            <SelectItem value="95">95%</SelectItem>
-            <SelectItem value="100">100%</SelectItem>
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-gray-500 mt-1">
-          Markup percentage applied to the base station cost (negative values apply a discount)
-        </p>
-      </div>
+      {/* Station Premium - only shown for turnkey */}
+      {stationConfig.turnkey && (
+        <div className="border-t pt-3 mt-3">
+          <Label className="block text-sm font-medium text-gray-700 mb-2">Station Premium</Label>
+          <Select
+            value={(stationConfig.stationMarkup ?? DEFAULT_VALUES.stationMarkup).toString()}
+            onValueChange={(value) => {
+              const newValue = parseInt(value);
+              if (newValue !== DEFAULT_VALUES.stationMarkup) {
+                markFieldAsModified('stationMarkup');
+              }
+              updateStationConfig({...stationConfig, stationMarkup: newValue});
+            }}
+          >
+            <SelectTrigger className="w-full" style={getFieldStyles(isFieldModified('stationMarkup'))}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="-50">-50%</SelectItem>
+              <SelectItem value="-45">-45%</SelectItem>
+              <SelectItem value="-40">-40%</SelectItem>
+              <SelectItem value="-35">-35%</SelectItem>
+              <SelectItem value="-30">-30%</SelectItem>
+              <SelectItem value="-25">-25%</SelectItem>
+              <SelectItem value="-20">-20%</SelectItem>
+              <SelectItem value="-15">-15%</SelectItem>
+              <SelectItem value="-10">-10%</SelectItem>
+              <SelectItem value="-5">-5%</SelectItem>
+              <SelectItem value="0">0%</SelectItem>
+              <SelectItem value="5">5%</SelectItem>
+              <SelectItem value="10">10%</SelectItem>
+              <SelectItem value="15">15%</SelectItem>
+              <SelectItem value="20">20%</SelectItem>
+              <SelectItem value="25">25%</SelectItem>
+              <SelectItem value="30">30%</SelectItem>
+              <SelectItem value="35">35%</SelectItem>
+              <SelectItem value="40">40%</SelectItem>
+              <SelectItem value="45">45%</SelectItem>
+              <SelectItem value="50">50%</SelectItem>
+              <SelectItem value="55">55%</SelectItem>
+              <SelectItem value="60">60%</SelectItem>
+              <SelectItem value="65">65%</SelectItem>
+              <SelectItem value="70">70%</SelectItem>
+              <SelectItem value="75">75%</SelectItem>
+              <SelectItem value="80">80%</SelectItem>
+              <SelectItem value="85">85%</SelectItem>
+              <SelectItem value="90">90%</SelectItem>
+              <SelectItem value="95">95%</SelectItem>
+              <SelectItem value="100">100%</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-gray-500 mt-1">
+            Premium percentage applied to the base station cost (negative values apply a discount)
+          </p>
+        </div>
+      )}
 
       {/* Cost Estimate */}
       <div className="border-t pt-3 mt-3">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className="block text-sm font-medium text-gray-700">Base Station Cost</Label>
-            <span className="text-sm font-medium text-gray-600">
-              ${stationSizeInfo?.baseCost.toLocaleString() || 'Calculating...'}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <Label className="block text-sm font-medium text-gray-700">Quoted Price</Label>
-            <span className="text-sm font-medium text-gray-900">
-              ${stationSizeInfo?.finalCost.toLocaleString() || getStationCost().toLocaleString()}
-            </span>
-          </div>
+        <div className="flex items-center justify-between">
+          <Label className="block text-sm font-medium text-gray-700">Quoted Price</Label>
+          <span className="text-sm font-medium text-gray-900">
+            ${stationSizeInfo?.finalCost.toLocaleString() || getStationCost().toLocaleString()}
+          </span>
         </div>
         <p className="text-xs text-gray-500 mt-2">
-          {stationConfig.turnkey 
-            ? `Base cost + ${stationConfig.stationMarkup}% markup` 
+          {stationConfig.turnkey
+            ? `Base cost + ${stationConfig.stationMarkup}% premium`
             : `Base cost ${stationConfig.businessType === 'cgc' ? '- 5% CGC discount' : ''}`}
         </p>
         <p className="text-xs text-gray-500">
-          {stationConfig.turnkey 
-            ? "Includes installation and equipment (paid upfront)" 
+          {stationConfig.turnkey
+            ? "Includes installation and equipment (paid upfront)"
             : "Includes installation and equipment (LDC investment tariff)"}
         </p>
       </div>
