@@ -7,6 +7,7 @@ import RenewableNaturalGas from "./RenewableNaturalGas";
 import GlobalSettings from "./GlobalSettings";
 import { Badge } from "@/components/ui/badge";
 import { useCalculator } from "@/contexts/CalculatorContext";
+import truckImg from "@assets/truck.png";
 
 export default function SidePanel() {
   
@@ -28,9 +29,17 @@ export default function SidePanel() {
   return (
     <div className="w-full h-full bg-white shadow-lg overflow-y-auto dark-mode-transition dark:bg-gray-800">
       {/* Side Panel Header */}
-      <div className="p-4 bg-blue-800 text-white dark:bg-blue-900">
-        <h1 className="text-xl font-bold">CNG Fleet Calculator</h1>
-        <p className="text-sm text-blue-100 mt-1">Optimize your fleet conversion strategy</p>
+      <div className="relative overflow-hidden">
+        <img
+          src={truckImg}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-green-900/75 dark:bg-green-950/80" />
+        <div className="relative p-4 py-5">
+          <h1 className="text-xl font-bold text-white drop-shadow-sm">CNG Fleet Calculator</h1>
+          <p className="text-sm text-green-100/90 mt-1">Optimize your fleet conversion strategy</p>
+        </div>
       </div>
 
       {/* Collapsible Sections */}

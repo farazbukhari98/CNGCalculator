@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, AlertTriangle, Info } from "lucide-react";
 import { MetricInfoTooltip } from "./MetricInfoTooltip";
 import { formatPaybackPeriod } from "@/lib/utils";
-import { calculateStationCost } from "@/lib/calculator";
+import { calculateStationCost, getStationSizeInfo } from "@/lib/calculator";
 import { 
   ResponsiveContainer, 
   AreaChart, 
@@ -433,23 +433,52 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
                     if (totalVehicles === 0) {
                       return "N/A";
                     }
-                    
+
                     // Find the best performing vehicle type that actually exists in the fleet
                     const vehicleTypesWithCounts = [
                       { type: 'Light Duty', count: vehicleParameters.lightDutyCount, data: operationalChartData[0] },
                       { type: 'Medium Duty', count: vehicleParameters.mediumDutyCount, data: operationalChartData[1] },
                       { type: 'Heavy Duty', count: vehicleParameters.heavyDutyCount, data: operationalChartData[2] }
                     ];
-                    
+
                     // Filter for vehicle types that exist in the fleet, then find best savings
                     const existingTypes = vehicleTypesWithCounts.filter(v => v.count > 0);
                     if (existingTypes.length === 0) return "N/A";
-                    
-                    const best = existingTypes.reduce((best, current) => 
+
+                    const best = existingTypes.reduce((best, current) =>
                       current.data.fuelSavings > best.data.fuelSavings ? current : best
                     );
-                    
+
                     return best.type;
+                  })()}
+                </div>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700">
+                <div className="text-xs text-gray-500 mb-1 dark:text-gray-300">Cost Per Mile (CNG Fleet)</div>
+                <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
+                  {(() => {
+                    const totalVehicles = vehicleParameters.lightDutyCount + vehicleParameters.mediumDutyCount + vehicleParameters.heavyDutyCount;
+                    if (totalVehicles === 0) return "N/A";
+                    // Weighted average cost per mile across all active vehicle types
+                    const totalMiles = operationalChartData.reduce((sum, item) => sum + (item.annualMiles * item.vehicleCount), 0);
+                    if (totalMiles === 0) return "N/A";
+                    const totalCngCost = operationalChartData.reduce((sum, item) => sum + (item.cngFuel * item.annualMiles * item.vehicleCount), 0);
+                    return `$${(totalCngCost / totalMiles).toFixed(4)}`;
+                  })()}
+                </div>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700">
+                <div className="text-xs text-gray-500 mb-1 dark:text-gray-300">Cost Per GGE</div>
+                <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                  {(() => {
+                    const totalVehicles = vehicleParameters.lightDutyCount + vehicleParameters.mediumDutyCount + vehicleParameters.heavyDutyCount;
+                    if (totalVehicles === 0) return "N/A";
+                    const stationInfo = getStationSizeInfo(stationConfig, vehicleParameters, enhancedDistribution, fuelPrices);
+                    const annualGGE = stationInfo?.annualGGE || 0;
+                    if (annualGGE === 0) return "N/A";
+                    // Total annual CNG fuel cost across all vehicles
+                    const totalAnnualCngCost = operationalChartData.reduce((sum, item) => sum + item.annualCngCost, 0);
+                    return `$${(totalAnnualCngCost / annualGGE).toFixed(2)}`;
                   })()}
                 </div>
               </div>
