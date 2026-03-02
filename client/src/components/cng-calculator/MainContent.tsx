@@ -388,7 +388,7 @@ export default function MainContent() {
   const { toggleSidebar, sidebarCollapsed } = useCalculator();
 
   return (
-    <div className="flex-1 overflow-y-auto p-6" ref={contentRef}>
+    <div className="flex-1 p-6" ref={contentRef}>
       {/* Strategy Header */}
       <div className="mb-6">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center">
