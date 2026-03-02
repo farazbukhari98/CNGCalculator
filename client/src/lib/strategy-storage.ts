@@ -1,16 +1,18 @@
+import { DeploymentStrategy, FuelPrices, StationConfig, VehicleDistribution, VehicleParameters, CalculationResults } from "@/types/calculator";
+
 const STORAGE_KEY = "cng-saved-strategies";
 
 export interface SavedStrategy {
   id: string;
   name: string;
   createdAt: string;
-  deploymentStrategy: string;
-  vehicleParameters: any;
-  stationConfig: any;
-  fuelPrices: any;
+  deploymentStrategy: DeploymentStrategy;
+  vehicleParameters: VehicleParameters;
+  stationConfig: StationConfig;
+  fuelPrices: FuelPrices;
   timeHorizon: number;
-  vehicleDistribution: any[];
-  calculatedResults?: any;
+  vehicleDistribution: VehicleDistribution[];
+  calculatedResults?: CalculationResults;
 }
 
 function getAll(): SavedStrategy[] {

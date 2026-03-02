@@ -3,7 +3,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { calculateStationCost, getStationSizeInfo } from "@/lib/calculator";
+import { calculateStationCost, getMonthlyTariffRate, getStationSizeInfo } from "@/lib/calculator";
 import { Check } from "lucide-react";
 import { getFieldStyles, DEFAULT_VALUES } from "@/lib/fieldStyling";
 
@@ -150,7 +150,11 @@ export default function StationConfiguration() {
             if (newValue !== DEFAULT_VALUES.turnkey) {
               markFieldAsModified('turnkey');
             }
-            updateStationConfig({...stationConfig, turnkey: newValue});
+            updateStationConfig({
+              ...stationConfig,
+              turnkey: newValue,
+              stationMarkup: newValue ? stationConfig.stationMarkup : 0
+            });
           }}
         >
           <div className="relative">
@@ -189,7 +193,7 @@ export default function StationConfiguration() {
         <p className="text-xs text-gray-500 mt-1">
           {stationConfig.turnkey 
             ? "Station cost is paid upfront as a single investment" 
-            : `Station uses LDC investment tariff with monthly fee of ${stationConfig.businessType === 'cgc' ? '1.6%' : '1.5%'} over the analysis period`}
+            : `Station uses LDC investment tariff with a monthly fee of ${(getMonthlyTariffRate(stationConfig) * 100).toFixed(1)}% of station cost over the analysis period`}
         </p>
       </div>
 

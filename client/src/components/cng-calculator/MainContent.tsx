@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import * as strategyStorage from "@/lib/strategy-storage";
+import { getPlannedFleetTotals } from "@/lib/calculator";
 
 export default function MainContent() {
   const { 
@@ -51,6 +52,12 @@ export default function MainContent() {
     
     try {
       setIsExporting(true);
+      const plannedFleetTotals = getPlannedFleetTotals(results.vehicleDistribution);
+      const businessTypeLabels = {
+        aglc: "Atlanta Gas Light Company",
+        cgc: "Chattanooga Gas Company",
+        vng: "Virginia Natural Gas"
+      };
       
       // Create a date string for the report
       const date = new Date().toLocaleDateString('en-US', { 
@@ -125,9 +132,9 @@ export default function MainContent() {
       // Values 
       pdf.setTextColor(darkMode ? 255 : 0, darkMode ? 255 : 0, darkMode ? 255 : 0);
       pdf.setFontSize(14);
-      pdf.text(`${vehicleParameters.lightDutyCount}`, col1X + 35, vehicleY + 10);
-      pdf.text(`${vehicleParameters.mediumDutyCount}`, col2X + 41, vehicleY + 10);
-      pdf.text(`${vehicleParameters.heavyDutyCount}`, col3X + 35, vehicleY + 10);
+      pdf.text(`${plannedFleetTotals.light}`, col1X + 35, vehicleY + 10);
+      pdf.text(`${plannedFleetTotals.medium}`, col2X + 41, vehicleY + 10);
+      pdf.text(`${plannedFleetTotals.heavy}`, col3X + 35, vehicleY + 10);
       
       // Station information box
       const stationBoxY = boxY + 55;
@@ -152,7 +159,7 @@ export default function MainContent() {
       // Right column - values
       pdf.setTextColor(darkMode ? 255 : 0, darkMode ? 255 : 0, darkMode ? 255 : 0);
       pdf.text(`${stationConfig.stationType === 'fast' ? 'Fast-Fill' : 'Time-Fill'}`, margin + 50, stationDetailY);
-      pdf.text(`${stationConfig.businessType === 'aglc' ? 'Alternative Gas & Light Company' : 'Clean Gas Corporation'}`, margin + 50, stationDetailY + 10);
+      pdf.text(`${businessTypeLabels[stationConfig.businessType]}`, margin + 50, stationDetailY + 10);
       pdf.text(`${stationConfig.turnkey ? 'TurnKey (Upfront)' : 'Financed'}`, margin + 50, stationDetailY + 20);
       
       // Key Metrics
@@ -168,13 +175,13 @@ export default function MainContent() {
       
       // Create metrics in a 2x5 grid layout
       const metrics = [
-        { name: 'Total Investment', value: `$${results.totalInvestment.toLocaleString()}` },
+        { name: 'Total Investment', value: `$${results.totalProjectCost.toLocaleString()}` },
         { name: 'Payback Period', value: results.paybackPeriod < 0 ? 'Never' : `${Math.floor(results.paybackPeriod)} years, ${Math.round((results.paybackPeriod % 1) * 12)} months` },
         { name: 'ROI', value: `${Math.round(results.roi)}%` },
         { name: 'Annual Rate of Return', value: `${results.annualRateOfReturn.toFixed(1)}%` },
-        { name: 'Annual Fuel Savings', value: `$${results.annualFuelSavings.toLocaleString()}` },
+        { name: 'Average Annual Net Savings', value: `$${results.annualFuelSavings.toLocaleString()}` },
         { name: 'Net Cash Flow', value: `$${results.netCashFlow.toLocaleString()}` },
-        { name: 'CO₂ Reduction', value: `${results.co2Reduction.toLocaleString()} kg` },
+        { name: 'CO₂ Reduction', value: `${results.co2Reduction.toFixed(1)}%` },
         { name: 'Cost Per Mile (Gasoline)', value: `$${results.costPerMileGasoline.toFixed(3)}` },
         { name: 'Cost Per Mile (CNG)', value: `$${results.costPerMileCNG.toFixed(3)}` },
         { name: 'Cost Reduction', value: `${results.costReduction.toFixed(1)}%` }

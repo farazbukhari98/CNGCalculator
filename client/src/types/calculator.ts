@@ -96,6 +96,10 @@ export interface VehicleDistribution {
 // Calculation results
 export interface CalculationResults {
   totalInvestment: number;
+  totalVehicleInvestment: number;
+  stationCost: number;
+  totalProjectCost: number;
+  totalTariffFees: number;
   annualFuelSavings: number;
   yearlySavings: number[];
   yearlyFuelSavings: number[];

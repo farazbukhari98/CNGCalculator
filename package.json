@@ -9,6 +9,7 @@
     "start": "NODE_ENV=production node dist/index.js",
     "build:client": "vite build",
     "check": "tsc",
+    "test:calculator": "tsx tests/calculator-regression.ts",
     "db:push": "drizzle-kit push"
   },
   "dependencies": {

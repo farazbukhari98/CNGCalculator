@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, AlertTriangle, Info } from "lucide-react";
 import { MetricInfoTooltip } from "./MetricInfoTooltip";
 import { formatPaybackPeriod } from "@/lib/utils";
-import { calculateStationCost, getStationSizeInfo } from "@/lib/calculator";
+import { calculateStationCost, getCngEfficiencyFactor, getStationSizeInfo } from "@/lib/calculator";
 import { 
   ResponsiveContainer, 
   AreaChart, 
@@ -50,6 +50,10 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
     return `${tons.toLocaleString(undefined, { maximumFractionDigits: 1 })} tons`;
   };
 
+  const safeDivide = (numerator: number, denominator: number) => {
+    return denominator > 0 ? numerator / denominator : 0;
+  };
+
   // Calculate operational cost per mile for conventional vs CNG by vehicle type
   const calculateCostPerMile = () => {
     // Base fuel prices with annual increases applied for year 1
@@ -67,14 +71,23 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
     const adjustedCngPrice = cngWithBusinessRate * yearMultiplier;
     
     // Calculate cost per mile for each vehicle type using configurable CNG efficiency loss
-    const lightGasCostPerMile = adjustedGasolinePrice / vehicleParameters.lightDutyMPG;
-    const lightCngCostPerMile = adjustedCngPrice / (vehicleParameters.lightDutyMPG * (1 - vehicleParameters.lightDutyCngEfficiencyLoss / 1000));
+    const lightGasCostPerMile = safeDivide(adjustedGasolinePrice, vehicleParameters.lightDutyMPG);
+    const lightCngCostPerMile = safeDivide(
+      adjustedCngPrice,
+      vehicleParameters.lightDutyMPG * getCngEfficiencyFactor(vehicleParameters.lightDutyCngEfficiencyLoss)
+    );
     
-    const mediumDieselCostPerMile = adjustedDieselPrice / vehicleParameters.mediumDutyMPG;
-    const mediumCngCostPerMile = adjustedCngPrice / (vehicleParameters.mediumDutyMPG * (1 - vehicleParameters.mediumDutyCngEfficiencyLoss / 1000));
+    const mediumDieselCostPerMile = safeDivide(adjustedDieselPrice, vehicleParameters.mediumDutyMPG);
+    const mediumCngCostPerMile = safeDivide(
+      adjustedCngPrice,
+      vehicleParameters.mediumDutyMPG * getCngEfficiencyFactor(vehicleParameters.mediumDutyCngEfficiencyLoss)
+    );
     
-    const heavyDieselCostPerMile = adjustedDieselPrice / vehicleParameters.heavyDutyMPG;
-    const heavyCngCostPerMile = adjustedCngPrice / (vehicleParameters.heavyDutyMPG * (1 - vehicleParameters.heavyDutyCngEfficiencyLoss / 1000));
+    const heavyDieselCostPerMile = safeDivide(adjustedDieselPrice, vehicleParameters.heavyDutyMPG);
+    const heavyCngCostPerMile = safeDivide(
+      adjustedCngPrice,
+      vehicleParameters.heavyDutyMPG * getCngEfficiencyFactor(vehicleParameters.heavyDutyCngEfficiencyLoss)
+    );
     
     // Maintenance costs
     const MAINTENANCE_COST = { gasoline: 0.47, diesel: 0.52, cng: 0.47 };
@@ -554,29 +567,23 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
                   />
                 </div>
                 {(() => {
-                  const totalVehicleInvestment = results.vehicleDistribution.reduce((sum, dist) => sum + dist.investment, 0);
-                  // Use enhancedDistribution for accurate station cost calculation
-                  const stationCost = calculateStationCost(stationConfig, vehicleParameters, enhancedDistribution, fuelPrices);
-                  // Total investment always includes vehicles + station regardless of turnkey option
-                  const displayTotalInvestment = totalVehicleInvestment + stationCost;
-                  
-                  return (
+                      return (
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-blue-600 dark:text-blue-400">Vehicles (Inc)</span>
-                        <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">{formatCurrency(totalVehicleInvestment)}</span>
+                        <span className="text-sm text-blue-600 dark:text-blue-400">Vehicles (Lifecycle)</span>
+                        <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">{formatCurrency(results.totalVehicleInvestment)}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-blue-600 dark:text-blue-400">Station</span>
+                        <span className="text-sm text-blue-600 dark:text-blue-400">Station (Quoted)</span>
                         <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">
-                          {formatCurrency(stationCost)}
+                          {formatCurrency(results.stationCost)}
                         </span>
                       </div>
                       <div className="border-t pt-2 border-blue-200 dark:border-blue-700">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Total Investment</span>
+                          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Modeled Total</span>
                           <span className="text-lg font-bold text-blue-800 dark:text-blue-200">
-                            {formatCurrency(displayTotalInvestment)}
+                            {formatCurrency(results.totalProjectCost)}
                           </span>
                         </div>
                       </div>
@@ -585,7 +592,7 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
                 })()}
               </div>
             </div>
-            
+
             {/* Savings Summary */}
             <div className="mb-4">
               <div className="bg-green-50 p-4 rounded-lg dark:bg-green-900/20">
@@ -606,11 +613,7 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
                 </div>
                 {(() => {
                   const totalSavingsOverHorizon = results.cumulativeSavings[results.cumulativeSavings.length - 1];
-                  // Calculate consistent total investment (vehicles + station) regardless of turnkey option
-                  const totalVehicleInvestment = results.vehicleDistribution.reduce((sum, dist) => sum + dist.investment, 0);
-                  const stationCost = calculateStationCost(stationConfig, vehicleParameters, enhancedDistribution, fuelPrices);
-                  const displayTotalInvestment = totalVehicleInvestment + stationCost;
-                  const netSavings = totalSavingsOverHorizon - displayTotalInvestment;
+                  const netSavings = totalSavingsOverHorizon - results.totalProjectCost;
                   
                   return (
                     <div className="space-y-2">
@@ -619,8 +622,8 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
                         <span className="text-sm font-semibold text-green-800 dark:text-green-200">{formatCurrency(totalSavingsOverHorizon)}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-green-600 dark:text-green-400">Less: Total Investment</span>
-                        <span className="text-sm font-semibold text-red-600 dark:text-red-400">({formatCurrency(displayTotalInvestment)})</span>
+                        <span className="text-sm text-green-600 dark:text-green-400">Less: Modeled Investment</span>
+                        <span className="text-sm font-semibold text-red-600 dark:text-red-400">({formatCurrency(results.totalProjectCost)})</span>
                       </div>
                       <div className="border-t pt-2 border-green-200 dark:border-green-700">
                         <div className="flex justify-between items-center">

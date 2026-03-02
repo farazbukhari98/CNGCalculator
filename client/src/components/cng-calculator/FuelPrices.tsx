@@ -20,8 +20,12 @@ export default function FuelPrices() {
   const effectiveCngPrice = Math.max(0, fuelPrices.cngPrice - fuelPrices.cngTaxCredit);
   
   // Calculate fuel savings percentages using effective CNG price
-  const cngVsGasolineSavings = Math.round(((fuelPrices.gasolinePrice - effectiveCngPrice) / fuelPrices.gasolinePrice) * 100 * 10) / 10;
-  const cngVsDieselSavings = Math.round(((fuelPrices.dieselPrice - effectiveCngPrice) / fuelPrices.dieselPrice) * 100 * 10) / 10;
+  const cngVsGasolineSavings = fuelPrices.gasolinePrice > 0
+    ? Math.round(((fuelPrices.gasolinePrice - effectiveCngPrice) / fuelPrices.gasolinePrice) * 100 * 10) / 10
+    : 0;
+  const cngVsDieselSavings = fuelPrices.dieselPrice > 0
+    ? Math.round(((fuelPrices.dieselPrice - effectiveCngPrice) / fuelPrices.dieselPrice) * 100 * 10) / 10
+    : 0;
 
   return (
     <div className="bg-white dark:bg-gray-700 rounded-md p-3 space-y-3">

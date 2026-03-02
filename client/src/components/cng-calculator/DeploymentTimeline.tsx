@@ -2,7 +2,7 @@ import { useCalculator } from "@/contexts/CalculatorContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatPaybackPeriod } from "@/lib/utils";
 import { MetricInfoTooltip } from "./MetricInfoTooltip";
-import { calculateStationCost } from "@/lib/calculator";
+import { calculateStationCost, getAnnualCngGgePerVehicle } from "@/lib/calculator";
 
 export default function DeploymentTimeline() {
   const { 
@@ -23,6 +23,7 @@ export default function DeploymentTimeline() {
 
   // Only show years up to the selected time horizon
   const years = Array.from({ length: timeHorizon }, (_, i) => i + 1);
+  const annualCngGgeByVehicle = getAnnualCngGgePerVehicle(vehicleParameters, fuelPrices);
 
 
   return (
@@ -85,32 +86,9 @@ export default function DeploymentTimeline() {
                 const totalVehiclesInOperation = (yearData.totalActiveLight || 0) + (yearData.totalActiveMedium || 0) + (yearData.totalActiveHeavy || 0);
                 
                 // Calculate annual GGE for this year based on active vehicles
-                const cngEfficiencyFactors = {
-                  light: 1 - (vehicleParameters.lightDutyCngEfficiencyLoss / 1000),
-                  medium: 1 - (vehicleParameters.mediumDutyCngEfficiencyLoss / 1000),
-                  heavy: 1 - (vehicleParameters.heavyDutyCngEfficiencyLoss / 1000)
-                };
-                
-                const lightConversionFactor = vehicleParameters.lightDutyFuelType === 'gasoline' 
-                  ? (fuelPrices?.gasolineToCngConversionFactor || 1.0)
-                  : (fuelPrices?.dieselToCngConversionFactor || 1.136);
-                const mediumConversionFactor = vehicleParameters.mediumDutyFuelType === 'gasoline'
-                  ? (fuelPrices?.gasolineToCngConversionFactor || 1.0)
-                  : (fuelPrices?.dieselToCngConversionFactor || 1.136);
-                const heavyConversionFactor = vehicleParameters.heavyDutyFuelType === 'gasoline'
-                  ? (fuelPrices?.gasolineToCngConversionFactor || 1.0)
-                  : (fuelPrices?.dieselToCngConversionFactor || 1.136);
-                
-                const lightAnnualGGE = (vehicleParameters.lightDutyAnnualMiles / vehicleParameters.lightDutyMPG) * 
-                  lightConversionFactor / cngEfficiencyFactors.light;
-                const mediumAnnualGGE = (vehicleParameters.mediumDutyAnnualMiles / vehicleParameters.mediumDutyMPG) * 
-                  mediumConversionFactor / cngEfficiencyFactors.medium;
-                const heavyAnnualGGE = (vehicleParameters.heavyDutyAnnualMiles / vehicleParameters.heavyDutyMPG) * 
-                  heavyConversionFactor / cngEfficiencyFactors.heavy;
-                
-                const totalLightGGE = totalActiveLight * lightAnnualGGE;
-                const totalMediumGGE = totalActiveMedium * mediumAnnualGGE;
-                const totalHeavyGGE = totalActiveHeavy * heavyAnnualGGE;
+                const totalLightGGE = totalActiveLight * annualCngGgeByVehicle.light;
+                const totalMediumGGE = totalActiveMedium * annualCngGgeByVehicle.medium;
+                const totalHeavyGGE = totalActiveHeavy * annualCngGgeByVehicle.heavy;
                 const totalAnnualGGE = totalLightGGE + totalMediumGGE + totalHeavyGGE;
                 
                 // Get annual savings for this year (not cumulative)

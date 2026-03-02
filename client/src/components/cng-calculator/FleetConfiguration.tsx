@@ -2,7 +2,7 @@ import { useCalculator } from "@/contexts/CalculatorContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatPaybackPeriod, formatNumberWithCommas } from "@/lib/utils";
 import { MetricInfoTooltip } from "./MetricInfoTooltip";
-import { calculateStationCost } from "@/lib/calculator";
+import { calculateAnnualFleetGGE, getPlannedFleetTotals } from "@/lib/calculator";
 
 interface FleetConfigurationProps {
   showCashflow: boolean;
@@ -11,39 +11,22 @@ interface FleetConfigurationProps {
 export default function FleetConfiguration({ showCashflow }: FleetConfigurationProps) {
   const { 
     vehicleParameters,
-    stationConfig,
     results,
     timeHorizon,
-    deploymentStrategy,
-    vehicleDistribution,
-    enhancedDistribution,
     fuelPrices
   } = useCalculator();
 
-  // Calculate vehicle distribution percentages (use manual distribution totals if in manual mode)
-  const getActualVehicleCounts = () => {
-    if (deploymentStrategy === 'manual' && vehicleDistribution) {
-      // Sum up totals from manual distribution
-      const totals = vehicleDistribution.reduce(
-        (acc, year) => ({
-          light: acc.light + (year.light || 0),
-          medium: acc.medium + (year.medium || 0),
-          heavy: acc.heavy + (year.heavy || 0)
-        }),
-        { light: 0, medium: 0, heavy: 0 }
-      );
-      return totals;
-    }
-    // For non-manual strategies, use original parameters
-    return {
-      light: vehicleParameters.lightDutyCount,
-      medium: vehicleParameters.mediumDutyCount,
-      heavy: vehicleParameters.heavyDutyCount
-    };
+  const fallbackCounts = {
+    light: vehicleParameters.lightDutyCount,
+    medium: vehicleParameters.mediumDutyCount,
+    heavy: vehicleParameters.heavyDutyCount,
+    total:
+      vehicleParameters.lightDutyCount +
+      vehicleParameters.mediumDutyCount +
+      vehicleParameters.heavyDutyCount
   };
-
-  const actualCounts = getActualVehicleCounts();
-  const totalVehicles = actualCounts.light + actualCounts.medium + actualCounts.heavy;
+  const actualCounts = results ? getPlannedFleetTotals(results.vehicleDistribution) : fallbackCounts;
+  const totalVehicles = actualCounts.total;
   
   const lightDutyPercentage = totalVehicles > 0 
     ? Math.round((actualCounts.light / totalVehicles) * 100) 
@@ -57,59 +40,10 @@ export default function FleetConfiguration({ showCashflow }: FleetConfigurationP
     ? Math.round((actualCounts.heavy / totalVehicles) * 100) 
     : 0;
 
-  // Vehicle costs (CNG conversion costs)
-  const lightDutyCost = 15000;
-  const mediumDutyCost = 15000;
-  const heavyDutyCost = 50000;
-
-  // Total vehicle investment (use actual counts from manual distribution if applicable)
-  const totalVehicleInvestment = 
-    (actualCounts.light * lightDutyCost) +
-    (actualCounts.medium * mediumDutyCost) +
-    (actualCounts.heavy * heavyDutyCost);
-
-  // Calculate annual GGE (Gasoline Gallon Equivalent) consumption for fleet
-  // Formula: (Annual Miles / MPG) × Fuel Conversion Factor / CNG Efficiency
-  
-  // CNG efficiency factors from vehicle parameters (stored as integer values, divide by 1000)
-  const cngEfficiencyFactors = {
-    light: 1 - (vehicleParameters.lightDutyCngEfficiencyLoss / 1000),
-    medium: 1 - (vehicleParameters.mediumDutyCngEfficiencyLoss / 1000),
-    heavy: 1 - (vehicleParameters.heavyDutyCngEfficiencyLoss / 1000)
-  };
-  
-  // Get fuel conversion factors based on fuel type
-  const lightConversionFactor = vehicleParameters.lightDutyFuelType === 'gasoline' 
-    ? (fuelPrices?.gasolineToCngConversionFactor || 1.0)
-    : (fuelPrices?.dieselToCngConversionFactor || 1.136);
-  const mediumConversionFactor = vehicleParameters.mediumDutyFuelType === 'gasoline'
-    ? (fuelPrices?.gasolineToCngConversionFactor || 1.0)
-    : (fuelPrices?.dieselToCngConversionFactor || 1.136);
-  const heavyConversionFactor = vehicleParameters.heavyDutyFuelType === 'gasoline'
-    ? (fuelPrices?.gasolineToCngConversionFactor || 1.0)
-    : (fuelPrices?.dieselToCngConversionFactor || 1.136);
-  
-  // Calculate annual GGE per vehicle type
-  const lightAnnualGGE = (vehicleParameters.lightDutyAnnualMiles / vehicleParameters.lightDutyMPG) * 
-    lightConversionFactor / cngEfficiencyFactors.light;
-  const mediumAnnualGGE = (vehicleParameters.mediumDutyAnnualMiles / vehicleParameters.mediumDutyMPG) * 
-    mediumConversionFactor / cngEfficiencyFactors.medium;
-  const heavyAnnualGGE = (vehicleParameters.heavyDutyAnnualMiles / vehicleParameters.heavyDutyMPG) * 
-    heavyConversionFactor / cngEfficiencyFactors.heavy;
-  
-  // Total annual GGE consumption for the fleet (use actual counts)
-  const totalAnnualFleetGGE = 
-    (actualCounts.light * lightAnnualGGE) + 
-    (actualCounts.medium * mediumAnnualGGE) + 
-    (actualCounts.heavy * heavyAnnualGGE);
-  
-  // Use centralized station cost calculation - use enhanced distribution for accurate active vehicle counts
-  const getStationCost = () => {
-    return calculateStationCost(stationConfig, vehicleParameters, enhancedDistribution, fuelPrices);
-  };
-
-  const stationCost = getStationCost();
-  const totalInvestment = totalVehicleInvestment + stationCost;
+  const totalVehicleInvestment = results?.totalVehicleInvestment ?? 0;
+  const stationCost = results?.stationCost ?? 0;
+  const totalInvestment = results?.totalProjectCost ?? 0;
+  const totalAnnualFleetGGE = calculateAnnualFleetGGE(vehicleParameters, actualCounts, fuelPrices);
 
   // Format currency
   const formatCurrency = (value: number) => {
@@ -193,15 +127,15 @@ export default function FleetConfiguration({ showCashflow }: FleetConfigurationP
             </h3>
             <div className="flex flex-col">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600 dark:text-gray-300">Vehicles (incremental)</span>
+                <span className="text-sm text-gray-600 dark:text-gray-300">Vehicles (lifecycle)</span>
                 <span className="text-sm font-medium dark:text-gray-200">{formatCurrency(totalVehicleInvestment)}</span>
               </div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600 dark:text-gray-300">Station</span>
+                <span className="text-sm text-gray-600 dark:text-gray-300">Station (quoted)</span>
                 <span className="text-sm font-medium dark:text-gray-200">{formatCurrency(stationCost)}</span>
               </div>
               <div className="flex items-center justify-between pt-2 border-t dark:border-gray-600">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Total</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Modeled Total</span>
                 <span className="text-sm font-bold text-gray-900 dark:text-white">{formatCurrency(totalInvestment)}</span>
               </div>
             </div>

@@ -103,7 +103,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     cngTaxCredit: 0.00, // Default to $0.00 tax credit per gallon
     annualIncrease: 0,
     gasolineToCngConversionFactor: 1,
-    dieselToCngConversionFactor: 1
+    dieselToCngConversionFactor: 1.136
   });
 
   const [timeHorizon, setTimeHorizon] = useState<number>(10); // Default to 10 years
@@ -677,16 +677,22 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
       deploymentStrategy
     );
     setVehicleDistribution(distribution);
+    const enhancedDistribution = applyVehicleLifecycle(
+      distribution,
+      vehicleParameters,
+      timeHorizon
+    );
+    setEnhancedDistribution(enhancedDistribution);
     
     // Then calculate ROI and other metrics
-    if (distribution) {
+    if (enhancedDistribution) {
       const calculationResults = calculateROI(
         vehicleParameters,
         stationConfig,
         fuelPrices,
         timeHorizon,
         deploymentStrategy,
-        distribution,
+        enhancedDistribution,
         rngFeedstockType,
         customCiValue
       );

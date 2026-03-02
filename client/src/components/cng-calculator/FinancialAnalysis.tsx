@@ -1,7 +1,7 @@
 import { useCalculator } from "@/contexts/CalculatorContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatPaybackPeriod } from "@/lib/utils";
-import { calculateStationCost } from "@/lib/calculator";
+import { getMonthlyTariffRate, getPlannedFleetTotals } from "@/lib/calculator";
 import { MetricInfoTooltip } from "./MetricInfoTooltip";
 import { 
   LineChart, 
@@ -22,7 +22,7 @@ type FinancialAnalysisProps = {
 };
 
 export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: FinancialAnalysisProps) {
-  const { results, timeHorizon, stationConfig, fuelPrices } = useCalculator();
+  const { results, timeHorizon, stationConfig, vehicleParameters } = useCalculator();
 
   // If no results yet, don't render anything
   if (!results) return null;
@@ -32,25 +32,11 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
     return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
-  // Calculate total vehicle investment across all years (sum of all distributed investments)
-  const totalVehicleInvestment = results.vehicleDistribution.reduce(
-    (sum, dist) => sum + dist.investment, 0
-  );
-
-  // For non-turnkey option, we need to calculate station cost separately since it's not included in totalInvestment
-  // This ensures we have the correct station cost to calculate LDC investment tariff
-  const { vehicleParameters, enhancedDistribution } = useCalculator();
-  
-  // Calculate appropriate station cost based on the current fleet configuration - use enhanced distribution for accurate active vehicle counts
-  const calculatedStationCost = calculateStationCost(stationConfig, vehicleParameters, enhancedDistribution, fuelPrices);
-  
-  // For turnkey, station cost is included in total investment (the difference between total and vehicle investments)
-  // For non-turnkey, use the calculated station cost directly
-  const totalStationCost = stationConfig.turnkey 
-    ? (results.totalInvestment - totalVehicleInvestment)  // Already included in totalInvestment
-    : calculatedStationCost;  // Calculate based on current fleet and station configuration
-  
-  console.log("Total station cost:", totalStationCost, "Vehicle Investment:", totalVehicleInvestment, "Total Investment:", results.totalInvestment, "TurnKey:", stationConfig.turnkey);
+  const totalVehicleInvestment = results.totalVehicleInvestment;
+  const totalStationCost = results.stationCost;
+  const monthlyTariffRate = getMonthlyTariffRate(stationConfig);
+  const annualTariffRate = monthlyTariffRate * 12;
+  const plannedFleetTotals = getPlannedFleetTotals(results.vehicleDistribution);
 
   // Prepare cash flow chart data
   const cashFlowData = Array.from({ length: timeHorizon }, (_, i) => {
@@ -63,20 +49,15 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
   
   // Prepare cost vs savings chart data
   const costSavingsData = Array.from({ length: timeHorizon }, (_, i) => {
-    const vehicleInvestment = results.vehicleDistribution[i]?.investment || 0;
+    const vehicleInvestment =
+      (results.vehicleDistribution[i]?.investment || 0) +
+      (results.vehicleDistribution[i]?.replacementInvestment || 0);
     
     // For turnkey=yes: Show station cost in first year as upfront payment
     // For turnkey=no: Show NO station cost (it's financed via monthly LDC investment tariff)
     const stationCost = (i === 0 && stationConfig.turnkey) ? totalStationCost : 0;
     
-    // For non-turnkey: calculate LDC investment tariff rate
-    // This is a fixed monthly cost (percentage of station cost) paid throughout the analysis period
-    const monthlyTariffRate = stationConfig.businessType === 'aglc' ? 0.015 : 0.016;
-    const annualTariffRate = monthlyTariffRate * 12;
-    
-    // For non-turnkey: calculate annual LDC investment tariff
-    // This is applied for ALL years when non-turnkey is selected
-    const tariffCost = !stationConfig.turnkey ? totalStationCost * annualTariffRate : 0;
+    const tariffCost = !stationConfig.turnkey ? (results.yearlyTariffFees[i] || 0) : 0;
     
     return {
       year: `Year ${i + 1}`,
@@ -159,9 +140,7 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
       // Turnkey: Pay full station cost upfront in Year 1
       stationInvestment = (index === 0) ? totalStationCost : 0;
     } else {
-      // Non-turnkey: Annual LDC investment tariff
-      const monthlyTariffRate = (stationConfig.businessType === 'aglc' || stationConfig.businessType === 'vng') ? 0.015 : 0.016;
-      stationInvestment = totalStationCost * monthlyTariffRate * 12;  // Annual tariff payment
+      stationInvestment = results.yearlyTariffFees[index] || 0;
     }
     
     return {
@@ -257,7 +236,7 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
                 title="Capital Investment Timeline" 
                 description={stationConfig.turnkey ? 
                   "This single-axis stacked chart shows your complete capital investment distribution across all years in the time horizon. Station cost is paid upfront in Year 1, with vehicle investments distributed according to your deployment strategy." :
-                  "This single-axis stacked chart shows your capital investments including annual LDC tariff payments for station financing. Station costs are spread across all years as annual payments (18-19.2% of station cost per year)."}
+                  `This single-axis stacked chart shows your capital investments including annual LDC tariff payments for station financing. Station costs are spread across all years as annual payments (${(annualTariffRate * 100).toFixed(1)}% of station cost per year).`}
                 calculation={stationConfig.turnkey ?
                   "Stacked investment bars from bottom to top: Station investment (Year 1 only), Heavy-duty vehicles, Medium-duty vehicles, Light-duty vehicles." :
                   "Stacked investment bars from bottom to top: Annual station tariff payments (all years), Heavy-duty vehicles, Medium-duty vehicles, Light-duty vehicles."}
@@ -354,7 +333,7 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
                   }
                   calculation={stationConfig.turnkey ?
                     "Total Investment = Vehicle Investment + Station Investment. Per-Vehicle Cost = Total Investment / Total Vehicle Count." :
-                    "Vehicle Investment = Total upfront vehicle costs. Station is financed via monthly LDC tariff at a rate of 1.5-1.6% of station cost (18-19.2% annually)."
+                    `Vehicle Investment = Total upfront vehicle costs. Station is financed via a monthly LDC tariff at ${(monthlyTariffRate * 100).toFixed(1)}% of station cost (${(annualTariffRate * 100).toFixed(1)}% annually).`
                   }
                   affectingVariables={[
                     "Vehicle counts and costs",
@@ -425,9 +404,17 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
               <div className="text-center w-full max-w-md">
                 {stationConfig.turnkey ? (
                   // For turnkey, show the breakdown of vehicles vs station as a capital investment
-                  <>
+                  (() => {
+                    const vehicleShare = results.totalProjectCost > 0
+                      ? Math.round((totalVehicleInvestment / results.totalProjectCost) * 100)
+                      : 0;
+                    const stationShare = results.totalProjectCost > 0
+                      ? Math.round((totalStationCost / results.totalProjectCost) * 100)
+                      : 0;
+                    return (
+                      <>
                     <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
-                      {formatCurrency(results.totalInvestment)}
+                      {formatCurrency(results.totalProjectCost)}
                     </div>
                     <div className="text-base text-gray-500 dark:text-gray-400 mb-5">
                       Total Capital Investment
@@ -440,16 +427,16 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center">
                           <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                          Vehicles ({Math.round((totalVehicleInvestment / results.totalInvestment) * 100)}%)
+                          Vehicles ({vehicleShare}%)
                         </div>
                       </div>
                       <div className="text-center">
                         <div className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
-                          {formatCurrency(results.totalInvestment - totalVehicleInvestment)}
+                          {formatCurrency(totalStationCost)}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center">
                           <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                          Station ({Math.round(((results.totalInvestment - totalVehicleInvestment) / results.totalInvestment) * 100)}%)
+                          Station ({stationShare}%)
                         </div>
                       </div>
                     </div>
@@ -458,11 +445,13 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
                       <div 
                         className="h-full bg-blue-500 rounded-full" 
                         style={{ 
-                          width: `${Math.round((totalVehicleInvestment / results.totalInvestment) * 100)}%` 
+                          width: `${vehicleShare}%` 
                         }}
                       ></div>
                     </div>
-                  </>
+                      </>
+                    );
+                  })()
                 ) : (
                   // For non-turnkey, show vehicle investment and station financing info
                   <>
@@ -485,7 +474,7 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
                         <div>
                           <span className="text-xs dark:text-amber-300" style={{ color: '#755c3b' }}>Monthly Rate:</span>
                           <span className="text-sm font-semibold ml-1 dark:text-gray-200">
-                            {(stationConfig.businessType === 'aglc' || stationConfig.businessType === 'vng' ? 1.5 : 1.6).toFixed(1)}%
+                            {(monthlyTariffRate * 100).toFixed(1)}%
                           </span>
                         </div>
                         <div>
@@ -497,13 +486,13 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
                         <div>
                           <span className="text-xs dark:text-amber-300" style={{ color: '#755c3b' }}>Annual Rate:</span>
                           <span className="text-sm font-semibold ml-1 dark:text-gray-200">
-                            {(stationConfig.businessType === 'aglc' || stationConfig.businessType === 'vng' ? 18 : 19.2).toFixed(1)}%
+                            {(annualTariffRate * 100).toFixed(1)}%
                           </span>
                         </div>
                         <div>
                           <span className="text-xs dark:text-amber-300" style={{ color: '#755c3b' }}>Annual Cost:</span>
                           <span className="text-sm font-semibold ml-1 dark:text-gray-200">
-                            {formatCurrency(totalStationCost * (stationConfig.businessType === 'aglc' || stationConfig.businessType === 'vng' ? 0.18 : 0.192))}
+                            {formatCurrency(results.yearlyTariffFees[0] || 0)}
                           </span>
                         </div>
                       </div>
@@ -533,8 +522,7 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
               <div className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700">
                 <div className="text-sm text-gray-500 mb-1 dark:text-gray-300">Total Vehicles</div>
                 <div className="text-lg font-bold text-blue-600">
-                  {results.vehicleDistribution.reduce((total, year) => 
-                    total + year.light + year.medium + year.heavy, 0)}
+                  {plannedFleetTotals.total}
                 </div>
               </div>
             )}
@@ -561,7 +549,7 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
                   <div>
                     <span className="text-xs dark:text-amber-300" style={{ color: '#755c3b' }}>Monthly Fee:</span>
                     <span className="text-sm font-semibold ml-1 dark:text-gray-200">
-                      {(stationConfig.businessType === 'aglc' ? 1.5 : 1.6).toFixed(1)}%
+                      {(monthlyTariffRate * 100).toFixed(1)}%
                     </span>
                   </div>
                   <div>
@@ -575,7 +563,7 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
                   <div>
                     <span className="text-xs dark:text-amber-300" style={{ color: '#755c3b' }}>Annual Fee:</span>
                     <span className="text-sm font-semibold ml-1 dark:text-gray-200">
-                      {(stationConfig.businessType === 'aglc' ? 18 : 19.2).toFixed(1)}%
+                      {(annualTariffRate * 100).toFixed(1)}%
                     </span>
                   </div>
                   <div>
@@ -586,7 +574,7 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
                   </div>
                 </div>
                 <div className="text-xs mt-1 dark:text-amber-200" style={{ color: '#654321' }}>
-                  Note: LDC investment tariff applies a monthly fee of {(stationConfig.businessType === 'aglc' ? 1.5 : 1.6).toFixed(1)}% on the station cost throughout the analysis period.
+                  Note: LDC investment tariff applies a monthly fee of {(monthlyTariffRate * 100).toFixed(1)}% on the station cost throughout the analysis period.
                 </div>
               </div>
             )}
