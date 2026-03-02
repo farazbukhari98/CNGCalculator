@@ -1,13 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCalculator } from "@/contexts/CalculatorContext";
 import { formatPaybackPeriod } from "@/lib/utils";
 import { MetricInfoTooltip } from "./MetricInfoTooltip";
+import { calculateROI, distributeVehicles, applyVehicleLifecycle } from "@/lib/calculator";
 
 // Type for sensitivity variables
 type SensitivityVariable = 
@@ -26,56 +24,49 @@ const variableConfig = {
     min: -50,
     max: 50,
     step: 10,
-    defaultValue: 0,
-    weight: 1
+    defaultValue: 0
   },
   dieselPrice: {
     label: "Diesel Price ($/gallon)",
     min: -50,
     max: 50,
     step: 10,
-    defaultValue: 0,
-    weight: 1
+    defaultValue: 0
   },
   cngPrice: {
     label: "CNG Price ($/GGE)",
     min: -50,
     max: 50,
     step: 10,
-    defaultValue: 0,
-    weight: 1
+    defaultValue: 0
   },
   lightDutyCost: {
     label: "Light Duty Vehicle Cost",
     min: -50,
     max: 50,
     step: 10,
-    defaultValue: 0,
-    weight: 1
+    defaultValue: 0
   },
   mediumDutyCost: {
     label: "Medium Duty Vehicle Cost",
     min: -50,
     max: 50,
     step: 10,
-    defaultValue: 0,
-    weight: 1
+    defaultValue: 0
   },
   heavyDutyCost: {
     label: "Heavy Duty Vehicle Cost",
     min: -50,
     max: 50,
     step: 10,
-    defaultValue: 0,
-    weight: 1
+    defaultValue: 0
   },
   annualMiles: {
     label: "Annual Miles Driven",
     min: -50,
     max: 50,
     step: 10,
-    defaultValue: 0,
-    weight: 1
+    defaultValue: 0
   }
 };
 
@@ -265,220 +256,187 @@ const HeatMapVisualization = ({
 };
 
 export default function MultiVariableAnalysis({ hideNegativeValues = false }: { hideNegativeValues?: boolean }) {
-  const { 
-    vehicleParameters, 
-    stationConfig, 
-    fuelPrices, 
-    timeHorizon, 
+  const {
+    vehicleParameters,
+    stationConfig,
+    fuelPrices,
+    timeHorizon,
     deploymentStrategy,
+    vehicleDistribution,
+    enhancedDistribution,
+    rngFeedstockType,
+    customCiValue,
     results,
   } = useCalculator();
-  
+
   // Selected variables for the analysis
   const [primaryVariable, setPrimaryVariable] = useState<SensitivityVariable>("gasolinePrice");
   const [secondaryVariable, setSecondaryVariable] = useState<SensitivityVariable>("cngPrice");
-  const [tertiaryVariable, setTertiaryVariable] = useState<SensitivityVariable | null>(null);
-  
-  // Variable weights (used when multiple variables are active)
-  const [variableWeights, setVariableWeights] = useState<Record<SensitivityVariable, number>>({
-    gasolinePrice: 1,
-    dieselPrice: 1,
-    cngPrice: 1,
-    lightDutyCost: 1,
-    mediumDutyCost: 1,
-    heavyDutyCost: 1,
-    annualMiles: 1
-  });
-  
+
   // Selected metric
   const [activeMetric, setActiveMetric] = useState<"payback" | "roi" | "netCashFlow">("payback");
-  
+
   // Heat map data
   const [heatMapData, setHeatMapData] = useState<number[][]>([]);
   const [xValues, setXValues] = useState<number[]>([]);
   const [yValues, setYValues] = useState<number[]>([]);
-  
-  // Calculate heat map data when variables or results change
+
+  // Compute a single heat map cell by running calculateROI with modified parameters
+  const computeCellResult = useCallback((
+    varA: SensitivityVariable, pctA: number,
+    varB: SensitivityVariable, pctB: number
+  ) => {
+    if (!enhancedDistribution || !vehicleDistribution) return null;
+
+    // Build the set of percentage modifications keyed by variable
+    const mods: Partial<Record<SensitivityVariable, number>> = {};
+    mods[varA] = pctA;
+    mods[varB] = pctB;
+
+    // Clone parameters that may be modified
+    const modifiedFuelPrices = { ...fuelPrices };
+    const modifiedVehicleParams = { ...vehicleParameters };
+
+    // Apply fuel price modifications
+    if (mods.gasolinePrice !== undefined) {
+      modifiedFuelPrices.gasolinePrice = fuelPrices.gasolinePrice * (1 + mods.gasolinePrice / 100);
+    }
+    if (mods.dieselPrice !== undefined) {
+      modifiedFuelPrices.dieselPrice = fuelPrices.dieselPrice * (1 + mods.dieselPrice / 100);
+    }
+    if (mods.cngPrice !== undefined) {
+      modifiedFuelPrices.cngPrice = fuelPrices.cngPrice * (1 + mods.cngPrice / 100);
+    }
+
+    // Apply vehicle cost modifications
+    if (mods.lightDutyCost !== undefined) {
+      modifiedVehicleParams.lightDutyCost = vehicleParameters.lightDutyCost * (1 + mods.lightDutyCost / 100);
+    }
+    if (mods.mediumDutyCost !== undefined) {
+      modifiedVehicleParams.mediumDutyCost = vehicleParameters.mediumDutyCost * (1 + mods.mediumDutyCost / 100);
+    }
+    if (mods.heavyDutyCost !== undefined) {
+      modifiedVehicleParams.heavyDutyCost = vehicleParameters.heavyDutyCost * (1 + mods.heavyDutyCost / 100);
+    }
+
+    // Apply annual miles modification (proportionally to all three)
+    if (mods.annualMiles !== undefined) {
+      const factor = 1 + mods.annualMiles / 100;
+      modifiedVehicleParams.lightDutyAnnualMiles = vehicleParameters.lightDutyAnnualMiles * factor;
+      modifiedVehicleParams.mediumDutyAnnualMiles = vehicleParameters.mediumDutyAnnualMiles * factor;
+      modifiedVehicleParams.heavyDutyAnnualMiles = vehicleParameters.heavyDutyAnnualMiles * factor;
+    }
+
+    // Determine if we need to rebuild the distribution
+    const needsDistributionRebuild =
+      mods.lightDutyCost !== undefined ||
+      mods.mediumDutyCost !== undefined ||
+      mods.heavyDutyCost !== undefined ||
+      mods.annualMiles !== undefined;
+
+    let distForROI = enhancedDistribution;
+
+    if (needsDistributionRebuild) {
+      if (deploymentStrategy === 'manual') {
+        // For manual mode: preserve user's vehicle counts, recalculate investment amounts
+        const manualBase = vehicleDistribution.map(year => {
+          const investment =
+            (year.light * modifiedVehicleParams.lightDutyCost) +
+            (year.medium * modifiedVehicleParams.mediumDutyCost) +
+            (year.heavy * modifiedVehicleParams.heavyDutyCost);
+          return { ...year, investment };
+        });
+        distForROI = applyVehicleLifecycle(manualBase, modifiedVehicleParams, timeHorizon);
+      } else {
+        const baseDist = distributeVehicles(modifiedVehicleParams, timeHorizon, deploymentStrategy);
+        distForROI = applyVehicleLifecycle(baseDist, modifiedVehicleParams, timeHorizon);
+      }
+    }
+
+    return calculateROI(
+      modifiedVehicleParams,
+      stationConfig,
+      modifiedFuelPrices,
+      timeHorizon,
+      deploymentStrategy,
+      distForROI,
+      rngFeedstockType,
+      customCiValue
+    );
+  }, [vehicleParameters, stationConfig, fuelPrices, timeHorizon, deploymentStrategy, enhancedDistribution, vehicleDistribution, rngFeedstockType, customCiValue]);
+
+  // Calculate heat map data when variables or parameters change
   useEffect(() => {
-    if (!results) return;
-    
+    if (!results || !enhancedDistribution || !vehicleDistribution) return;
+
     // Generate x and y axis values
     const primarySteps = Math.floor((variableConfig[primaryVariable].max - variableConfig[primaryVariable].min) / variableConfig[primaryVariable].step) + 1;
     const secondarySteps = Math.floor((variableConfig[secondaryVariable].max - variableConfig[secondaryVariable].min) / variableConfig[secondaryVariable].step) + 1;
-    
+
     const xAxisValues = [];
     for (let i = 0; i < primarySteps; i++) {
       const percentage = variableConfig[primaryVariable].min + (i * variableConfig[primaryVariable].step);
       xAxisValues.push(percentage);
     }
-    
+
     const yAxisValues = [];
     for (let i = 0; i < secondarySteps; i++) {
       const percentage = variableConfig[secondaryVariable].min + (i * variableConfig[secondaryVariable].step);
       yAxisValues.push(percentage);
     }
-    
+
     // Store x and y values for reference
     setXValues(xAxisValues);
     setYValues(yAxisValues.slice().reverse()); // Reverse y-values to have min at bottom, max at top
-    
+
     // Generate heat map data
     const heatData: number[][] = [];
-    
+
     for (let y = 0; y < secondarySteps; y++) {
       const row: number[] = [];
       const secondaryPercentage = variableConfig[secondaryVariable].min + (y * variableConfig[secondaryVariable].step);
-      
+
       for (let x = 0; x < primarySteps; x++) {
         const primaryPercentage = variableConfig[primaryVariable].min + (x * variableConfig[primaryVariable].step);
-        
-        // Calculate modified values
-        const primaryModifiedValue = calculateModifiedValue(primaryVariable, primaryPercentage);
-        const secondaryModifiedValue = calculateModifiedValue(secondaryVariable, secondaryPercentage);
-        
-        // Calculate result for this combination
-        const result = calculateCombinedResult(
-          primaryVariable, primaryModifiedValue,
-          secondaryVariable, secondaryModifiedValue,
-          tertiaryVariable
+
+        // Run real calculateROI for this cell
+        const cellResult = computeCellResult(
+          primaryVariable, primaryPercentage,
+          secondaryVariable, secondaryPercentage
         );
-        
-        // Store the metric value for the heatmap, filtering negatives if requested
+
         let metricValue: number;
-        if (activeMetric === 'payback') {
-          metricValue = result.paybackPeriod;
+        if (!cellResult) {
+          metricValue = 0;
+        } else if (activeMetric === 'payback') {
+          metricValue = cellResult.paybackPeriod;
         } else if (activeMetric === 'roi') {
-          metricValue = result.roi;
+          metricValue = cellResult.roi;
         } else {
-          metricValue = result.netCashFlow;
+          metricValue = cellResult.netCashFlow;
         }
-        
+
         // Apply negative value filtering
         if (hideNegativeValues && metricValue < 0) {
           metricValue = 0;
         }
-        
+
         row.push(metricValue);
       }
-      
-      // Note: we reverse the rows to match the y-axis orientation
+
+      // Reverse the rows to match the y-axis orientation
       heatData.unshift(row);
     }
-    
+
     setHeatMapData(heatData);
-    
-  }, [primaryVariable, secondaryVariable, tertiaryVariable, variableWeights, activeMetric, results]);
-  
-  // Calculate the modified value for a single variable
-  const calculateModifiedValue = (variable: SensitivityVariable, percentage: number) => {
-    switch (variable) {
-      case "gasolinePrice":
-        return fuelPrices.gasolinePrice * (1 + percentage / 100);
-      case "dieselPrice":
-        return fuelPrices.dieselPrice * (1 + percentage / 100);
-      case "cngPrice":
-        return fuelPrices.cngPrice * (1 + percentage / 100);
-      case "lightDutyCost":
-      case "mediumDutyCost":
-      case "heavyDutyCost":
-      case "annualMiles":
-        // These would need appropriate base values from the context
-        return (1 + percentage / 100);
-      default:
-        return 0;
-    }
-  };
-  
-  // Calculate combined result for multiple variables
-  const calculateCombinedResult = (
-    primaryVar: SensitivityVariable, primaryVal: number,
-    secondaryVar: SensitivityVariable, secondaryVal: number,
-    tertiaryVar: SensitivityVariable | null
-  ) => {
-    // For simplicity, we'll focus on primary and secondary variables for now
-    let basePayback = results?.paybackPeriod || 0;
-    let baseRoi = results?.roi || 0;
-    let baseNetCashFlow = results?.netCashFlow || 0;
-    
-    // Calculate impact factors for each variable
-    const primaryImpact = calculateVariableImpact(primaryVar, primaryVal);
-    const secondaryImpact = calculateVariableImpact(secondaryVar, secondaryVal);
-    
-    // Combine impacts with weights
-    const primaryWeight = variableWeights[primaryVar];
-    const secondaryWeight = variableWeights[secondaryVar];
-    const totalWeight = primaryWeight + secondaryWeight;
-    
-    const combinedPaybackFactor = 
-      ((primaryImpact.paybackFactor * primaryWeight) + 
-       (secondaryImpact.paybackFactor * secondaryWeight)) / totalWeight;
-      
-    const combinedRoiFactor = 
-      ((primaryImpact.roiFactor * primaryWeight) + 
-       (secondaryImpact.roiFactor * secondaryWeight)) / totalWeight;
-       
-    const combinedCashFlowFactor = 
-      ((primaryImpact.cashFlowFactor * primaryWeight) + 
-       (secondaryImpact.cashFlowFactor * secondaryWeight)) / totalWeight;
-    
-    return {
-      paybackPeriod: Math.max(0.5, basePayback * combinedPaybackFactor),
-      roi: Math.max(0, baseRoi * combinedRoiFactor),
-      netCashFlow: baseNetCashFlow * combinedCashFlowFactor
-    };
-  };
-  
-  // Calculate impact factors for a single variable
-  const calculateVariableImpact = (variable: SensitivityVariable, modifiedValue: number) => {
-    let paybackFactor = 1.0;
-    let roiFactor = 1.0;
-    let cashFlowFactor = 1.0;
-    
-    switch (variable) {
-      case "gasolinePrice":
-        // Higher gas price improves CNG financials
-        paybackFactor = modifiedValue / fuelPrices.gasolinePrice > 1 ? 
-          1 / (modifiedValue / fuelPrices.gasolinePrice) : modifiedValue / fuelPrices.gasolinePrice;
-        roiFactor = modifiedValue / fuelPrices.gasolinePrice;
-        cashFlowFactor = modifiedValue / fuelPrices.gasolinePrice;
-        break;
-      case "dieselPrice":
-        // Higher diesel price improves CNG financials
-        paybackFactor = modifiedValue / fuelPrices.dieselPrice > 1 ? 
-          1 / (modifiedValue / fuelPrices.dieselPrice) : modifiedValue / fuelPrices.dieselPrice;
-        roiFactor = modifiedValue / fuelPrices.dieselPrice;
-        cashFlowFactor = modifiedValue / fuelPrices.dieselPrice;
-        break;
-      case "cngPrice":
-        // Higher CNG price worsens financials
-        paybackFactor = fuelPrices.cngPrice / modifiedValue > 1 ? 
-          fuelPrices.cngPrice / modifiedValue : 1 / (fuelPrices.cngPrice / modifiedValue);
-        roiFactor = fuelPrices.cngPrice / modifiedValue;
-        cashFlowFactor = fuelPrices.cngPrice / modifiedValue;
-        break;
-      // For the simplified model, we'll use a basic linear relationship for other variables
-      default:
-        paybackFactor = 1 / modifiedValue;
-        roiFactor = modifiedValue;
-        cashFlowFactor = modifiedValue;
-    }
-    
-    return { paybackFactor, roiFactor, cashFlowFactor };
-  };
-  
-  // Handle weight change for a variable
-  const handleWeightChange = (variable: SensitivityVariable, weight: number) => {
-    setVariableWeights(prev => ({
-      ...prev,
-      [variable]: weight
-    }));
-  };
-  
+
+  }, [primaryVariable, secondaryVariable, activeMetric, vehicleParameters, stationConfig, fuelPrices, timeHorizon, deploymentStrategy, enhancedDistribution, vehicleDistribution, rngFeedstockType, customCiValue, computeCellResult, results, hideNegativeValues]);
+
   // Format currency
   const formatCurrency = (value: number) => {
     return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
-  
+
   return (
     <Card className="bg-white rounded-lg shadow mb-6">
       <CardContent className="p-6">
@@ -487,7 +445,7 @@ export default function MultiVariableAnalysis({ hideNegativeValues = false }: { 
           <MetricInfoTooltip
             title="Multi-Variable Analysis"
             description="This advanced analysis examines how combinations of two variables simultaneously impact your financial metrics. The heat map visualization shows the interaction effects across different percentage changes."
-            calculation="Each cell in the heat map represents a unique combination of X and Y variable changes, color-coded to show the resulting impact on your selected metric (payback period, ROI, or net cash flow)."
+            calculation="Each cell in the heat map runs a full financial calculation with modified parameters, showing accurate results for every combination of X and Y variable changes."
             affectingVariables={[
               "Primary variable (X-axis)",
               "Secondary variable (Y-axis)",
@@ -497,21 +455,21 @@ export default function MultiVariableAnalysis({ hideNegativeValues = false }: { 
             simpleDescription="Visualize how combinations of two variables interact to affect your project outcomes."
           />
         </h2>
-        
+
         {results ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               {/* Variable Selection */}
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h3 className="text-sm font-medium text-gray-700 mb-3">Variable Selection</h3>
-                
+
                 {/* Primary Variable (X-axis) */}
                 <div className="mb-4">
                   <Label className="block text-sm font-medium text-gray-700 mb-2">
                     Primary Variable (X-axis)
                   </Label>
-                  <Select 
-                    value={primaryVariable} 
+                  <Select
+                    value={primaryVariable}
                     onValueChange={(value) => setPrimaryVariable(value as SensitivityVariable)}
                   >
                     <SelectTrigger className="w-full">
@@ -523,30 +481,15 @@ export default function MultiVariableAnalysis({ hideNegativeValues = false }: { 
                       ))}
                     </SelectContent>
                   </Select>
-                  
-                  {/* Weight slider for primary variable */}
-                  <div className="mt-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-500">Weight</span>
-                      <span className="text-xs font-medium">{variableWeights[primaryVariable]}x</span>
-                    </div>
-                    <Slider 
-                      value={[variableWeights[primaryVariable]]} 
-                      min={0.5} 
-                      max={2} 
-                      step={0.1} 
-                      onValueChange={(values) => handleWeightChange(primaryVariable, values[0])}
-                    />
-                  </div>
                 </div>
-                
+
                 {/* Secondary Variable (Y-axis) */}
                 <div className="mb-4">
                   <Label className="block text-sm font-medium text-gray-700 mb-2">
                     Secondary Variable (Y-axis)
                   </Label>
-                  <Select 
-                    value={secondaryVariable} 
+                  <Select
+                    value={secondaryVariable}
                     onValueChange={(value) => setSecondaryVariable(value as SensitivityVariable)}
                   >
                     <SelectTrigger className="w-full">
@@ -561,84 +504,8 @@ export default function MultiVariableAnalysis({ hideNegativeValues = false }: { 
                       }
                     </SelectContent>
                   </Select>
-                  
-                  {/* Weight slider for secondary variable */}
-                  <div className="mt-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-500">Weight</span>
-                      <span className="text-xs font-medium">{variableWeights[secondaryVariable]}x</span>
-                    </div>
-                    <Slider 
-                      value={[variableWeights[secondaryVariable]]} 
-                      min={0.5} 
-                      max={2} 
-                      step={0.1} 
-                      onValueChange={(values) => handleWeightChange(secondaryVariable, values[0])}
-                    />
-                  </div>
                 </div>
-                
-                {/* Optional Tertiary Variable */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <Label className="block text-sm font-medium text-gray-700">
-                      Tertiary Variable (Optional)
-                    </Label>
-                    <Checkbox
-                      checked={tertiaryVariable !== null}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          // Find first available variable 
-                          const available = Object.keys(variableConfig).find(
-                            key => key !== primaryVariable && key !== secondaryVariable
-                          );
-                          if (available) {
-                            setTertiaryVariable(available as SensitivityVariable);
-                          }
-                        } else {
-                          setTertiaryVariable(null);
-                        }
-                      }}
-                    />
-                  </div>
-                  
-                  {tertiaryVariable && (
-                    <>
-                      <Select 
-                        value={tertiaryVariable} 
-                        onValueChange={(value) => setTertiaryVariable(value as SensitivityVariable)}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select tertiary variable" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(variableConfig)
-                            .filter(([key]) => key !== primaryVariable && key !== secondaryVariable)
-                            .map(([key, config]) => (
-                              <SelectItem key={key} value={key}>{config.label}</SelectItem>
-                            ))
-                          }
-                        </SelectContent>
-                      </Select>
-                      
-                      {/* Weight slider for tertiary variable */}
-                      <div className="mt-2">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-gray-500">Weight</span>
-                          <span className="text-xs font-medium">{variableWeights[tertiaryVariable]}x</span>
-                        </div>
-                        <Slider 
-                          value={[variableWeights[tertiaryVariable]]} 
-                          min={0.5} 
-                          max={2} 
-                          step={0.1} 
-                          onValueChange={(values) => handleWeightChange(tertiaryVariable, values[0])}
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-                
+
                 {/* Current base values */}
                 <div className="mt-6">
                   <h3 className="text-sm font-medium text-gray-700 mb-2">Current Base Values</h3>
@@ -658,13 +525,13 @@ export default function MultiVariableAnalysis({ hideNegativeValues = false }: { 
                   </div>
                 </div>
               </div>
-              
+
               {/* Heat Map Visualization */}
               <div className="bg-gray-50 p-4 rounded-lg col-span-1 md:col-span-2">
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="text-sm font-medium text-gray-700">Variable Interaction Heat Map</h3>
                   <div className="flex border rounded-md overflow-hidden">
-                    <button 
+                    <button
                       className={`px-3 py-1 text-xs ${activeMetric === 'payback' ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}
                       onClick={(e) => {
                         e.preventDefault();
@@ -673,7 +540,7 @@ export default function MultiVariableAnalysis({ hideNegativeValues = false }: { 
                     >
                       Payback
                     </button>
-                    <button 
+                    <button
                       className={`px-3 py-1 text-xs ${activeMetric === 'roi' ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}
                       onClick={(e) => {
                         e.preventDefault();
@@ -682,7 +549,7 @@ export default function MultiVariableAnalysis({ hideNegativeValues = false }: { 
                     >
                       ROI
                     </button>
-                    <button 
+                    <button
                       className={`px-3 py-1 text-xs ${activeMetric === 'netCashFlow' ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}
                       onClick={(e) => {
                         e.preventDefault();
@@ -693,7 +560,7 @@ export default function MultiVariableAnalysis({ hideNegativeValues = false }: { 
                     </button>
                   </div>
                 </div>
-                
+
                 <HeatMapVisualization
                   xVariable={primaryVariable}
                   yVariable={secondaryVariable}
@@ -702,7 +569,7 @@ export default function MultiVariableAnalysis({ hideNegativeValues = false }: { 
                   yValues={yValues}
                   metric={activeMetric}
                 />
-                
+
                 <div className="mt-4 text-xs text-gray-500 leading-relaxed">
                   <p>This heat map shows how combinations of {variableConfig[primaryVariable].label} (X-axis) and {variableConfig[secondaryVariable].label} (Y-axis) impact your financial outcomes.</p>
                   <p>Click on any cell to see detailed values for that combination.</p>

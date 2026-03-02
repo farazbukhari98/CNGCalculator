@@ -708,6 +708,25 @@ export function calculateROI(
     });
   }
   
+  // Helper to get lifecycle-aware active vehicle counts for a given year
+  const getActiveVehicles = (year: number) => {
+    if (ensuredDistribution[year]?.totalActiveLight !== undefined) {
+      return {
+        light: ensuredDistribution[year].totalActiveLight!,
+        medium: ensuredDistribution[year].totalActiveMedium ?? 0,
+        heavy: ensuredDistribution[year].totalActiveHeavy ?? 0,
+      };
+    }
+    // Fallback for non-enhanced distributions
+    let light = 0, medium = 0, heavy = 0;
+    for (let i = 0; i <= year && i < ensuredDistribution.length; i++) {
+      light += ensuredDistribution[i].light || 0;
+      medium += ensuredDistribution[i].medium || 0;
+      heavy += ensuredDistribution[i].heavy || 0;
+    }
+    return { light, medium, heavy };
+  };
+
   // Calculate yearly savings
   const yearlySavings: number[] = [];
   const yearlyFuelSavings: number[] = [];
@@ -727,17 +746,12 @@ export function calculateROI(
   const annualTariffRate = monthlyTariffRate * 12;
   
   for (let year = 0; year < timeHorizon; year++) {
-    // Calculate number of each vehicle type in operation this year (cumulative)
-    let lightInOperation = 0;
-    let mediumInOperation = 0;
-    let heavyInOperation = 0;
-    
-    for (let i = 0; i <= year && i < ensuredDistribution.length; i++) {
-      lightInOperation += ensuredDistribution[i].light || 0;
-      mediumInOperation += ensuredDistribution[i].medium || 0;
-      heavyInOperation += ensuredDistribution[i].heavy || 0;
-    }
-    
+    // Get lifecycle-aware active vehicle counts for this year
+    const active = getActiveVehicles(year);
+    let lightInOperation = active.light;
+    let mediumInOperation = active.medium;
+    let heavyInOperation = active.heavy;
+
     // Factor in annual fuel price increase
     const yearMultiplier = Math.pow(1 + (fuelPrices.annualIncrease / 100), year);
     const adjustedGasolinePrice = fuelPrices.gasolinePrice * yearMultiplier;
@@ -907,16 +921,11 @@ export function calculateROI(
   let cumulativeEmissionsSavedToDate = 0;
 
   for (let year = 0; year < timeHorizon; year++) {
-    // Calculate number of each vehicle type in operation this year (cumulative)
-    let lightInOperation = 0;
-    let mediumInOperation = 0;
-    let heavyInOperation = 0;
-    
-    for (let i = 0; i <= year && i < ensuredDistribution.length; i++) {
-      lightInOperation += ensuredDistribution[i].light || 0;
-      mediumInOperation += ensuredDistribution[i].medium || 0;
-      heavyInOperation += ensuredDistribution[i].heavy || 0;
-    }
+    // Get lifecycle-aware active vehicle counts for this year
+    const activeEmissions = getActiveVehicles(year);
+    let lightInOperation = activeEmissions.light;
+    let mediumInOperation = activeEmissions.medium;
+    let heavyInOperation = activeEmissions.heavy;
 
     // Calculate conventional emissions using g/mile emission factors (more accurate)
     const lightGasolineEmissions = lightInOperation * vehicleParams.lightDutyAnnualMiles * VEHICLE_EMISSION_FACTORS.light.gasoline / 1000; // convert g to kg
