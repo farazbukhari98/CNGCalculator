@@ -692,6 +692,9 @@ export function calculateROI(
   const totalVehicleInvestment = vehicleInvestmentTotals.total;
   const stationCost = calculateStationCost(stationConfig, vehicleParams, vehicleDistribution, fuelPrices);
   const totalProjectCost = totalVehicleInvestment + stationCost;
+  // ROI is based on lifecycle vehicle capex (including replacements).
+  // For turnkey projects, add the upfront station capex; for non-turnkey,
+  // the station is financed through tariff fees and remains in yearly savings.
   const totalInvestment = totalVehicleInvestment + (stationConfig.turnkey ? stationCost : 0);
   
   // Ensure the vehicleDistribution array is long enough
@@ -733,8 +736,9 @@ export function calculateROI(
   const cumulativeSavings: number[] = [];
   const cumulativeInvestment: number[] = [];
   
-  // When turnkey is true, station cost is applied upfront
-  // When turnkey is false, station cost is $0 upfront (not included in cumulativeInvestment)
+  // Track only the initial project investment for payback purposes.
+  // This includes the original deployment schedule and upfront turnkey station cost,
+  // but excludes lifecycle replacement purchases.
   let cumulativeInvestmentToDate = stationConfig.turnkey ? stationCost : 0;
   
   // Monthly LDC investment tariff rate (as a decimal).
@@ -822,10 +826,9 @@ export function calculateROI(
     const prevCumulativeSavings = year > 0 ? cumulativeSavings[year - 1] : 0;
     cumulativeSavings.push(Math.round(prevCumulativeSavings + yearSavings));
     
-    // Update cumulative investment (including replacements)
+    // Update cumulative initial project investment (exclude replacement capex).
     const yearInvestment = year < ensuredDistribution.length
-      ? toNonNegativeNumber(ensuredDistribution[year].investment || 0) +
-        toNonNegativeNumber(ensuredDistribution[year].replacementInvestment || 0)
+      ? toNonNegativeNumber(ensuredDistribution[year].investment || 0)
       : 0;
     cumulativeInvestmentToDate += yearInvestment;
     cumulativeInvestment.push(Math.round(cumulativeInvestmentToDate));
@@ -843,11 +846,15 @@ export function calculateROI(
         const currentOverage = cumulativeSavings[i] - cumulativeInvestment[i];
         const interpolationBase = previousGap + currentOverage;
         const fractionalYear = interpolationBase > 0
-          ? i - (previousGap / interpolationBase)
+          ? i + (previousGap / interpolationBase)
           : i + 1;
-        paybackPeriod = Math.max(1, fractionalYear); // Ensure at least 1 year
+        paybackPeriod = Math.max(0, fractionalYear);
       } else {
-        paybackPeriod = 1; // If it pays back in first year
+        const firstYearSavings = cumulativeSavings[0];
+        const firstYearInvestment = cumulativeInvestment[0];
+        paybackPeriod = firstYearSavings > 0
+          ? Math.max(0, firstYearInvestment / firstYearSavings)
+          : 0;
       }
       break;
     }

@@ -199,11 +199,82 @@ function testZeroAndEmptyStyleInputsStayFinite() {
   });
 }
 
+function testPaybackUsesInitialProjectBreakeven() {
+  const params: VehicleParameters = {
+    ...baseVehicleParameters,
+    lightDutyCount: 20,
+    mediumDutyCount: 20,
+    heavyDutyCount: 20,
+  };
+  const station: StationConfig = {
+    stationType: "fast",
+    businessType: "aglc",
+    turnkey: false,
+    sizingMethod: "peak",
+    stationMarkup: 20,
+  };
+  const fuelPrices: FuelPrices = {
+    ...baseFuelPrices,
+    gasolinePrice: 3.38,
+    dieselPrice: 3.38,
+    cngPrice: 0.5,
+  };
+
+  const baseDistribution = distributeVehicles(params, 10, "immediate");
+  const enhanced = applyVehicleLifecycle(baseDistribution, params, 10);
+  const results = calculateROI(
+    params,
+    station,
+    fuelPrices,
+    10,
+    "immediate",
+    enhanced
+  );
+
+  assert.equal(results.cumulativeInvestment[0], 1600000);
+  assert.equal(results.cumulativeInvestment[7], 1600000);
+  assert.ok(results.paybackPeriod > 8 && results.paybackPeriod < 9);
+}
+
+function testRoiUsesLifecycleCapexIncludingReplacements() {
+  const params: VehicleParameters = {
+    ...baseVehicleParameters,
+    lightDutyCount: 1,
+    lightDutyLifespan: 3,
+  };
+
+  const baseDistribution = distributeVehicles(params, 10, "immediate");
+  const enhanced = applyVehicleLifecycle(baseDistribution, params, 10);
+  const results = calculateROI(
+    params,
+    {
+      ...turnkeyStation,
+      turnkey: false,
+    },
+    {
+      ...baseFuelPrices,
+      gasolinePrice: 1.5,
+      cngPrice: 0.5,
+    },
+    10,
+    "immediate",
+    enhanced
+  );
+
+  const expectedLifecycleVehicleCapex = 4 * params.lightDutyCost;
+
+  assert.equal(results.totalVehicleInvestment, expectedLifecycleVehicleCapex);
+  assert.equal(results.totalInvestment, expectedLifecycleVehicleCapex);
+  assert.equal(results.netCashFlow, results.cumulativeSavings[9] - expectedLifecycleVehicleCapex);
+}
+
 function main() {
   testRecurringLifecycleReplacements();
   testDieselConversionFactorAffectsSavings();
   testNonTurnkeyIgnoresPremiumButKeepsTariff();
   testZeroAndEmptyStyleInputsStayFinite();
+  testPaybackUsesInitialProjectBreakeven();
+  testRoiUsesLifecycleCapexIncludingReplacements();
   console.log("calculator regression checks passed");
 }
 
