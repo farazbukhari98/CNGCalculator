@@ -1,6 +1,6 @@
 import { useCalculator } from "@/contexts/CalculatorContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatPaybackPeriod } from "@/lib/utils";
+import { formatPaybackPeriod, formatCurrency } from "@/lib/utils";
 import { MetricInfoTooltip } from "./MetricInfoTooltip";
 import { calculateStationCost, getAnnualCngGgePerVehicle } from "@/lib/calculator";
 
@@ -15,11 +15,6 @@ export default function DeploymentTimeline() {
     vehicleParameters,
     fuelPrices
   } = useCalculator();
-
-  // Format currency without decimal places
-  const formatCurrency = (value: number) => {
-    return `$${value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-  };
 
   // Only show years up to the selected time horizon
   const years = Array.from({ length: timeHorizon }, (_, i) => i + 1);

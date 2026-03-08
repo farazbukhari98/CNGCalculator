@@ -2,7 +2,7 @@ import { useCalculator } from "@/contexts/CalculatorContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, AlertTriangle, Info } from "lucide-react";
 import { MetricInfoTooltip } from "./MetricInfoTooltip";
-import { formatPaybackPeriod } from "@/lib/utils";
+import { formatPaybackPeriod, formatCurrency, formatNumberWithCommas } from "@/lib/utils";
 import { calculateStationCost, getCngEfficiencyFactor, getStationSizeInfo } from "@/lib/calculator";
 import { 
   ResponsiveContainer, 
@@ -38,11 +38,6 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
 
   // If no results yet, don't render anything
   if (!results) return null;
-
-  // Format currency
-  const formatCurrency = (value: number) => {
-    return `$${Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
 
   // Format emissions value (convert kg to metric tons)
   const formatEmissions = (value: number) => {
@@ -428,12 +423,9 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
                 <div className="text-xs text-gray-500 mb-1 dark:text-gray-300">Total Annual Savings</div>
                 <div className="text-lg font-bold text-green-600 dark:text-green-400">
                   {(() => {
-                    // Check if there are any vehicles in the fleet
                     const totalVehicles = vehicleParameters.lightDutyCount + vehicleParameters.mediumDutyCount + vehicleParameters.heavyDutyCount;
-                    if (totalVehicles === 0) {
-                      return "$0.00";
-                    }
-                    return `$${operationalChartData.reduce((sum, item) => sum + item.annualSavings, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    if (totalVehicles === 0) return "$0.00";
+                    return formatCurrency(operationalChartData.reduce((sum, item) => sum + item.annualSavings, 0));
                   })()}
                 </div>
               </div>
@@ -463,6 +455,29 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
                     );
 
                     return best.type;
+                  })()}
+                </div>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700">
+                <div className="text-xs text-gray-500 mb-1 dark:text-gray-300">Total Miles Driven</div>
+                <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                  {(() => {
+                    const totalVehicles = vehicleParameters.lightDutyCount + vehicleParameters.mediumDutyCount + vehicleParameters.heavyDutyCount;
+                    if (totalVehicles === 0) return "0";
+                    const totalMiles = operationalChartData.reduce((sum, item) => sum + item.annualMiles * item.vehicleCount, 0) * timeHorizon;
+                    return formatNumberWithCommas(totalMiles);
+                  })()}
+                </div>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700">
+                <div className="text-xs text-gray-500 mb-1 dark:text-gray-300">Total Gallons Consumed (CNG GGE)</div>
+                <div className="text-lg font-bold text-teal-600 dark:text-teal-400">
+                  {(() => {
+                    const totalVehicles = vehicleParameters.lightDutyCount + vehicleParameters.mediumDutyCount + vehicleParameters.heavyDutyCount;
+                    if (totalVehicles === 0) return "0";
+                    const stationInfo = getStationSizeInfo(stationConfig, vehicleParameters, enhancedDistribution, fuelPrices);
+                    const annualGGE = stationInfo?.annualGGE || 0;
+                    return formatNumberWithCommas(annualGGE * timeHorizon);
                   })()}
                 </div>
               </div>
@@ -574,16 +589,18 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
                         <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">{formatCurrency(results.totalVehicleInvestment)}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-blue-600 dark:text-blue-400">Station (Quoted)</span>
+                        <span className="text-sm text-blue-600 dark:text-blue-400">
+                          {stationConfig.turnkey ? "Station (Quoted)" : `Station (Tariff × ${timeHorizon} yrs)`}
+                        </span>
                         <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">
-                          {formatCurrency(results.stationCost)}
+                          {formatCurrency(results.totalStationInvestment)}
                         </span>
                       </div>
                       <div className="border-t pt-2 border-blue-200 dark:border-blue-700">
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Modeled Total</span>
                           <span className="text-lg font-bold text-blue-800 dark:text-blue-200">
-                            {formatCurrency(results.totalProjectCost)}
+                            {formatCurrency(results.totalInvestment)}
                           </span>
                         </div>
                       </div>
@@ -613,21 +630,31 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
                 </div>
                 {(() => {
                   const totalSavingsOverHorizon = results.cumulativeSavings[results.cumulativeSavings.length - 1];
-                  const netSavings = totalSavingsOverHorizon - results.totalProjectCost;
-                  
+                  const netSavings = totalSavingsOverHorizon - results.totalInvestment;
+                  const totalFuelSavings = results.yearlyFuelSavings.reduce((sum: number, v: number) => sum + v, 0);
+                  const totalMaintenanceSavings = results.yearlyMaintenanceSavings.reduce((sum: number, v: number) => sum + v, 0);
+
                   return (
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-green-600 dark:text-green-400">Total Savings ({timeHorizon}-Year)</span>
+                        <span className="text-sm text-green-600 dark:text-green-400">Fuel Savings</span>
+                        <span className="text-sm font-semibold text-green-800 dark:text-green-200">{formatCurrency(totalFuelSavings)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-green-600 dark:text-green-400">Maintenance Savings</span>
+                        <span className="text-sm font-semibold text-green-800 dark:text-green-200">{formatCurrency(totalMaintenanceSavings)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-green-600 dark:text-green-400">Total</span>
                         <span className="text-sm font-semibold text-green-800 dark:text-green-200">{formatCurrency(totalSavingsOverHorizon)}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-green-600 dark:text-green-400">Less: Modeled Investment</span>
-                        <span className="text-sm font-semibold text-red-600 dark:text-red-400">({formatCurrency(results.totalProjectCost)})</span>
+                        <span className="text-sm font-semibold text-red-600 dark:text-red-400">({formatCurrency(results.totalInvestment)})</span>
                       </div>
                       <div className="border-t pt-2 border-green-200 dark:border-green-700">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-green-700 dark:text-green-300">Net Benefit</span>
+                          <span className="text-sm font-medium text-green-700 dark:text-green-300">Total Benefit</span>
                           <span className={`text-lg font-bold ${netSavings >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                             {formatCurrency(netSavings)}
                           </span>
@@ -639,45 +666,32 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
               </div>
             </div>
             
-            {/* Deployment Strategy Summary */}
-            <div className="bg-blue-50 p-3 rounded-lg dark:bg-blue-900/20">
-              <div className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">
-                {deploymentStrategy.charAt(0).toUpperCase() + deploymentStrategy.slice(1)} Deployment Strategy
-              </div>
-              <div className="text-sm text-blue-800 dark:text-blue-200">
-                {(() => {
-                  // Use same logic as FleetConfiguration to get actual vehicle counts
-                  const totalVehicles = (() => {
-                    if (deploymentStrategy === 'manual' && vehicleDistribution) {
-                      // Sum up totals from manual distribution
-                      const totals = vehicleDistribution.reduce(
-                        (acc, year) => ({
-                          light: acc.light + (year.light || 0),
-                          medium: acc.medium + (year.medium || 0),
-                          heavy: acc.heavy + (year.heavy || 0)
-                        }),
-                        { light: 0, medium: 0, heavy: 0 }
-                      );
-                      return totals.light + totals.medium + totals.heavy;
-                    }
-                    // For non-manual strategies, use original parameters
-                    return vehicleParameters.lightDutyCount + vehicleParameters.mediumDutyCount + vehicleParameters.heavyDutyCount;
-                  })();
-                  
-                  if (deploymentStrategy === 'immediate') {
-                    return `All ${totalVehicles} vehicles converted immediately for maximum savings.`;
-                  } else if (deploymentStrategy === 'phased') {
-                    return `${Math.ceil(totalVehicles / timeHorizon)} vehicles converted annually over ${timeHorizon} years.`;
-                  } else if (deploymentStrategy === 'aggressive') {
-                    return `Front-loaded deployment to accelerate savings and reduce long-term fuel costs.`;
-                  } else if (deploymentStrategy === 'deferred') {
-                    return `Gradual conversion prioritizing later years to minimize upfront capital.`;
-                  } else {
-                    return `Custom deployment schedule tailored to operational requirements.`;
-                  }
-                })()}
-              </div>
-            </div>
+            {/* Calculation Equation */}
+            {(() => {
+              const totalSavings = results.cumulativeSavings[results.cumulativeSavings.length - 1];
+              const totalInvestment = results.totalInvestment;
+              const totalBenefit = totalSavings - totalInvestment;
+              return (
+                <div className="bg-gray-50 p-4 rounded-lg dark:bg-gray-700">
+                  <div className="flex items-center justify-between text-center gap-2">
+                    <div className="flex-1">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Savings</div>
+                      <div className="text-sm font-bold text-green-600 dark:text-green-400">{formatCurrency(totalSavings)}</div>
+                    </div>
+                    <div className="text-lg font-bold text-gray-400">-</div>
+                    <div className="flex-1">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Investment</div>
+                      <div className="text-sm font-bold text-blue-600 dark:text-blue-400">{formatCurrency(totalInvestment)}</div>
+                    </div>
+                    <div className="text-lg font-bold text-gray-400">=</div>
+                    <div className="flex-1">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Benefit</div>
+                      <div className={`text-sm font-bold ${totalBenefit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{formatCurrency(totalBenefit)}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
       </div>

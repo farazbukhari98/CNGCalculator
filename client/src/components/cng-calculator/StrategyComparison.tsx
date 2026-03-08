@@ -3,7 +3,7 @@ import { useCalculator } from "@/contexts/CalculatorContext";
 import { useComparison } from "@/contexts/ComparisonContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { formatPaybackPeriod } from "@/lib/utils";
+import { formatPaybackPeriod, formatCurrency } from "@/lib/utils";
 import { 
   AreaChart, 
   Area, 
@@ -275,7 +275,7 @@ export default function StrategyComparison() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 p-4 bg-gray-50 rounded-lg">
                 {comparisonItems.map((item, index) => {
                   const finalSavings = item.results.cumulativeSavings[item.results.cumulativeSavings.length - 1];
-                  const totalInvestment = item.results.totalProjectCost;
+                  const totalInvestment = item.results.totalInvestment;
                   const netBenefit = finalSavings - totalInvestment;
                   
                   return (
@@ -287,13 +287,13 @@ export default function StrategyComparison() {
                         {item.strategyName}
                       </div>
                       <div className="text-sm font-semibold">
-                        ${finalSavings.toLocaleString()}
+                        {formatCurrency(finalSavings)}
                       </div>
                       <div className="text-xs text-gray-500">
                         Total Savings
                       </div>
                       <div className={`text-xs mt-1 ${netBenefit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        Net: ${netBenefit.toLocaleString()}
+                        Net: {formatCurrency(netBenefit)}
                       </div>
                     </div>
                   );

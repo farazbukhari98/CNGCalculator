@@ -1,6 +1,6 @@
 import { useCalculator } from "@/contexts/CalculatorContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatPaybackPeriod } from "@/lib/utils";
+import { formatPaybackPeriod, formatCurrency } from "@/lib/utils";
 import { getMonthlyTariffRate, getPlannedFleetTotals } from "@/lib/calculator";
 import { MetricInfoTooltip } from "./MetricInfoTooltip";
 import { 
@@ -26,11 +26,6 @@ export default function FinancialAnalysis({ showCashflow, hideNegativeValues }: 
 
   // If no results yet, don't render anything
   if (!results) return null;
-
-  // Format currency
-  const formatCurrency = (value: number) => {
-    return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
 
   const totalVehicleInvestment = results.totalVehicleInvestment;
   const totalStationCost = results.stationCost;

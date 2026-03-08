@@ -40,6 +40,21 @@ function formatPaybackYearsMonths(years: number, months: number, isProjection: b
 }
 
 /**
+ * Smart currency formatting:
+ * - Under $100 → show cents (2 decimals): $45.67
+ * - $100+ → whole numbers (0 decimals): $1,234
+ * - Handles negatives: -$1,234
+ */
+export function formatCurrency(value: number): string {
+  const absValue = Math.abs(value);
+  const sign = value < 0 ? '-' : '';
+  if (absValue < 100) {
+    return `${sign}$${absValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+  return `${sign}$${absValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+}
+
+/**
  * Formats a number with comma separators for thousands
  * @param num The number to format
  * @returns Formatted string with commas (e.g., "1,234,567")

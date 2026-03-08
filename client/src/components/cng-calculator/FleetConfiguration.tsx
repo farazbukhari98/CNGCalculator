@@ -1,6 +1,6 @@
 import { useCalculator } from "@/contexts/CalculatorContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatPaybackPeriod, formatNumberWithCommas } from "@/lib/utils";
+import { formatPaybackPeriod, formatNumberWithCommas, formatCurrency } from "@/lib/utils";
 import { MetricInfoTooltip } from "./MetricInfoTooltip";
 import { calculateAnnualFleetGGE, getPlannedFleetTotals } from "@/lib/calculator";
 
@@ -44,11 +44,6 @@ export default function FleetConfiguration({ showCashflow }: FleetConfigurationP
   const stationCost = results?.stationCost ?? 0;
   const totalInvestment = results?.totalProjectCost ?? 0;
   const totalAnnualFleetGGE = calculateAnnualFleetGGE(vehicleParameters, actualCounts, fuelPrices);
-
-  // Format currency
-  const formatCurrency = (value: number) => {
-    return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
 
   return (
     <Card className="bg-white rounded-lg shadow mb-6 dark:bg-gray-800">

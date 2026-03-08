@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCalculator } from "@/contexts/CalculatorContext";
-import { formatPaybackPeriod } from "@/lib/utils";
+import { formatPaybackPeriod, formatCurrency } from "@/lib/utils";
 import { MetricInfoTooltip } from "./MetricInfoTooltip";
 import { calculateROI, distributeVehicles, applyVehicleLifecycle } from "@/lib/calculator";
 
@@ -138,7 +138,7 @@ const HeatMapVisualization = ({
     } else if (metric === 'roi') {
       return `${value.toFixed(1)}%`;
     } else {
-      return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      return formatCurrency(value);
     }
   };
   
@@ -431,11 +431,6 @@ export default function MultiVariableAnalysis({ hideNegativeValues = false }: { 
     setHeatMapData(heatData);
 
   }, [primaryVariable, secondaryVariable, activeMetric, vehicleParameters, stationConfig, fuelPrices, timeHorizon, deploymentStrategy, enhancedDistribution, vehicleDistribution, rngFeedstockType, customCiValue, computeCellResult, results, hideNegativeValues]);
-
-  // Format currency
-  const formatCurrency = (value: number) => {
-    return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
 
   return (
     <Card className="bg-white rounded-lg shadow mb-6">

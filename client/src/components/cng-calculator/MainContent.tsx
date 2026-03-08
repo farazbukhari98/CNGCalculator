@@ -23,6 +23,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import * as strategyStorage from "@/lib/strategy-storage";
 import { getPlannedFleetTotals } from "@/lib/calculator";
+import { formatCurrency } from "@/lib/utils";
 
 export default function MainContent() {
   const { 
@@ -175,12 +176,12 @@ export default function MainContent() {
       
       // Create metrics in a 2x5 grid layout
       const metrics = [
-        { name: 'Total Investment', value: `$${results.totalProjectCost.toLocaleString()}` },
+        { name: 'Total Investment', value: formatCurrency(results.totalProjectCost) },
         { name: 'Payback Period', value: results.paybackPeriod < 0 ? 'Never' : `${Math.floor(results.paybackPeriod)} years, ${Math.round((results.paybackPeriod % 1) * 12)} months` },
         { name: 'ROI', value: `${Math.round(results.roi)}%` },
         { name: 'Annual Rate of Return', value: `${results.annualRateOfReturn.toFixed(1)}%` },
-        { name: 'Average Annual Net Savings', value: `$${results.annualFuelSavings.toLocaleString()}` },
-        { name: 'Net Cash Flow', value: `$${results.netCashFlow.toLocaleString()}` },
+        { name: 'Average Annual Net Savings', value: formatCurrency(results.annualFuelSavings) },
+        { name: 'Net Cash Flow', value: formatCurrency(results.netCashFlow) },
         { name: 'CO₂ Reduction', value: `${results.co2Reduction.toFixed(1)}%` },
         { name: 'Cost Per Mile (Gasoline)', value: `$${results.costPerMileGasoline.toFixed(3)}` },
         { name: 'Cost Per Mile (CNG)', value: `$${results.costPerMileCNG.toFixed(3)}` },
