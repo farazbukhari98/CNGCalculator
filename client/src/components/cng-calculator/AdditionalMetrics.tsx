@@ -678,7 +678,7 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
                     </div>
                     <div className="text-lg font-bold text-gray-400">=</div>
                     <div className="flex-1">
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Benefit</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Savings</div>
                       <div className={`text-sm font-bold ${totalBenefit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{formatCurrency(totalBenefit)}</div>
                     </div>
                   </div>
