@@ -127,7 +127,7 @@ export function NaturalLanguageQuery({ onViewChange }: NaturalLanguageQueryProps
         }
         
         // Update station config
-        const stationFields = ['stationType', 'businessType', 'turnkey', 'stationMarkup'];
+        const stationFields = ['stationType', 'businessType', 'stationOption', 'stationMarkup'];
         
         const stationUpdates: any = {};
         let hasStationUpdates = false;

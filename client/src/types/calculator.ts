@@ -30,7 +30,7 @@ export interface VehicleParameters {
 export interface StationConfig {
   stationType: "fast" | "time";
   businessType: "aglc" | "cgc" | "vng";
-  turnkey: boolean; // Yes = upfront cost, No = financed cost
+  stationOption: "turnkey" | "tariff" | "public"; // turnkey = upfront, tariff = LDC financed, public = use existing public stations
   sizingMethod: "total" | "peak"; // Total vehicles vs peak year usage
   stationMarkup: number; // Markup percentage applied to station cost (0-100)
 }
@@ -97,6 +97,7 @@ export interface VehicleDistribution {
 export interface CalculationResults {
   totalInvestment: number;
   totalVehicleInvestment: number;
+  totalStationInvestment: number;
   stationCost: number;
   totalProjectCost: number;
   totalTariffFees: number;

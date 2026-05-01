@@ -139,66 +139,84 @@ export default function StationConfiguration() {
       </div>
       
       
-      {/* Turnkey Option */}
+      {/* Station Choice */}
       <div className="border-t pt-3 mt-3">
-        <Label className="block text-sm font-medium text-gray-700 mb-2">Turnkey Option</Label>
-        <RadioGroup 
-          className="grid grid-cols-2 gap-3"
-          value={stationConfig.turnkey ? "yes" : "no"}
+        <Label className="block text-sm font-medium text-gray-700 mb-2">Station Choice</Label>
+        <RadioGroup
+          className="grid grid-cols-3 gap-3"
+          value={stationConfig.stationOption}
           onValueChange={(value) => {
-            const newValue = value === "yes";
-            if (newValue !== DEFAULT_VALUES.turnkey) {
-              markFieldAsModified('turnkey');
+            const newValue = value as "turnkey" | "tariff" | "public";
+            if (newValue !== DEFAULT_VALUES.stationOption) {
+              markFieldAsModified('stationOption');
             }
             updateStationConfig({
               ...stationConfig,
-              turnkey: newValue,
-              stationMarkup: newValue ? stationConfig.stationMarkup : 0
+              stationOption: newValue,
+              stationMarkup: newValue === "turnkey" ? stationConfig.stationMarkup : 0
             });
           }}
         >
           <div className="relative">
-            <RadioGroupItem value="yes" id="turnkeyYes" className="absolute opacity-0" />
-            <Label 
-              htmlFor="turnkeyYes" 
+            <RadioGroupItem value="turnkey" id="stationOptionTurnkey" className="absolute opacity-0" />
+            <Label
+              htmlFor="stationOptionTurnkey"
               className="flex flex-col items-center p-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-green-50 data-[state=checked]:border-green-500 data-[state=checked]:border-2"
-              style={getFieldStyles(isFieldModified('turnkey') && stationConfig.turnkey)}
+              style={getFieldStyles(isFieldModified('stationOption') && stationConfig.stationOption === "turnkey")}
             >
-              {stationConfig.turnkey === true && (
+              {stationConfig.stationOption === "turnkey" && (
                 <div className="absolute top-2 left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
                   <Check className="w-3 h-3 text-white" />
                 </div>
               )}
-              <span className="text-sm font-medium">Yes</span>
-              <span className="text-xs text-gray-500 mt-1">Pay cost upfront</span>
+              <span className="text-sm font-medium">Turnkey</span>
+              <span className="text-xs text-gray-500 mt-1 text-center">Pay cost upfront</span>
             </Label>
           </div>
           <div className="relative">
-            <RadioGroupItem value="no" id="turnkeyNo" className="absolute opacity-0" />
-            <Label 
-              htmlFor="turnkeyNo" 
+            <RadioGroupItem value="tariff" id="stationOptionTariff" className="absolute opacity-0" />
+            <Label
+              htmlFor="stationOptionTariff"
               className="flex flex-col items-center p-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-green-50 data-[state=checked]:border-green-500 data-[state=checked]:border-2"
-              style={getFieldStyles(isFieldModified('turnkey') && !stationConfig.turnkey)}
+              style={getFieldStyles(isFieldModified('stationOption') && stationConfig.stationOption === "tariff")}
             >
-              {stationConfig.turnkey === false && (
+              {stationConfig.stationOption === "tariff" && (
                 <div className="absolute top-2 left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
                   <Check className="w-3 h-3 text-white" />
                 </div>
               )}
-              <span className="text-sm font-medium">No</span>
-              <span className="text-xs text-gray-500 mt-1">Leveraging LDC investment tariff</span>
+              <span className="text-sm font-medium">LDC Tariff</span>
+              <span className="text-xs text-gray-500 mt-1 text-center">Leveraging LDC investment tariff</span>
+            </Label>
+          </div>
+          <div className="relative">
+            <RadioGroupItem value="public" id="stationOptionPublic" className="absolute opacity-0" />
+            <Label
+              htmlFor="stationOptionPublic"
+              className="flex flex-col items-center p-3 bg-gray-50 border rounded-md cursor-pointer hover:bg-blue-50 data-[state=checked]:bg-green-50 data-[state=checked]:border-green-500 data-[state=checked]:border-2"
+              style={getFieldStyles(isFieldModified('stationOption') && stationConfig.stationOption === "public")}
+            >
+              {stationConfig.stationOption === "public" && (
+                <div className="absolute top-2 left-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+              )}
+              <span className="text-sm font-medium">Public</span>
+              <span className="text-xs text-gray-500 mt-1 text-center">Use of publicly available CNG stations</span>
             </Label>
           </div>
         </RadioGroup>
         <p className="text-xs text-gray-500 mt-1">
-          {stationConfig.turnkey 
-            ? "Station cost is paid upfront as a single investment" 
-            : `Station uses LDC investment tariff with a monthly fee of ${(getMonthlyTariffRate(stationConfig) * 100).toFixed(1)}% of station cost over the analysis period`}
+          {stationConfig.stationOption === "turnkey"
+            ? "Station cost is paid upfront as a single investment"
+            : stationConfig.stationOption === "tariff"
+              ? `Station uses LDC investment tariff with a monthly fee of ${(getMonthlyTariffRate(stationConfig) * 100).toFixed(1)}% of station cost over the analysis period`
+              : "Fleet refuels at publicly available CNG stations — no station capex or tariff applied"}
         </p>
       </div>
 
       {/* Station Premium - only shown for turnkey */}
-      {stationConfig.turnkey && (
+      {stationConfig.stationOption === "turnkey" && (
         <div className="border-t pt-3 mt-3">
           <Label className="block text-sm font-medium text-gray-700 mb-2">Station Premium</Label>
           <Select
@@ -254,25 +272,27 @@ export default function StationConfiguration() {
         </div>
       )}
 
-      {/* Cost Estimate */}
-      <div className="border-t pt-3 mt-3">
-        <div className="flex items-center justify-between">
-          <Label className="block text-sm font-medium text-gray-700">Quoted Price</Label>
-          <span className="text-sm font-medium text-gray-900">
-            ${stationSizeInfo?.finalCost.toLocaleString() || getStationCost().toLocaleString()}
-          </span>
+      {/* Cost Estimate - not shown for public option (no station capex) */}
+      {stationConfig.stationOption !== "public" && (
+        <div className="border-t pt-3 mt-3">
+          <div className="flex items-center justify-between">
+            <Label className="block text-sm font-medium text-gray-700">Quoted Price</Label>
+            <span className="text-sm font-medium text-gray-900">
+              ${stationSizeInfo?.finalCost.toLocaleString() || getStationCost().toLocaleString()}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            {stationConfig.stationOption === "turnkey"
+              ? `Base cost + ${stationConfig.stationMarkup}% premium`
+              : `Base cost ${stationConfig.businessType === 'cgc' ? '- 5% CGC discount' : ''}`}
+          </p>
+          <p className="text-xs text-gray-500">
+            {stationConfig.stationOption === "turnkey"
+              ? "Includes installation and equipment (paid upfront)"
+              : "Includes installation and equipment (LDC investment tariff)"}
+          </p>
         </div>
-        <p className="text-xs text-gray-500 mt-2">
-          {stationConfig.turnkey
-            ? `Base cost + ${stationConfig.stationMarkup}% premium`
-            : `Base cost ${stationConfig.businessType === 'cgc' ? '- 5% CGC discount' : ''}`}
-        </p>
-        <p className="text-xs text-gray-500">
-          {stationConfig.turnkey
-            ? "Includes installation and equipment (paid upfront)"
-            : "Includes installation and equipment (LDC investment tariff)"}
-        </p>
-      </div>
+      )}
     </div>
   );
 }

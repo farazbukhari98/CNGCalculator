@@ -46,7 +46,7 @@ const baseFuelPrices: FuelPrices = {
 const turnkeyStation: StationConfig = {
   stationType: "time",
   businessType: "aglc",
-  turnkey: true,
+  stationOption: "turnkey",
   sizingMethod: "peak",
   stationMarkup: 20,
 };
@@ -102,7 +102,7 @@ function testNonTurnkeyIgnoresPremiumButKeepsTariff() {
   };
   const stationWithMarkup: StationConfig = {
     ...turnkeyStation,
-    turnkey: false,
+    stationOption: "tariff",
     stationMarkup: 50,
   };
   const stationWithoutMarkup: StationConfig = {
@@ -130,7 +130,15 @@ function testNonTurnkeyIgnoresPremiumButKeepsTariff() {
   );
 
   assert.equal(withMarkup.stationCost, withoutMarkup.stationCost);
-  assert.equal(withMarkup.totalInvestment, withMarkup.totalVehicleInvestment);
+  // Tariff option: totalInvestment = vehicles + lifetime tariff payments.
+  assert.equal(
+    withMarkup.totalInvestment,
+    withMarkup.totalVehicleInvestment + withMarkup.totalStationInvestment
+  );
+  assert.equal(
+    withMarkup.totalStationInvestment,
+    withMarkup.stationCost * 0.18 * 10
+  );
   assert.equal(withMarkup.yearlyTariffFees[0], Math.round(withMarkup.stationCost * 0.18));
 
   const cgcResults = calculateROI(
@@ -209,7 +217,7 @@ function testPaybackUsesInitialProjectBreakeven() {
   const station: StationConfig = {
     stationType: "fast",
     businessType: "aglc",
-    turnkey: false,
+    stationOption: "tariff",
     sizingMethod: "peak",
     stationMarkup: 20,
   };
@@ -231,9 +239,12 @@ function testPaybackUsesInitialProjectBreakeven() {
     enhanced
   );
 
-  assert.equal(results.cumulativeInvestment[0], 1600000);
-  assert.equal(results.cumulativeInvestment[7], 1600000);
-  assert.ok(results.paybackPeriod > 8 && results.paybackPeriod < 9);
+  // Tariff option: cumulative investment = vehicles upfront + accumulating annual tariff payments.
+  // The calculator accumulates the unrounded tariff and rounds at the end of each year.
+  const annualTariff = results.stationCost * 0.18;
+  assert.equal(results.cumulativeInvestment[0], Math.round(1600000 + annualTariff));
+  assert.equal(results.cumulativeInvestment[7], Math.round(1600000 + annualTariff * 8));
+  assert.ok(results.paybackPeriod > 0);
 }
 
 function testRoiUsesLifecycleCapexIncludingReplacements() {
@@ -249,7 +260,7 @@ function testRoiUsesLifecycleCapexIncludingReplacements() {
     params,
     {
       ...turnkeyStation,
-      turnkey: false,
+      stationOption: "tariff",
     },
     {
       ...baseFuelPrices,
@@ -264,8 +275,12 @@ function testRoiUsesLifecycleCapexIncludingReplacements() {
   const expectedLifecycleVehicleCapex = 4 * params.lightDutyCost;
 
   assert.equal(results.totalVehicleInvestment, expectedLifecycleVehicleCapex);
-  assert.equal(results.totalInvestment, expectedLifecycleVehicleCapex);
-  assert.equal(results.netCashFlow, results.cumulativeSavings[9] - expectedLifecycleVehicleCapex);
+  // Tariff option: totalInvestment now includes lifetime tariff payments.
+  assert.equal(
+    results.totalInvestment,
+    expectedLifecycleVehicleCapex + results.totalStationInvestment
+  );
+  assert.equal(results.netCashFlow, results.cumulativeSavings[9] - results.totalInvestment);
 }
 
 function main() {

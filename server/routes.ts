@@ -2,12 +2,20 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  ...(process.env.AI_INTEGRATIONS_OPENAI_BASE_URL && {
-    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-  }),
-});
+let _openai: OpenAI | null = null;
+function getOpenAI(): OpenAI | null {
+  if (!_openai) {
+    const apiKey = process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+    if (!apiKey) return null;
+    _openai = new OpenAI({
+      apiKey,
+      ...(process.env.AI_INTEGRATIONS_OPENAI_BASE_URL && {
+        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+      }),
+    });
+  }
+  return _openai;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Natural Language Query API endpoint
@@ -35,7 +43,7 @@ Available parameters to modify:
 - CNG efficiency loss: lightDutyCngEfficiencyLoss (50 = 5%), mediumDutyCngEfficiencyLoss (75 = 7.5%), heavyDutyCngEfficiencyLoss (100 = 10%)
 - Fuel prices: gasolinePrice ($3.00), dieselPrice ($3.50), cngPrice ($2.00), cngTaxCredit ($0.50)
 - Price annual increase: annualIncrease (3%)
-- Station config: stationType ("fast" or "time"), businessType ("aglc", "cgc", "vng"), turnkey (true/false), stationMarkup (0-100)
+- Station config: stationType ("fast" or "time"), businessType ("aglc", "cgc", "vng"), stationOption ("turnkey", "tariff", or "public"), stationMarkup (0-100)
 - Deployment strategy: deploymentStrategy ("immediate", "phased", "aggressive", "deferred", "manual")
 - Time horizon: timeHorizon (1-15 years)
 - Conversion factors: gasolineToCngConversionFactor (1.0), dieselToCngConversionFactor (1.136)
@@ -63,6 +71,12 @@ Response: {"parameterUpdates": {"lightDutyCount": 10}, "insights": "Set light du
 
 Query: "Use immediate deployment strategy"
 Response: {"parameterUpdates": {"deploymentStrategy": "immediate"}, "insights": "Changed deployment strategy to immediate (all vehicles in year 1)", "suggestedView": "dashboard"}`;
+
+      const openai = getOpenAI();
+      if (!openai) {
+        res.status(503).json({ error: "OpenAI API key not configured" });
+        return;
+      }
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -195,8 +209,10 @@ Response: {"parameterUpdates": {"deploymentStrategy": "immediate"}, "insights": 
             }
           }
 
-          if ('turnkey' in updates) {
-            sanitized.turnkey = Boolean(updates.turnkey);
+          if ('stationOption' in updates) {
+            if (['turnkey', 'tariff', 'public'].includes(updates.stationOption)) {
+              sanitized.stationOption = updates.stationOption;
+            }
           }
 
           if ('stationMarkup' in updates) {

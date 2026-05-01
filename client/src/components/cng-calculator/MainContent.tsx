@@ -161,7 +161,11 @@ export default function MainContent() {
       pdf.setTextColor(darkMode ? 255 : 0, darkMode ? 255 : 0, darkMode ? 255 : 0);
       pdf.text(`${stationConfig.stationType === 'fast' ? 'Fast-Fill' : 'Time-Fill'}`, margin + 50, stationDetailY);
       pdf.text(`${businessTypeLabels[stationConfig.businessType]}`, margin + 50, stationDetailY + 10);
-      pdf.text(`${stationConfig.turnkey ? 'TurnKey (Upfront)' : 'Financed'}`, margin + 50, stationDetailY + 20);
+      pdf.text(
+        `${stationConfig.stationOption === "turnkey" ? 'Turnkey (Upfront)' : stationConfig.stationOption === "tariff" ? 'LDC Tariff' : 'Public Stations'}`,
+        margin + 50,
+        stationDetailY + 20
+      );
       
       // Key Metrics
       const metricsBoxY = stationBoxY + 60;

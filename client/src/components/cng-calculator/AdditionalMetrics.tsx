@@ -491,7 +491,7 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
                     const totalMiles = operationalChartData.reduce((sum, item) => sum + (item.annualMiles * item.vehicleCount), 0);
                     if (totalMiles === 0) return "N/A";
                     const totalCngCost = operationalChartData.reduce((sum, item) => sum + (item.cngFuel * item.annualMiles * item.vehicleCount), 0);
-                    return `$${(totalCngCost / totalMiles).toFixed(4)}`;
+                    return `$${(totalCngCost / totalMiles).toFixed(2)}`;
                   })()}
                 </div>
               </div>
@@ -567,7 +567,7 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
             <div className="mb-4">
               <div className="bg-blue-50 p-4 rounded-lg dark:bg-blue-900/20">
                 <div className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-3">
-                  Investment
+                  Investment (Lifecycle)
                   <MetricInfoTooltip
                     title="Investment Breakdown"
                     description="Detailed breakdown of capital investment required for your CNG conversion project."
@@ -576,7 +576,7 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
                       "Vehicle counts and conversion costs",
                       "Station type (Fast-Fill/Time-Fill)",
                       "Business type selection",
-                      "TurnKey vs Non-TurnKey option"
+                      "Station Choice (Turnkey / LDC Tariff / Public)"
                     ]}
                     simpleDescription="Total upfront capital required broken down by component."
                   />
@@ -585,20 +585,22 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
                       return (
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-blue-600 dark:text-blue-400">Vehicles (Lifecycle)</span>
+                        <span className="text-sm text-blue-600 dark:text-blue-400">Vehicles</span>
                         <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">{formatCurrency(results.totalVehicleInvestment)}</span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-blue-600 dark:text-blue-400">
-                          {stationConfig.turnkey ? "Station (Quoted)" : `Station (Tariff × ${timeHorizon} yrs)`}
-                        </span>
-                        <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">
-                          {formatCurrency(results.totalStationInvestment)}
-                        </span>
-                      </div>
+                      {stationConfig.stationOption !== "public" && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-blue-600 dark:text-blue-400">
+                            {stationConfig.stationOption === "turnkey" ? "Station (Quoted)" : `Station (Tariff × ${timeHorizon} yrs)`}
+                          </span>
+                          <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">
+                            {formatCurrency(results.totalStationInvestment)}
+                          </span>
+                        </div>
+                      )}
                       <div className="border-t pt-2 border-blue-200 dark:border-blue-700">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Modeled Total</span>
+                          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Total</span>
                           <span className="text-lg font-bold text-blue-800 dark:text-blue-200">
                             {formatCurrency(results.totalInvestment)}
                           </span>
@@ -614,7 +616,7 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
             <div className="mb-4">
               <div className="bg-green-50 p-4 rounded-lg dark:bg-green-900/20">
                 <div className="text-sm font-medium text-green-700 dark:text-green-300 mb-3">
-                  Savings
+                  Savings (Lifecycle)
                   <MetricInfoTooltip
                     title="Savings Summary"
                     description="Total savings generated from CNG conversion over the analysis period."
@@ -630,7 +632,6 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
                 </div>
                 {(() => {
                   const totalSavingsOverHorizon = results.cumulativeSavings[results.cumulativeSavings.length - 1];
-                  const netSavings = totalSavingsOverHorizon - results.totalInvestment;
                   const totalFuelSavings = results.yearlyFuelSavings.reduce((sum: number, v: number) => sum + v, 0);
                   const totalMaintenanceSavings = results.yearlyMaintenanceSavings.reduce((sum: number, v: number) => sum + v, 0);
 
@@ -644,19 +645,11 @@ export default function AdditionalMetrics({ showCashflow }: AdditionalMetricsPro
                         <span className="text-sm text-green-600 dark:text-green-400">Maintenance Savings</span>
                         <span className="text-sm font-semibold text-green-800 dark:text-green-200">{formatCurrency(totalMaintenanceSavings)}</span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-green-600 dark:text-green-400">Total</span>
-                        <span className="text-sm font-semibold text-green-800 dark:text-green-200">{formatCurrency(totalSavingsOverHorizon)}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-green-600 dark:text-green-400">Less: Modeled Investment</span>
-                        <span className="text-sm font-semibold text-red-600 dark:text-red-400">({formatCurrency(results.totalInvestment)})</span>
-                      </div>
                       <div className="border-t pt-2 border-green-200 dark:border-green-700">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-green-700 dark:text-green-300">Total Benefit</span>
-                          <span className={`text-lg font-bold ${netSavings >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                            {formatCurrency(netSavings)}
+                          <span className="text-sm font-medium text-green-700 dark:text-green-300">Total Savings</span>
+                          <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                            {formatCurrency(totalSavingsOverHorizon)}
                           </span>
                         </div>
                       </div>

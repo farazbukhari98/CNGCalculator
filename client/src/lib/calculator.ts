@@ -198,11 +198,11 @@ export function getVehicleInvestmentTotals(
 }
 
 export function getAppliedStationMarkup(config: StationConfig): number {
-  return config.turnkey ? config.stationMarkup : 0;
+  return config.stationOption === "turnkey" ? config.stationMarkup : 0;
 }
 
 export function getMonthlyTariffRate(config: StationConfig): number {
-  if (config.turnkey) {
+  if (config.stationOption !== "tariff") {
     return 0;
   }
 
@@ -255,6 +255,11 @@ function getPeakYearVehicleCount(vehicleDistribution: VehicleDistribution[] | nu
 
 // Station cost calculation
 export function calculateStationCost(config: StationConfig, vehicleParams?: VehicleParameters, vehicleDistribution?: VehicleDistribution[] | null, fuelPrices?: FuelPrices): number {
+  // Public option: fleet uses existing public CNG stations, no station capex.
+  if (config.stationOption === "public") {
+    return 0;
+  }
+
   // If no vehicle params provided, return 0 (no station needed without vehicles)
   if (!vehicleParams) {
     return 0;
@@ -692,10 +697,6 @@ export function calculateROI(
   const totalVehicleInvestment = vehicleInvestmentTotals.total;
   const stationCost = calculateStationCost(stationConfig, vehicleParams, vehicleDistribution, fuelPrices);
   const totalProjectCost = totalVehicleInvestment + stationCost;
-  // ROI is based on lifecycle vehicle capex (including replacements).
-  // For turnkey projects, add the upfront station capex; for non-turnkey,
-  // the station is financed through tariff fees and remains in yearly savings.
-  const totalInvestment = totalVehicleInvestment + (stationConfig.turnkey ? stationCost : 0);
   
   // Ensure the vehicleDistribution array is long enough
   // (this should be handled already by distributeVehicles, but ensuring it here too)
@@ -736,16 +737,28 @@ export function calculateROI(
   const cumulativeSavings: number[] = [];
   const cumulativeInvestment: number[] = [];
   
-  // Track only the initial project investment for payback purposes.
-  // This includes the original deployment schedule and upfront turnkey station cost,
-  // but excludes lifecycle replacement purchases.
-  let cumulativeInvestmentToDate = stationConfig.turnkey ? stationCost : 0;
-  
-  // Monthly LDC investment tariff rate (as a decimal).
-  // For non-TurnKey, this is a fixed monthly percentage of the station cost.
+  // Track cumulative investment for payback purposes.
+  // turnkey: station cost is upfront in year 1.
+  // tariff: station cost is spread as annual tariff payments.
+  // public: no station investment of any kind.
+  let cumulativeInvestmentToDate = stationConfig.stationOption === "turnkey" ? stationCost : 0;
+
+  // Monthly LDC investment tariff rate (as a decimal). Only non-zero for the tariff option.
   const monthlyTariffRate = getMonthlyTariffRate(stationConfig);
   // Annual tariff amount (monthly rate * 12 months)
   const annualTariffRate = monthlyTariffRate * 12;
+
+  // Total station investment reflects actual cost paid over the horizon.
+  // turnkey: quoted station cost (paid upfront).
+  // tariff: annual tariff × time horizon (what you actually pay over the analysis window).
+  // public: $0 (using existing public stations).
+  const totalStationInvestment =
+    stationConfig.stationOption === "turnkey"
+      ? stationCost
+      : stationConfig.stationOption === "tariff"
+        ? stationCost * annualTariffRate * timeHorizon
+        : 0;
+  const totalInvestment = totalVehicleInvestment + totalStationInvestment;
   
   for (let year = 0; year < timeHorizon; year++) {
     // Get lifecycle-aware active vehicle counts for this year
@@ -804,33 +817,31 @@ export function calculateROI(
     
     const maintenanceSavings = lightMaintenanceSavings + mediumMaintenanceSavings + heavyMaintenanceSavings;
     
-    // Calculate annual LDC investment tariff for non-turnkey option
-    // This is a fixed monthly cost that continues for the entire period
+    // Annual LDC investment tariff applies only to the tariff option.
     let annualTariffFee = 0;
-    if (!stationConfig.turnkey) {
+    if (stationConfig.stationOption === "tariff") {
       annualTariffFee = stationCost * annualTariffRate;
     }
     
-    // Separate fuel and maintenance savings (before tariff fees)
+    // Savings are purely fuel + maintenance (tariff is a cost, not a negative saving)
     const totalFuelSavings = lightFuelSavings + mediumFuelSavings + heavyFuelSavings;
-    
-    // Total savings for the year (subtract tariff fee if applicable)
-    const yearSavings = totalFuelSavings + maintenanceSavings - annualTariffFee;
-    
+    const yearSavings = totalFuelSavings + maintenanceSavings;
+
     yearlySavings.push(Math.round(toFiniteNumber(yearSavings, 0)));
     yearlyFuelSavings.push(Math.round(toFiniteNumber(totalFuelSavings, 0)));
     yearlyMaintenanceSavings.push(Math.round(toFiniteNumber(maintenanceSavings, 0)));
     yearlyTariffFees.push(Math.round(toFiniteNumber(annualTariffFee, 0)));
-    
+
     // Update cumulative savings
     const prevCumulativeSavings = year > 0 ? cumulativeSavings[year - 1] : 0;
     cumulativeSavings.push(Math.round(prevCumulativeSavings + yearSavings));
-    
-    // Update cumulative initial project investment (exclude replacement capex).
+
+    // Update cumulative investment.
+    // Vehicle deployment costs plus, for the tariff option, annual tariff payments as costs.
     const yearInvestment = year < ensuredDistribution.length
       ? toNonNegativeNumber(ensuredDistribution[year].investment || 0)
       : 0;
-    cumulativeInvestmentToDate += yearInvestment;
+    cumulativeInvestmentToDate += yearInvestment + annualTariffFee;
     cumulativeInvestment.push(Math.round(cumulativeInvestmentToDate));
   }
   
@@ -1001,6 +1012,7 @@ export function calculateROI(
   return {
     totalInvestment,
     totalVehicleInvestment,
+    totalStationInvestment,
     stationCost,
     totalProjectCost,
     totalTariffFees,

@@ -65,7 +65,7 @@ export default function DeploymentTimeline() {
                 let stationCostInvestment = 0;
                 let stationCostDisplay = 0;
                 
-                if (stationConfig.turnkey) {
+                if ((stationConfig.stationOption === "turnkey")) {
                   stationCostInvestment = isFirstYear ? calculatedStationCost : 0;
                   stationCostDisplay = stationCostInvestment;
                 } else {
@@ -112,7 +112,7 @@ export default function DeploymentTimeline() {
                     const pastVehicleInvestment = (pastYearData.investment || 0) + (pastYearData.replacementInvestment || 0);
                     const pastIsFirstYear = (i + 1) === 1;
                     let pastStationInvestment = 0;
-                    if (stationConfig.turnkey) {
+                    if ((stationConfig.stationOption === "turnkey")) {
                       pastStationInvestment = pastIsFirstYear ? calculatedStationCost : 0;
                     }
                     const pastTotalInvestment = pastVehicleInvestment + pastStationInvestment;
@@ -161,12 +161,14 @@ export default function DeploymentTimeline() {
                             <span className="text-xs text-gray-600 dark:text-gray-400">Vehicles (Incr.)</span>
                             <span className="text-xs font-medium" data-testid={`vehicle-investment-year-${year}`}>{formatCurrency(vehicleInvestment)}</span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-600 dark:text-gray-400">
-                              {stationConfig.turnkey ? 'Station' : 'Station (Annual)'}
-                            </span>
-                            <span className="text-xs font-medium" data-testid={`station-investment-year-${year}`}>{formatCurrency(stationCostDisplay)}</span>
-                          </div>
+                          {stationConfig.stationOption !== "public" && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-gray-600 dark:text-gray-400">
+                                {stationConfig.stationOption === "turnkey" ? 'Station' : 'Station (Annual)'}
+                              </span>
+                              <span className="text-xs font-medium" data-testid={`station-investment-year-${year}`}>{formatCurrency(stationCostDisplay)}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                       

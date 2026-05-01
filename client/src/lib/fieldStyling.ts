@@ -57,7 +57,7 @@ export const DEFAULT_VALUES = {
   // Station Configuration
   stationType: 'fast',
   businessType: 'aglc',
-  turnkey: true,
+  stationOption: 'turnkey',
   stationMarkup: 20,
   
   // Fuel Prices
