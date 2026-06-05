@@ -401,7 +401,7 @@ export default function VehicleParameters() {
                 </div>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Fuel efficiency directly impacts cost savings and emissions reductions
+                CNG vehicles replacing diesel applications generally get 5-10% less MPG due to engine efficiency differences.
               </p>
             </div>
             

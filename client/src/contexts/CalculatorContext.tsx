@@ -93,7 +93,9 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
     businessType: "aglc",
     stationOption: "turnkey", // Default to turnkey (upfront cost)
     sizingMethod: "peak", // Always use peak year sizing (maximum vehicles in any single year)
-    stationMarkup: 20 // Default to 20% markup on station cost
+    stationMarkup: 20, // Default to 20% markup on station cost
+    useCustomStationPrice: false,
+    customStationPrice: 0
   });
 
   const [fuelPrices, setFuelPrices] = useState<FuelPrices>({

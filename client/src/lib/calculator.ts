@@ -209,6 +209,14 @@ export function getMonthlyTariffRate(config: StationConfig): number {
   return config.businessType === "cgc" ? 0.016 : 0.015;
 }
 
+export function getCustomStationPrice(config: StationConfig): number | null {
+  if (config.stationOption === "public" || !config.useCustomStationPrice) {
+    return null;
+  }
+
+  return Math.round(toNonNegativeNumber(config.customStationPrice));
+}
+
 function getStationSelection(stationType: StationConfig["stationType"], annualGGE: number) {
   const sizes = STATION_SIZES[stationType];
   const sortedSizes = [...sizes].sort((a, b) => a.capacity - b.capacity);
@@ -258,6 +266,11 @@ export function calculateStationCost(config: StationConfig, vehicleParams?: Vehi
   // Public option: fleet uses existing public CNG stations, no station capex.
   if (config.stationOption === "public") {
     return 0;
+  }
+
+  const customStationPrice = getCustomStationPrice(config);
+  if (customStationPrice !== null) {
+    return customStationPrice;
   }
 
   // If no vehicle params provided, return 0 (no station needed without vehicles)
@@ -426,14 +439,15 @@ export function getStationSizeInfo(config: StationConfig, vehicleParams?: Vehicl
   // Calculate final cost with business adjustments and markup
   const businessMultiplier = config.businessType === 'cgc' ? 0.95 : 1.0;
   const markupMultiplier = 1 + (getAppliedStationMarkup(config) / 100); // Convert percentage to multiplier
-  const finalCost = Math.round(selectedStation.cost * businessMultiplier * markupMultiplier);
+  const calculatedFinalCost = Math.round(selectedStation.cost * businessMultiplier * markupMultiplier);
+  const customStationPrice = getCustomStationPrice(config);
   
   return {
     size: selectedStation.size,
     capacity: selectedStation.capacity,
     annualGGE: Math.round(annualGGE),
     baseCost: selectedStation.cost,
-    finalCost: finalCost
+    finalCost: customStationPrice ?? calculatedFinalCost
   };
 }
 

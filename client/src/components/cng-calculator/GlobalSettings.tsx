@@ -193,7 +193,9 @@ export default function GlobalSettings() {
       });
       updateStationConfig({
         ...strategy.stationConfig,
-        stationMarkup: strategy.stationConfig.stationMarkup ?? DEFAULT_VALUES.stationMarkup
+        stationMarkup: strategy.stationConfig.stationMarkup ?? DEFAULT_VALUES.stationMarkup,
+        useCustomStationPrice: strategy.stationConfig.useCustomStationPrice ?? DEFAULT_VALUES.useCustomStationPrice,
+        customStationPrice: strategy.stationConfig.customStationPrice ?? DEFAULT_VALUES.customStationPrice
       });
       updateFuelPrices({
         ...strategy.fuelPrices,
