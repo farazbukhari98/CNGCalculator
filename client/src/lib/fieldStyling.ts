@@ -59,6 +59,8 @@ export const DEFAULT_VALUES = {
   businessType: 'aglc',
   stationOption: 'turnkey',
   stationMarkup: 20,
+  useCustomStationPrice: false,
+  customStationPrice: 0,
   
   // Fuel Prices
   gasolinePrice: 3.38,

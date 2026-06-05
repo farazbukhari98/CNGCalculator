@@ -3,6 +3,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
 import { calculateStationCost, getMonthlyTariffRate, getStationSizeInfo } from "@/lib/calculator";
 import { Check } from "lucide-react";
 import { getFieldStyles, DEFAULT_VALUES } from "@/lib/fieldStyling";
@@ -213,6 +214,65 @@ export default function StationConfiguration() {
               ? `Station uses LDC investment tariff with a monthly fee of ${(getMonthlyTariffRate(stationConfig) * 100).toFixed(1)}% of station cost over the analysis period`
               : "Fleet refuels at publicly available CNG stations — no station capex or tariff applied"}
         </p>
+
+        <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <Label htmlFor="customStationPriceToggle" className="text-sm font-medium text-gray-700">
+              Custom Station Price
+            </Label>
+            <Switch
+              id="customStationPriceToggle"
+              checked={stationConfig.useCustomStationPrice}
+              onCheckedChange={(checked) => {
+                if (checked !== DEFAULT_VALUES.useCustomStationPrice) {
+                  markFieldAsModified('useCustomStationPrice');
+                }
+                const currentCalculatedCost = getStationCost();
+                updateStationConfig({
+                  ...stationConfig,
+                  useCustomStationPrice: checked,
+                  customStationPrice: checked && stationConfig.customStationPrice <= 0
+                    ? currentCalculatedCost
+                    : stationConfig.customStationPrice
+                });
+              }}
+              aria-label="Custom Station Price"
+            />
+          </div>
+
+          {stationConfig.useCustomStationPrice && (
+            <div className="mt-3">
+              <Label htmlFor="customStationPriceInput" className="block text-xs font-medium text-gray-600 mb-1">
+                Custom station cost
+              </Label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-gray-500">$</span>
+                <input
+                  id="customStationPriceInput"
+                  type="number"
+                  min="0"
+                  step="1000"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm pl-7 py-2"
+                  style={getFieldStyles(isFieldModified('customStationPrice'))}
+                  value={stationConfig.customStationPrice}
+                  onChange={(e) => {
+                    const newValue = Math.max(0, Math.round(Number(e.target.value) || 0));
+                    if (newValue !== DEFAULT_VALUES.customStationPrice) {
+                      markFieldAsModified('customStationPrice');
+                    }
+                    updateStationConfig({
+                      ...stationConfig,
+                      customStationPrice: newValue
+                    });
+                  }}
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Overrides the calculated station quote for Turnkey and LDC Tariff scenarios.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Station Premium - only shown for turnkey */}
@@ -282,9 +342,11 @@ export default function StationConfiguration() {
             </span>
           </div>
           <p className="text-xs text-gray-500 mt-2">
-            {stationConfig.stationOption === "turnkey"
-              ? `Base cost + ${stationConfig.stationMarkup}% premium`
-              : `Base cost ${stationConfig.businessType === 'cgc' ? '- 5% CGC discount' : ''}`}
+            {stationConfig.useCustomStationPrice
+              ? "Using custom station price override"
+              : stationConfig.stationOption === "turnkey"
+                ? `Base cost + ${stationConfig.stationMarkup}% premium`
+                : `Base cost ${stationConfig.businessType === 'cgc' ? '- 5% CGC discount' : ''}`}
           </p>
           <p className="text-xs text-gray-500">
             {stationConfig.stationOption === "turnkey"

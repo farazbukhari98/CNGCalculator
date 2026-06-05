@@ -33,6 +33,8 @@ export interface StationConfig {
   stationOption: "turnkey" | "tariff" | "public"; // turnkey = upfront, tariff = LDC financed, public = use existing public stations
   sizingMethod: "total" | "peak"; // Total vehicles vs peak year usage
   stationMarkup: number; // Markup percentage applied to station cost (0-100)
+  useCustomStationPrice: boolean; // Override calculated station cost with a user-entered cost
+  customStationPrice: number; // Custom station cost in dollars
 }
 
 // Fuel prices

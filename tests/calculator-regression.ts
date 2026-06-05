@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import {
   applyVehicleLifecycle,
   calculateROI,
+  calculateStationCost,
   distributeVehicles,
+  getStationSizeInfo,
 } from "../client/src/lib/calculator";
 import type { FuelPrices, StationConfig, VehicleParameters } from "../client/src/types/calculator";
 
@@ -49,6 +51,8 @@ const turnkeyStation: StationConfig = {
   stationOption: "turnkey",
   sizingMethod: "peak",
   stationMarkup: 20,
+  useCustomStationPrice: false,
+  customStationPrice: 0,
 };
 
 function testRecurringLifecycleReplacements() {
@@ -220,6 +224,8 @@ function testPaybackUsesInitialProjectBreakeven() {
     stationOption: "tariff",
     sizingMethod: "peak",
     stationMarkup: 20,
+    useCustomStationPrice: false,
+    customStationPrice: 0,
   };
   const fuelPrices: FuelPrices = {
     ...baseFuelPrices,
@@ -283,6 +289,26 @@ function testRoiUsesLifecycleCapexIncludingReplacements() {
   assert.equal(results.netCashFlow, results.cumulativeSavings[9] - results.totalInvestment);
 }
 
+function testCustomStationPriceOverridesCalculatedCost() {
+  const params: VehicleParameters = {
+    ...baseVehicleParameters,
+    mediumDutyCount: 12,
+  };
+  const distribution = applyVehicleLifecycle(distributeVehicles(params, 10, "immediate"), params, 10);
+  const customStation: StationConfig = {
+    ...turnkeyStation,
+    useCustomStationPrice: true,
+    customStationPrice: 1234567,
+  };
+
+  assert.equal(calculateStationCost(customStation, params, distribution, baseFuelPrices), 1234567);
+  assert.equal(getStationSizeInfo(customStation, params, distribution, baseFuelPrices)?.finalCost, 1234567);
+
+  const results = calculateROI(params, customStation, baseFuelPrices, 10, "immediate", distribution);
+  assert.equal(results.stationCost, 1234567);
+  assert.equal(results.totalStationInvestment, 1234567);
+}
+
 function main() {
   testRecurringLifecycleReplacements();
   testDieselConversionFactorAffectsSavings();
@@ -290,6 +316,7 @@ function main() {
   testZeroAndEmptyStyleInputsStayFinite();
   testPaybackUsesInitialProjectBreakeven();
   testRoiUsesLifecycleCapexIncludingReplacements();
+  testCustomStationPriceOverridesCalculatedCost();
   console.log("calculator regression checks passed");
 }
 

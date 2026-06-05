@@ -26,6 +26,7 @@ import { getPlannedFleetTotals } from "@/lib/calculator";
 import { formatCurrency } from "@/lib/utils";
 
 export default function MainContent() {
+  const isStandaloneLocal = __STANDALONE_LOCAL__;
   const { 
     deploymentStrategy, 
     results, 
@@ -578,32 +579,33 @@ export default function MainContent() {
         </DialogContent>
       </Dialog>
       
-      {/* Ask Shaun Modal */}
-      <Dialog open={showAskShaun} onOpenChange={setShowAskShaun}>
-        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <MessageCircle className="w-5 h-5 text-green-500" />
-              Ask Shaun - Natural Language Assistant
-            </DialogTitle>
-            <DialogDescription>
-              Ask questions or make changes to your CNG conversion analysis using natural language
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mt-4">
-            <NaturalLanguageQuery onViewChange={(view) => {
-              if (view === 'dashboard') {
-                // Close modal and scroll to top
-                setShowAskShaun(false);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              } else if (view === 'comparison') {
-                setShowComparison(true);
-                setShowAskShaun(false);
-              }
-            }} />
-          </div>
-        </DialogContent>
-      </Dialog>
+      {!isStandaloneLocal && (
+        <Dialog open={showAskShaun} onOpenChange={setShowAskShaun}>
+          <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <MessageCircle className="w-5 h-5 text-green-500" />
+                Ask Shaun - Natural Language Assistant
+              </DialogTitle>
+              <DialogDescription>
+                Ask questions or make changes to your CNG conversion analysis using natural language
+              </DialogDescription>
+            </DialogHeader>
+            <div className="mt-4">
+              <NaturalLanguageQuery onViewChange={(view) => {
+                if (view === 'dashboard') {
+                  // Close modal and scroll to top
+                  setShowAskShaun(false);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else if (view === 'comparison') {
+                  setShowComparison(true);
+                  setShowAskShaun(false);
+                }
+              }} />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
       
       {/* Floating Action Buttons */}
       <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
@@ -623,17 +625,18 @@ export default function MainContent() {
           </span>
         </button>
         
-        {/* Ask Shaun Button */}
-        <button
-          onClick={() => setShowAskShaun(true)}
-          className="group relative flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all hover:shadow-xl bg-green-600 text-white hover:bg-green-700"
-          aria-label="Open Ask Shaun Assistant"
-        >
-          <MessageCircle className="h-6 w-6" />
-          <span className="absolute right-full mr-3 hidden rounded-md bg-gray-900 px-2 py-1 text-xs text-white group-hover:block whitespace-nowrap dark:bg-gray-700">
-            Ask Shaun
-          </span>
-        </button>
+        {!isStandaloneLocal && (
+          <button
+            onClick={() => setShowAskShaun(true)}
+            className="group relative flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all hover:shadow-xl bg-green-600 text-white hover:bg-green-700"
+            aria-label="Open Ask Shaun Assistant"
+          >
+            <MessageCircle className="h-6 w-6" />
+            <span className="absolute right-full mr-3 hidden rounded-md bg-gray-900 px-2 py-1 text-xs text-white group-hover:block whitespace-nowrap dark:bg-gray-700">
+              Ask Shaun
+            </span>
+          </button>
+        )}
       </div>
     </div>
   );
