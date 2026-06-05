@@ -19,13 +19,15 @@ function Router() {
 }
 
 function App() {
+  const content = __STANDALONE_LOCAL__ ? <Home /> : <Router />;
+
   return (
     <QueryClientProvider client={queryClient}>
       <DarkModeProvider>
         <TooltipProvider>
           <CalculatorProvider>
             <ComparisonProvider>
-              <Router />
+              {content}
               <Toaster />
             </ComparisonProvider>
           </CalculatorProvider>

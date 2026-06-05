@@ -6,12 +6,14 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Builds a portable, offline-friendly client bundle. The follow-up
+// scripts/inline-standalone.mjs step inlines the generated JS/CSS into
+// dist/standalone/CNGCalculator.html.
 export default defineConfig({
-  plugins: [
-    react(),
-  ],
+  plugins: [react()],
+  base: "./",
   define: {
-    __STANDALONE_LOCAL__: "false",
+    __STANDALONE_LOCAL__: "true",
   },
   resolve: {
     alias: {
@@ -22,7 +24,14 @@ export default defineConfig({
   },
   root: path.resolve(__dirname, "client"),
   build: {
-    outDir: path.resolve(__dirname, "dist/public"),
+    outDir: path.resolve(__dirname, "dist/standalone"),
     emptyOutDir: true,
+    cssCodeSplit: false,
+    assetsInlineLimit: 10 * 1024 * 1024,
+    rollupOptions: {
+      output: {
+        inlineDynamicImports: true,
+      },
+    },
   },
 });
